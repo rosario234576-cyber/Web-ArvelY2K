@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex,nofollow">
+    <meta name="theme-color" content="#2f1e2a">
+    <title>Productos | Panel Arvel</title>
+    <script>document.documentElement.classList.add("js");</script>
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/admin-productos.css">
+    <link rel="stylesheet" href="css/responsive.css">
+  </head>
+  <body class="admin-body">
+    <a class="skip-link" href="#admin-main">Saltar al formulario</a>
+    <header class="admin-header">
+      <a href="index.html" aria-label="Volver a Arvel Customs">
+        <img src="assets/logo/LogoBlanco.png" alt="Arvel Customs" width="1080" height="1080">
+      </a>
+      <div>
+        <span class="eyebrow">Panel privado</span>
+        <strong>Productos</strong>
+      </div>
+      <button class="button button--secondary admin-logout" id="admin-logout" type="button">Salir</button>
+    </header>
+
+    <main class="admin-main" id="admin-main">
+      <section class="admin-access" id="admin-loading">
+        <span class="admin-spinner" aria-hidden="true"></span>
+        <p>Verificando acceso…</p>
+      </section>
+
+      <section class="admin-access" id="admin-denied" hidden>
+        <h1>Este usuario todavía no es administrador</h1>
+        <p>Iniciá sesión con la cuenta administrativa y agregá este UID en la colección <code>admins</code> de Firestore.</p>
+        <label>UID de esta cuenta
+          <input class="input" id="admin-current-uid" readonly>
+        </label>
+        <a class="button button--pink" href="login.html?next=admin-productos.html">Cambiar de cuenta</a>
+      </section>
+
+      <div class="admin-shell" id="admin-content" hidden>
+        <aside class="admin-catalog">
+          <div class="admin-catalog__heading">
+            <div>
+              <span class="eyebrow">Catálogo</span>
+              <h1>Productos</h1>
+            </div>
+            <button class="button button--pink" id="new-product" type="button">+ Nuevo</button>
+          </div>
+          <label class="visually-hidden" for="admin-search">Buscar productos</label>
+          <input class="input" id="admin-search" type="search" placeholder="Buscar por nombre o SKU">
+          <div class="admin-product-list" id="admin-product-list" aria-live="polite"></div>
+        </aside>
+
+        <section class="admin-editor">
+          <div class="admin-editor__heading">
+            <div>
+              <span class="eyebrow" id="editor-mode">Nuevo producto</span>
+              <h2 id="editor-title">Cargar una pieza</h2>
+            </div>
+            <span class="admin-save-state" id="admin-save-state" role="status" aria-live="polite"></span>
+          </div>
+
+          <form id="product-admin-form" novalidate>
+            <input id="product-document-id" name="documentId" type="hidden">
+
+            <fieldset class="admin-fieldset">
+              <legend>Información principal</legend>
+              <div class="admin-form-grid">
+                <label>Nombre *
+                  <input class="input" name="name" required>
+                </label>
+                <label>SKU *
+                  <input class="input" name="sku" required placeholder="ARV-AI-TOP-001">
+                </label>
+                <label>Categoría *
+                  <input class="input" name="category" list="product-categories" required>
+                </label>
+                <label>Colección
+                  <input class="input" name="collection" placeholder="After Internet">
+                </label>
+                <label>Precio *
+                  <input class="input" name="price" type="number" min="0" step="1" required>
+                </label>
+                <label>Precio anterior
+                  <input class="input" name="oldPrice" type="number" min="0" step="1">
+                </label>
+                <label>Condición
+                  <select class="select" name="condition">
+                    <option>Custom</option>
+                    <option>Nueva</option>
+                    <option>Segunda mano</option>
+                  </select>
+                </label>
+                <label>Estado
+                  <select class="select" name="status">
+                    <option value="draft">Borrador</option>
+                    <option value="published">Publicado</option>
+                    <option value="hidden">Oculto</option>
+                  </select>
+                </label>
+              </div>
+              <datalist id="product-categories">
+                <option value="Tops"><option value="Faldas"><option value="Pantalones">
+                <option value="Vestidos"><option value="Abrigos"><option value="Accesorios">
+                <option value="Mini customs">
+              </datalist>
+            </fieldset>
+
+            <fieldset class="admin-fieldset">
+              <legend>Descripción</legend>
+              <label>Descripción breve *
+                <textarea class="textarea" name="shortDescription" rows="2" required></textarea>
+              </label>
+              <label>Descripción completa
+                <textarea class="textarea" name="description" rows="5"></textarea>
+              </label>
+              <div class="admin-form-grid">
+                <label>Material
+                  <textarea class="textarea" name="material" rows="3"></textarea>
+                </label>
+                <label>Cuidados
+                  <textarea class="textarea" name="care" rows="3"></textarea>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="admin-fieldset">
+              <legend>Medidas reales</legend>
+              <div class="admin-form-grid admin-form-grid--4">
+                <label>Busto <input class="input" name="bust" placeholder="82–92 cm"></label>
+                <label>Cintura <input class="input" name="waist" placeholder="68–78 cm"></label>
+                <label>Cadera <input class="input" name="hip" placeholder="No aplica"></label>
+                <label>Largo <input class="input" name="length" placeholder="42 cm"></label>
+              </div>
+            </fieldset>
+
+            <fieldset class="admin-fieldset">
+              <div class="admin-fieldset__heading">
+                <legend>Variantes y stock *</legend>
+                <button class="button button--secondary" id="add-variant" type="button">+ Talle / color</button>
+              </div>
+              <div class="admin-variants" id="variant-rows"></div>
+              <p class="field-help">Agregá una fila por cada combinación disponible. El stock total se calcula automáticamente.</p>
+            </fieldset>
+
+            <fieldset class="admin-fieldset">
+              <legend>Fotografías</legend>
+              <label>Rutas o enlaces de las imágenes
+                <textarea
+                  class="textarea"
+                  id="product-image-urls"
+                  name="imageUrls"
+                  rows="5"
+                  placeholder="assets/images/productos/denim-orbit-1.jpg&#10;assets/images/productos/denim-orbit-2.jpg"
+                ></textarea>
+              </label>
+              <button class="button button--secondary admin-preview-images" id="preview-image-urls" type="button">
+                Previsualizar fotografías
+              </button>
+              <div class="admin-image-preview" id="image-preview"></div>
+              <p class="field-help">
+                Subí las fotos a <strong>assets/images/productos</strong> en GitHub y escribí una ruta por línea.
+                Un borrador puede guardarse sin fotos.
+              </p>
+            </fieldset>
+
+            <fieldset class="admin-fieldset">
+              <legend>Organización</legend>
+              <label>Etiquetas
+                <input class="input" name="tags" placeholder="denim, y2k, pieza única">
+              </label>
+              <div class="admin-checks">
+                <label><input name="featured" type="checkbox"> Destacar en la tienda</label>
+                <label><input name="uniquePiece" type="checkbox"> Pieza única</label>
+              </div>
+            </fieldset>
+
+            <p class="admin-form-error" id="admin-form-error" role="alert"></p>
+            <div class="admin-form-actions">
+              <button class="button button--pink" type="submit">Guardar producto</button>
+              <button class="button button--secondary" id="save-draft" type="button">Guardar borrador</button>
+              <button class="button button--secondary" id="duplicate-current" type="button" hidden>Duplicar</button>
+            </div>
+          </form>
+        </section>
+      </div>
+    </main>
+
+    <script type="module" src="js/admin-productos.js"></script>
+  </body>
+</html>
