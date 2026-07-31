@@ -167,7 +167,8 @@ function fillForm(product) {
     tags: (product.tags || []).join(", ")
   };
   Object.entries(fields).forEach(([name, value]) => {
-    if (ui.form.elements[name]) ui.form.elements[name].value = value ?? "";
+    const control = ui.form.elements.namedItem(name);
+    if (control) control.value = value ?? "";
   });
   ui.form.elements.featured.checked = Boolean(product.featured);
   ui.form.elements.uniquePiece.checked = Boolean(product.uniquePiece);
