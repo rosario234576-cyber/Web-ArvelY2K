@@ -379,7 +379,7 @@
 
   renderGlobalComponents();
   if (!document.querySelector("[data-auth-page]")) {
-    import("./firebase-auth.js?v=20260731-5").catch(() => {
+    import("./firebase-auth.js?v=20260731-6").catch(() => {
       // La web pública sigue funcionando aunque Firebase todavía no esté configurado.
     });
   }

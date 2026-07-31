@@ -15,11 +15,17 @@ import {
   signOut,
   updateProfile
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+import {
+  doc,
+  getDoc,
+  getFirestore
+} from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import { firebaseConfig, firebaseConfigured } from "./firebase-config.js?v=20260731-5";
 
 const accountLinks = document.querySelectorAll("[data-auth-account]");
 const authPage = document.querySelector("[data-auth-page]")?.dataset.authPage || "";
 let auth = null;
+let db = null;
 
 function setStatus(target, message, type = "") {
   if (!target) return;
@@ -244,6 +250,20 @@ function renderAccount(user) {
   };
 }
 
+async function updateAdminAccess(user) {
+  const adminLink = document.querySelector("#account-admin-products");
+  if (!adminLink) return;
+  adminLink.hidden = true;
+  if (!user || !db) return;
+
+  try {
+    const admin = await getDoc(doc(db, "admins", user.uid));
+    adminLink.hidden = !admin.exists();
+  } catch (error) {
+    reportAuthError("verificación de administradora", error);
+  }
+}
+
 function bindAccountActions() {
   document.querySelector("#account-logout")?.addEventListener("click", async () => {
     await signOut(auth);
@@ -263,6 +283,7 @@ async function initializeAuthentication() {
 
   const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
   auth = getAuth(app);
+  db = getFirestore(app);
   await setPersistence(auth, browserLocalPersistence);
 
   bindRegistration();
@@ -272,6 +293,7 @@ async function initializeAuthentication() {
   onAuthStateChanged(auth, (user) => {
     updateAccountLinks(user);
     renderAccount(user);
+    updateAdminAccess(user);
 
     if (authPage === "login" && user) {
       location.replace(safeNextPage());
