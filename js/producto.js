@@ -249,6 +249,7 @@
     else {
       cart.push({
         id: product.id,
+        documentId: product.documentId || "",
         size: selection.size,
         color: selection.color,
         quantity: selection.quantity,

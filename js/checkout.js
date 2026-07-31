@@ -1,8 +1,11 @@
-(function () {
+(async function () {
   "use strict";
 
   const FREE_SHIPPING_THRESHOLD = 120000;
-  const products = Array.isArray(window.ARVEL_PRODUCTS) ? window.ARVEL_PRODUCTS : [];
+  const products = await (
+    window.ARVEL_PRODUCTS_READY ||
+    Promise.resolve(Array.isArray(window.ARVEL_PRODUCTS) ? window.ARVEL_PRODUCTS : [])
+  );
   let cart = window.ArvelStore.readStoredArray(window.ArvelStore.storageKeys.cart);
 
   const elements = {
@@ -421,6 +424,49 @@
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  async function startMercadoPago(order) {
+    const submit = elements.form.querySelector('[type="submit"]');
+    const originalLabel = submit.textContent;
+    submit.disabled = true;
+    submit.textContent = "Conectando con Mercado Pago…";
+    elements.globalError.textContent = "";
+
+    try {
+      const response = await fetch(
+        `${window.ARVEL_PAYMENT_API_BASE}/api/create-mercadopago-preference`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderNumber: order.orderNumber,
+            customer: order.customer,
+            delivery: {
+              method: order.delivery.value,
+              postalCode: order.address.postalCode,
+              meetingPoint: elements.meetingPoint?.value || ""
+            },
+            items: order.items.map((item) => ({
+              documentId: item.product.documentId || item.documentId || "",
+              size: item.size,
+              color: item.color,
+              quantity: item.quantity
+            }))
+          })
+        }
+      );
+      const result = await response.json();
+      if (!response.ok || !result.checkoutUrl) {
+        throw new Error(result.error || "No pudimos iniciar Mercado Pago.");
+      }
+      location.href = result.checkoutUrl;
+    } catch (error) {
+      elements.globalError.textContent =
+        error.message || "No pudimos conectar con Mercado Pago. Intentá nuevamente.";
+      submit.disabled = false;
+      submit.textContent = originalLabel;
+    }
+  }
+
   function bindEvents() {
     elements.postalCode.addEventListener("change", updateCorreoEstimate);
     elements.postalCode.addEventListener("blur", updateCorreoEstimate);
@@ -451,10 +497,14 @@
       updateCheckoutProgress(event.target.closest(".checkout-block")?.id || null);
     });
 
-    elements.form.addEventListener("submit", (event) => {
+    elements.form.addEventListener("submit", async (event) => {
       event.preventDefault();
       if (!validateForm()) return;
       const order = buildOrderData(generateOrderNumber());
+      if (order.payment.value === "mercado-pago") {
+        await startMercadoPago(order);
+        return;
+      }
       showConfirmation(order);
     });
 
