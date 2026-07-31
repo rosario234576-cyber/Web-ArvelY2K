@@ -1,4 +1,8 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+import {
+  getApp,
+  getApps,
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
 import {
   browserLocalPersistence,
   createUserWithEmailAndPassword,
@@ -257,7 +261,7 @@ async function initializeAuthentication() {
     return;
   }
 
-  const app = initializeApp(firebaseConfig);
+  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
   auth = getAuth(app);
   await setPersistence(auth, browserLocalPersistence);
 
