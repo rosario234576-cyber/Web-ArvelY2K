@@ -1,5 +1,5 @@
 export const firebaseConfig = Object.freeze({
-  apiKey: "AIzaSyBrKPmmmT9yiYbaUPpk6RIv21I8bvPV9bA",
+  apiKey: "AIzaSyBrkPmmmT9yiYbaUPpk6RIv21I8bvPV9bA",
   authDomain: "arvelcustomy2k.firebaseapp.com",
   projectId: "arvelcustomy2k",
   storageBucket: "arvelcustomy2k.firebasestorage.app",

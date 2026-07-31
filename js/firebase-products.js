@@ -9,7 +9,7 @@
         await Promise.all([
           import("https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js"),
           import("https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js"),
-          import("./firebase-config.js")
+          import("./firebase-config.js?v=20260731-3")
         ]);
 
       if (!configModule.firebaseConfigured) return fallback;

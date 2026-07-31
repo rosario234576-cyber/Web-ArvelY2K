@@ -378,7 +378,7 @@
   });
 
   renderGlobalComponents();
-  import("./firebase-auth.js?v=20260731-2").catch(() => {
+  import("./firebase-auth.js?v=20260731-3").catch(() => {
     // La web pública sigue funcionando aunque Firebase todavía no esté configurado.
   });
 })();
