@@ -1,0 +1,140 @@
+@font-face {
+  font-family: "Canva Sans";
+  src: url("../assets/fonts/CanvaSans/CanvaSans-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Canva Sans";
+  src: url("../assets/fonts/CanvaSans/CanvaSans-Medium.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Canva Sans";
+  src: url("../assets/fonts/CanvaSans/CanvaSans-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Playfair Display";
+  src: url("../assets/fonts/PlayfairDisplay/PlayfairDisplay-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Playfair Display";
+  src: url("../assets/fonts/PlayfairDisplay/PlayfairDisplay-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Playfair Display";
+  src: url("../assets/fonts/PlayfairDisplay/PlayfairDisplay-Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Pinyon Script";
+  src: url("../assets/fonts/PinyonScript/PinyonScript-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: light;
+
+  /* Identidad visual */
+  --color-background: #fafaf8;
+  --color-surface: #ffffff;
+  --color-surface-soft: #f3f1ee;
+  --color-text: #111111;
+  --color-text-muted: #5d5b5b;
+  --color-border: #d9d6d2;
+  --color-pink: #f15bb5;
+  --color-pink-dark: #b92f7f;
+  --color-pink-light: #f7c9e4;
+  --color-silver: #b8b8be;
+  --color-white: #ffffff;
+  --color-error: #b42318;
+  --color-success: #347a48;
+  --color-warning: #946200;
+
+  /* Gradientes cromados */
+  --gradient-chrome: linear-gradient(
+    115deg,
+    #6f7078 0%,
+    #f8f8fb 18%,
+    #9d9ea6 36%,
+    #ffffff 52%,
+    #898a92 72%,
+    #e9e9ed 88%,
+    #777880 100%
+  );
+  --gradient-pink: linear-gradient(135deg, #f7c9e4 0%, #f15bb5 100%);
+
+  /* Tipografías locales de la identidad Arvel. */
+  --font-body: "Canva Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Playfair Display", Georgia, serif;
+  --font-script: "Pinyon Script", "Brush Script MT", cursive;
+  --font-accent: "Canva Sans", "Helvetica Neue", Arial, sans-serif;
+
+  /* Escala tipográfica fluida */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-md: 1.125rem;
+  --text-lg: clamp(1.25rem, 2vw, 1.5rem);
+  --text-xl: clamp(1.75rem, 4vw, 2.75rem);
+  --text-hero: clamp(2.8rem, 10vw, 8.5rem);
+
+  /* Espaciado */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4.5rem;
+  --space-9: 7rem;
+
+  /* Forma y profundidad */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1.5rem;
+  --radius-pill: 999px;
+  --border-thin: 1px solid var(--color-border);
+  --border-strong: 1px solid var(--color-text);
+  --shadow-sm: 0 0.25rem 1rem rgb(17 17 17 / 8%);
+  --shadow-md: 0 1rem 3rem rgb(17 17 17 / 14%);
+  --shadow-pink: 0 0.75rem 2rem rgb(241 91 181 / 24%);
+
+  /* Estructura */
+  --container-width: 90rem;
+  --content-width: 48rem;
+  --header-height: 4.5rem;
+  --touch-target: 2.75rem;
+  --z-header: 100;
+  --z-overlay: 200;
+  --z-modal: 300;
+  --z-toast: 400;
+
+  /* Movimiento */
+  --transition-fast: 160ms ease;
+  --transition-base: 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --transition-slow: 500ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}

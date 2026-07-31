@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="Archivo visual de piezas únicas vendidas y colecciones anteriores de Arvel Customs."
+    >
+    <meta name="theme-color" content="#111111">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="es_AR">
+    <meta property="og:title" content="Archivo de piezas | Arvel Customs">
+    <meta
+      property="og:description"
+      content="Piezas que encontraron dueña y siguen contando la historia de Arvel."
+    >
+    <link rel="icon" type="image/png" href="assets/logo/IsoNegro.png">
+    <title>Archivo de piezas | Arvel Customs</title>
+    <script>
+      document.documentElement.classList.add("js");
+    </script>
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/responsive.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#contenido-principal">Saltar al contenido</a>
+    <div id="site-header"></div>
+
+    <main id="contenido-principal">
+      <header class="archive-hero">
+        <div class="container archive-hero__layout">
+          <div>
+            <span class="eyebrow">Piezas que no se repiten</span>
+            <h1>Arvel <em>archive</em></h1>
+          </div>
+          <div class="stack stack--4">
+            <p>
+              Este archivo guarda prendas que encontraron dueña. Cada una marca
+              un momento, un drop y una forma distinta de transformar ropa.
+            </p>
+            <p class="archive-hero__note">
+              Podemos crear una custom inspirada en su energía, pero nunca una
+              copia exacta.
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <section class="section archive-section" aria-labelledby="archive-title">
+        <div class="container">
+          <div class="section__header">
+            <div>
+              <span class="eyebrow">Sold but never forgotten</span>
+              <h2 class="display-title" id="archive-title">Piezas vendidas</h2>
+            </div>
+            <p><span id="archive-count">0</span> piezas en el archivo</p>
+          </div>
+
+          <div class="archive-grid" id="archive-products" aria-live="polite"></div>
+          <div class="empty-state" id="archive-empty" hidden>
+            <div class="stack stack--4">
+              <span class="empty-state__symbol" aria-hidden="true">✦</span>
+              <h2>El archivo está creciendo</h2>
+              <p>Las piezas vendidas aparecerán acá para conservar su historia.</p>
+              <a class="button button--pink" href="tienda.html">Ver piezas disponibles</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section--pink archive-custom" aria-labelledby="archive-custom-title">
+        <div class="container archive-custom__layout">
+          <div>
+            <span class="eyebrow">¿Te quedaste pensando en una?</span>
+            <h2 class="display-title" id="archive-custom-title">Transformemos esa referencia</h2>
+          </div>
+          <div class="stack stack--4">
+            <p>
+              Elegí una pieza del archivo y contanos qué te inspira: la paleta,
+              el volumen, los materiales o la actitud. La nueva custom tendrá
+              identidad propia.
+            </p>
+            <a class="button button--secondary" href="custom.html">Conocer Custom by Arvel</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div id="site-footer"></div>
+    <div id="global-overlays"></div>
+    <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+    <script src="js/data/productos.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/archivo.js"></script>
+    <script src="js/chatbot.js"></script>
+    <script src="js/favoritos.js"></script>
+  </body>
+</html>
+

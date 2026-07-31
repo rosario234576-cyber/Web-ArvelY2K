@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="Explorá piezas únicas, prendas customizadas y segunda mano seleccionada de Arvel Customs."
+    >
+    <meta name="theme-color" content="#FAFAF8">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="es_AR">
+    <meta property="og:title" content="Shop | Arvel Customs">
+    <meta
+      property="og:description"
+      content="Piezas Y2K y alternativas que no se repiten. Envíos a toda Argentina."
+    >
+    <link rel="icon" type="image/png" href="assets/logo/IsoNegro.png">
+    <title>Shop | Arvel Customs</title>
+    <script>
+      document.documentElement.classList.add("js");
+    </script>
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/responsive.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#contenido-principal">Saltar al contenido</a>
+    <div id="site-header"></div>
+
+    <main id="contenido-principal">
+      <header class="shop-hero">
+        <div class="container shop-hero__content">
+          <div>
+            <span class="eyebrow">Drop online</span>
+            <h1 class="shop-title">Shop <em>the mood</em></h1>
+          </div>
+          <p>
+            Prendas únicas, customizadas y seleccionadas. Revisá las medidas:
+            cuando una pieza se va, no vuelve igual.
+          </p>
+        </div>
+      </header>
+
+      <section class="shop-section" aria-labelledby="shop-results-title">
+        <div class="container">
+          <div class="shop-toolbar">
+            <button
+              class="button button--secondary shop-filter-toggle"
+              id="filter-toggle"
+              type="button"
+              aria-expanded="false"
+              aria-controls="filters-panel"
+            >
+              Filtros <span aria-hidden="true">＋</span>
+            </button>
+
+            <form class="shop-search" id="shop-search-form" role="search">
+              <label class="visually-hidden" for="shop-search">Buscar prendas</label>
+              <input
+                class="input"
+                id="shop-search"
+                name="buscar"
+                type="search"
+                placeholder="Buscar por nombre..."
+                autocomplete="off"
+              >
+              <button class="button button--icon" type="submit" aria-label="Buscar">
+                <img src="assets/icons/lupa.png" alt="" width="512" height="512">
+              </button>
+            </form>
+
+            <label class="shop-sort">
+              <span>Ordenar</span>
+              <select class="select" id="sort-products" name="orden">
+                <option value="recent">Más recientes</option>
+                <option value="featured">Destacados</option>
+                <option value="price-asc">Menor precio</option>
+                <option value="price-desc">Mayor precio</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="shop-layout">
+            <aside class="filters-panel" id="filters-panel" aria-label="Filtros del catálogo">
+              <div class="filters-panel__header">
+                <div>
+                  <span class="eyebrow">Afiná tu búsqueda</span>
+                  <h2>Filtros</h2>
+                </div>
+                <button class="filters-panel__close" type="button" aria-label="Cerrar filtros">×</button>
+              </div>
+
+              <form id="filters-form">
+                <div class="filter-group">
+                  <label for="filter-category">Categoría</label>
+                  <select class="select" id="filter-category" name="categoria">
+                    <option value="">Todas</option>
+                  </select>
+                </div>
+
+                <div class="filter-group">
+                  <label for="filter-collection">Colección</label>
+                  <select class="select" id="filter-collection" name="coleccion">
+                    <option value="">Todas</option>
+                  </select>
+                </div>
+
+                <div class="filter-group">
+                  <label for="filter-size">Talle</label>
+                  <select class="select" id="filter-size" name="talle">
+                    <option value="">Todos</option>
+                  </select>
+                </div>
+
+                <div class="filter-group">
+                  <label for="filter-color">Color</label>
+                  <select class="select" id="filter-color" name="color">
+                    <option value="">Todos</option>
+                  </select>
+                </div>
+
+                <div class="filter-group">
+                  <label for="filter-condition">Condición</label>
+                  <select class="select" id="filter-condition" name="condicion">
+                    <option value="">Todas</option>
+                  </select>
+                </div>
+
+                <div class="filter-group">
+                  <div class="filter-group__label">
+                    <label for="filter-price">Precio máximo</label>
+                    <output id="filter-price-output" for="filter-price">$ 70.000</output>
+                  </div>
+                  <input
+                    class="price-range"
+                    id="filter-price"
+                    name="precio"
+                    type="range"
+                    min="15000"
+                    max="70000"
+                    step="500"
+                    value="70000"
+                  >
+                </div>
+
+                <fieldset class="filter-group filter-options">
+                  <legend>Disponibilidad</legend>
+                  <label>
+                    <input id="filter-available" name="disponibles" type="checkbox" value="1">
+                    Solo piezas disponibles
+                  </label>
+                  <label>
+                    <input id="filter-sale" name="ofertas" type="checkbox" value="1">
+                    Solo productos en oferta
+                  </label>
+                </fieldset>
+
+                <div class="filters-panel__actions">
+                  <button class="button button--pink" type="submit">Ver resultados</button>
+                  <button class="button button--secondary" id="clear-filters" type="button">
+                    Limpiar todo
+                  </button>
+                </div>
+              </form>
+            </aside>
+            <button class="filters-backdrop" type="button" tabindex="-1" aria-label="Cerrar filtros"></button>
+
+            <div class="shop-results">
+              <div class="shop-results__header">
+                <h2 id="shop-results-title">
+                  <span id="results-count">0</span> piezas
+                </h2>
+                <div class="active-filters" id="active-filters" aria-live="polite"></div>
+              </div>
+              <div class="product-grid" id="shop-products" aria-live="polite" aria-busy="false"></div>
+              <div class="empty-state" id="shop-empty" hidden>
+                <div class="stack stack--4">
+                  <span class="empty-state__symbol" aria-hidden="true">♡</span>
+                  <h2>No encontramos ese mood</h2>
+                  <p>Probá con menos filtros o buscá otra palabra.</p>
+                  <button class="button button--pink" type="button" data-clear-filters>
+                    Ver todas las piezas
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div id="site-footer"></div>
+    <div id="global-overlays"></div>
+    <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+    <script src="js/data/productos.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/tienda.js"></script>
+    <script src="js/chatbot.js"></script>
+    <script src="js/favoritos.js"></script>
+  </body>
+</html>
