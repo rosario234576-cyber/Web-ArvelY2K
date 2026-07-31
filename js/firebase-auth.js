@@ -43,9 +43,21 @@ function friendlyError(error) {
     "auth/too-many-requests": "Hubo demasiados intentos. Esperá unos minutos y volvé a probar.",
     "auth/network-request-failed": "No pudimos conectar con Firebase. Revisá tu conexión e intentá nuevamente.",
     "auth/operation-not-allowed": "El acceso con email y contraseña todavía no está habilitado en Firebase.",
-    "auth/unauthorized-domain": "Este dominio todavía no está autorizado en Firebase Authentication."
+    "auth/unauthorized-domain": "Este dominio todavía no está autorizado en Firebase Authentication.",
+    "auth/configuration-not-found": "Firebase Authentication no encuentra la configuración de este proyecto.",
+    "auth/invalid-api-key": "La clave pública de Firebase no es válida.",
+    "auth/app-not-authorized": "Esta web no está autorizada para usar este proyecto de Firebase.",
+    "auth/admin-restricted-operation": "Esta operación está restringida por la configuración de Firebase.",
+    "auth/operation-not-supported-in-this-environment": "El navegador o esta dirección no permiten completar la operación.",
+    "auth/user-disabled": "Esta cuenta fue deshabilitada en Firebase.",
+    "auth/missing-email": "Ingresá el correo electrónico.",
+    "auth/internal-error": "Firebase tuvo un error interno. Volvé a intentarlo en unos minutos."
   };
-  return messages[code] || "No pudimos completar la operación. Intentá nuevamente.";
+  return messages[code] || `No pudimos completar la operación (${code || "error desconocido"}).`;
+}
+
+function reportAuthError(context, error) {
+  console.error(`[Firebase Auth] ${context}:`, error?.code || "sin código", error?.message || error);
 }
 
 function safeNextPage() {
@@ -133,6 +145,7 @@ function bindRegistration() {
         location.href = "cuenta.html?registro=ok";
       }, 1200);
     } catch (error) {
+      reportAuthError("registro", error);
       setStatus(status, friendlyError(error), "error");
     } finally {
       setBusy(form, false);
@@ -159,6 +172,7 @@ function bindLogin() {
       );
       location.href = safeNextPage();
     } catch (error) {
+      reportAuthError("inicio de sesión", error);
       setStatus(status, friendlyError(error), "error");
     } finally {
       setBusy(form, false);
@@ -181,6 +195,7 @@ function bindLogin() {
         "success"
       );
     } catch (error) {
+      reportAuthError("recuperación de contraseña", error);
       setStatus(status, friendlyError(error), "error");
     } finally {
       reset.disabled = false;
@@ -260,11 +275,12 @@ async function initializeAuthentication() {
   });
 }
 
-initializeAuthentication().catch(() => {
+initializeAuthentication().catch((error) => {
+  reportAuthError("inicialización", error);
   showConfigurationNotice();
   setStatus(
     document.querySelector(".auth-status"),
-    "No pudimos inicializar Firebase Authentication.",
+    `No pudimos inicializar Firebase Authentication (${error?.code || "sin código"}).`,
     "error"
   );
 });
