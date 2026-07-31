@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Creá tu cuenta de Arvel Customs.">
+    <meta name="robots" content="noindex">
+    <meta name="theme-color" content="#2f1e2a">
+    <link rel="icon" type="image/png" href="assets/logo/IsoNegro.png">
+    <title>Crear cuenta | Arvel Customs</title>
+    <script>document.documentElement.classList.add("js");</script>
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/responsive.css">
+  </head>
+  <body data-page="registro">
+    <a class="skip-link" href="#main-content">Saltar al contenido</a>
+    <div id="site-header"></div>
+    <main class="auth-page" id="main-content" data-auth-page="register">
+      <div class="container auth-layout">
+        <div class="auth-intro" data-reveal>
+          <span class="eyebrow">Tu espacio Arvel</span>
+          <h1 class="display-title">Creá tu cuenta</h1>
+          <p class="lead">Guardá tu identidad de compra y accedé con seguridad desde cualquier dispositivo.</p>
+        </div>
+        <section class="auth-card" aria-labelledby="register-title" data-reveal>
+          <span class="eyebrow">Registro seguro</span>
+          <h2 id="register-title">Empezá acá</h2>
+          <p>Firebase protege tu contraseña. Arvel nunca puede verla.</p>
+          <div class="auth-config-notice" data-firebase-required hidden>
+            El registro estará disponible cuando completes <code>js/firebase-config.js</code>.
+          </div>
+          <form class="auth-form" id="register-form" data-auth-form>
+            <div class="auth-field">
+              <label for="register-name">Nombre y apellido</label>
+              <input id="register-name" name="name" type="text" autocomplete="name" minlength="2" maxlength="80" required>
+            </div>
+            <div class="auth-field">
+              <label for="register-email">Correo electrónico</label>
+              <input id="register-email" name="email" type="email" autocomplete="email" required>
+            </div>
+            <div class="auth-field">
+              <label for="register-password">Contraseña</label>
+              <div class="auth-input-wrap">
+                <input id="register-password" name="password" type="password" autocomplete="new-password" minlength="8" required aria-describedby="password-help">
+                <button class="auth-password-toggle" type="button" data-password-toggle="register-password" aria-pressed="false">Mostrar</button>
+              </div>
+              <small id="password-help">Mínimo 8 caracteres. Recomendamos mayúscula, minúscula, número y símbolo.</small>
+            </div>
+            <div class="auth-field">
+              <label for="register-password-confirmation">Repetir contraseña</label>
+              <div class="auth-input-wrap">
+                <input id="register-password-confirmation" name="passwordConfirmation" type="password" autocomplete="new-password" minlength="8" required>
+                <button class="auth-password-toggle" type="button" data-password-toggle="register-password-confirmation" aria-pressed="false">Mostrar</button>
+              </div>
+            </div>
+            <label class="auth-check">
+              <input name="privacy" type="checkbox" required>
+              <span>Acepto la <a href="privacidad.html">política de privacidad</a> y los <a href="terminos.html">términos</a>.</span>
+            </label>
+            <p class="auth-status" id="register-status" role="status" aria-live="polite" hidden></p>
+            <button class="button button--pink" type="submit">Crear cuenta</button>
+          </form>
+          <p class="auth-switch">¿Ya tenés cuenta? <a class="text-link" href="login.html">Iniciar sesión →</a></p>
+        </section>
+      </div>
+    </main>
+    <div id="site-footer"></div>
+    <div id="global-overlays"></div>
+    <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
+    <script src="js/components.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/chatbot.js"></script>
+    <script src="js/favoritos.js"></script>
+  </body>
+</html>

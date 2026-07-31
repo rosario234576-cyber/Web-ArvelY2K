@@ -75,7 +75,7 @@
               <a class="button button--pink" href="tienda.html">Entrar al drop</a>
               <a class="button button--secondary" href="nosotros.html">Conocer Arvel</a>
             </div>
-            <p class="home-hero__note">Hecho y seleccionado en Buenos Aires · Envíos a toda Argentina</p>
+            <p class="home-hero__note">100% HECHO EN ARGENTINA</p>
           </div>
 
           <figure class="home-hero__media" data-reveal>
@@ -117,8 +117,9 @@
               </p>
               <p class="drop-section__date">12 de agosto · 20:00 hs (Argentina)</p>
               <div class="cluster">
-                <button class="button button--pink" id="drop-reminder" type="button">
-                  Activar recordatorio
+                <button class="button button--pink drop-reminder" id="drop-reminder" type="button">
+                  <img class="drop-reminder__icon" src="assets/icons/campana.png" alt="" width="512" height="512">
+                  <span>Activar recordatorio</span>
                 </button>
                 <a
                   class="button button--secondary button--on-dark"
@@ -240,11 +241,6 @@
 
       <section class="section custom-intro home-section--gradient" aria-labelledby="custom-title">
         <div class="container custom-intro__layout">
-          <div class="custom-intro__art" aria-hidden="true" data-reveal>
-            <span>BEFORE</span>
-            <strong>→</strong>
-            <span>AFTER</span>
-          </div>
           <div class="stack stack--4" data-reveal>
             <span class="eyebrow">Custom by Arvel</span>
             <h2 class="display-title" id="custom-title">Tu idea, otra vida</h2>
@@ -270,23 +266,38 @@
               <h2 class="display-title" id="transformation-title">Antes / después</h2>
             </div>
           </div>
-          <div class="comparison" data-comparison data-reveal>
+          <div class="comparison comparison--real" data-comparison data-reveal>
             <div class="comparison__layer comparison__before">
               <span class="badge">Antes</span>
-              <strong>Denim<br>olvidado</strong>
+              <img
+                src="assets/images/AntesYDespues/Antes.jpg"
+                alt="Bolso antes de la intervención de Arvel"
+                width="1080"
+                height="1350"
+                loading="lazy"
+              >
             </div>
             <div class="comparison__layer comparison__after" data-comparison-after>
               <span class="badge badge--pink">Después</span>
-              <strong>Arvel<br>one-of-one</strong>
+              <img
+                src="assets/images/AntesYDespues/Despues.jpg"
+                alt="Bolso terminado después de la intervención custom de Arvel"
+                width="1080"
+                height="1350"
+                loading="lazy"
+              >
             </div>
             <label class="visually-hidden" for="comparison-range">Mostrar resultado de la transformación</label>
             <input class="comparison__range" id="comparison-range" type="range" min="0" max="100" value="52">
             <div class="comparison__handle" data-comparison-handle aria-hidden="true">↔</div>
           </div>
+          <p class="comparison__caption" data-reveal>
+            De bolso olvidado a pieza <em>one-of-one</em>. Mové el control para ver la transformación.
+          </p>
         </div>
       </section>
 
-      <section class="section home-section--light" aria-labelledby="mood-entry-title">
+      <section class="section home-section--light mood-entry-section" aria-labelledby="mood-entry-title">
         <div class="container">
           <div class="section__header" data-reveal>
             <div>
@@ -338,40 +349,22 @@
       </section>
 
       <section class="section home-section--light" aria-labelledby="community-title">
-        <div class="container">
+        <div class="container story-reviews__heading">
           <div class="section__header" data-reveal>
             <div>
-              <span class="eyebrow">Visto en la comunidad</span>
-              <h2 class="display-title" id="community-title">#ArvelIRL</h2>
+              <span class="eyebrow">Historias destacadas · clientas reales</span>
+              <h2 class="display-title" id="community-title">Arvel en sus vidas</h2>
             </div>
             <a class="text-link" href="https://www.instagram.com/stories/highlights/18113605399635699/" target="_blank" rel="noopener noreferrer">Ver destacadas ↗</a>
           </div>
-          <div class="community-carousel" data-community-carousel data-reveal>
-            <div class="community-carousel__viewport">
-              <div class="community-carousel__track">
-                <figure class="review-card community-carousel__slide">
-                  <blockquote>“La prenda se siente realmente mía. Las medidas estaban clarísimas y llegó hermosa.”</blockquote>
-                  <figcaption>— Mica, CABA</figcaption>
-                  <a class="text-link" href="https://www.instagram.com/stories/highlights/18113605399635699/" target="_blank" rel="noopener noreferrer">Ver historia ↗</a>
-                </figure>
-                <figure class="review-card review-card--dark community-carousel__slide">
-                  <blockquote>“Pedí una custom desde una idea muy suelta y Arvel la convirtió en algo que no había visto.”</blockquote>
-                  <figcaption>— Juli, Rosario</figcaption>
-                  <a class="text-link" href="https://www.instagram.com/stories/highlights/18113605399635699/" target="_blank" rel="noopener noreferrer">Ver historia ↗</a>
-                </figure>
-                <div class="community-callout community-carousel__slide">
-                  <span aria-hidden="true">✦</span>
-                  <p>Etiquetanos con <strong>#ArvelIRL</strong> para compartir tu look.</p>
-                  <a class="text-link" href="https://www.instagram.com/arvel.customsy2k/" target="_blank" rel="noopener noreferrer">Etiquetar a Arvel ↗</a>
-                </div>
-              </div>
-            </div>
-            <div class="community-carousel__controls">
-              <button type="button" data-carousel-prev aria-label="Ver historia anterior">←</button>
-              <p aria-live="polite"><span data-carousel-current>1</span> / 3</p>
-              <button type="button" data-carousel-next aria-label="Ver historia siguiente">→</button>
-            </div>
-          </div>
+        </div>
+        <div
+          class="story-marquee"
+          data-story-marquee
+          data-reveal
+          aria-label="Reseñas de clientas compartidas en historias de Instagram"
+        >
+          <div class="story-marquee__track" data-story-track></div>
         </div>
       </section>
 
@@ -417,11 +410,7 @@
     <div id="global-overlays"></div>
     <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase-config.js"></script>
-    <script src="js/supabase-client.js"></script>
     <script src="js/data/productos.js"></script>
-    <script src="js/supabase-catalog.js"></script>
     <script src="js/components.js"></script>
     <script src="js/main.js"></script>
     <script src="js/countdown.js"></script>

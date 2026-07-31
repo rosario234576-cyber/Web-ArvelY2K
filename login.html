@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Iniciá sesión en tu cuenta de Arvel Customs.">
+    <meta name="robots" content="noindex">
+    <meta name="theme-color" content="#2f1e2a">
+    <link rel="icon" type="image/png" href="assets/logo/IsoNegro.png">
+    <title>Iniciar sesión | Arvel Customs</title>
+    <script>document.documentElement.classList.add("js");</script>
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/responsive.css">
+  </head>
+  <body data-page="login">
+    <a class="skip-link" href="#main-content">Saltar al contenido</a>
+    <div id="site-header"></div>
+    <main class="auth-page" id="main-content" data-auth-page="login">
+      <div class="container auth-layout">
+        <div class="auth-intro" data-reveal>
+          <span class="eyebrow">Volvé a Arvel</span>
+          <h1 class="display-title">Tu cuenta,<br>tus piezas</h1>
+          <p class="lead">Ingresá para acceder a tu identidad dentro del universo Arvel.</p>
+        </div>
+        <section class="auth-card" aria-labelledby="login-title" data-reveal>
+          <span class="eyebrow">Acceso privado</span>
+          <h2 id="login-title">Iniciar sesión</h2>
+          <p>Usá el correo y la contraseña con los que creaste tu cuenta.</p>
+          <div class="auth-config-notice" data-firebase-required hidden>
+            El acceso estará disponible cuando completes <code>js/firebase-config.js</code>.
+          </div>
+          <form class="auth-form" id="login-form" data-auth-form>
+            <div class="auth-field">
+              <label for="login-email">Correo electrónico</label>
+              <input id="login-email" name="email" type="email" autocomplete="email" required>
+            </div>
+            <div class="auth-field">
+              <label for="login-password">Contraseña</label>
+              <div class="auth-input-wrap">
+                <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+                <button class="auth-password-toggle" type="button" data-password-toggle="login-password" aria-pressed="false">Mostrar</button>
+              </div>
+            </div>
+            <button class="auth-secondary" id="password-reset" type="button">Olvidé mi contraseña</button>
+            <p class="auth-status" id="login-status" role="status" aria-live="polite" hidden></p>
+            <button class="button button--pink" type="submit">Ingresar</button>
+          </form>
+          <p class="auth-switch">¿Todavía no tenés cuenta? <a class="text-link" href="registro.html">Crear cuenta →</a></p>
+        </section>
+      </div>
+    </main>
+    <div id="site-footer"></div>
+    <div id="global-overlays"></div>
+    <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
+    <script src="js/components.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/chatbot.js"></script>
+    <script src="js/favoritos.js"></script>
+  </body>
+</html>
