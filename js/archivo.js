@@ -1,6 +1,5 @@
-(async function () {
+(function () {
   "use strict";
-  await (window.ArvelCatalogReady || Promise.resolve());
 
   const products = Array.isArray(window.ARVEL_PRODUCTS)
     ? window.ARVEL_PRODUCTS.filter((product) => product.archived || product.soldOut)

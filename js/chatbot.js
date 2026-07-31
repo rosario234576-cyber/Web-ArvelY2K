@@ -7,63 +7,241 @@
   const messages = document.querySelector("#chatbot-messages");
   const form = document.querySelector("#chatbot-form");
   const input = document.querySelector("#chatbot-input");
+  const whatsapp = document.querySelector("#chatbot-whatsapp");
   if (!panel || !toggle || !close || !messages || !form || !input) return;
 
-  const answers = [
+  const conversation = [];
+  const stopWords = new Set([
+    "que", "como", "para", "con", "una", "uno", "unos", "unas", "del",
+    "las", "los", "por", "quiero", "tienen", "tenes", "hay", "algo",
+    "busco", "necesito", "sobre", "esta", "este", "esto", "hola"
+  ]);
+
+  const knowledge = [
     {
-      keywords: ["talle", "medida", "queda", "calce"],
-      response: "Para elegir bien, compará las medidas publicadas con una prenda tuya apoyada en plano. Si me decís qué pieza estás viendo y tus medidas aproximadas, te indico qué revisar."
+      keywords: ["talle", "medida", "calce", "queda", "pecho", "cintura", "cadera"],
+      answer: "Para elegir el talle, compará las medidas de la ficha con una prenda tuya apoyada en plano. Las etiquetas pueden variar entre marcas. Decime el nombre de la pieza y qué medida necesitás revisar."
     },
     {
-      keywords: ["envio", "correo", "codigo postal"],
-      response: "Hacemos envíos a toda Argentina. En cada ficha podés ingresar tu código postal para ver un valor orientativo; el importe final se confirma manualmente antes de despachar."
+      keywords: ["envio", "correo", "codigo postal", "cp", "sucursal", "domicilio", "retiro", "entrega"],
+      answer: "Hacemos envíos a toda Argentina y también coordinamos entregas en CABA. El cotizador por código postal muestra una estimación; la modalidad y el importe definitivo se eligen al finalizar la compra."
     },
     {
-      keywords: ["pago", "mercado pago", "transferencia", "efectivo"],
-      response: "Podés elegir Mercado Pago o transferencia. El efectivo se ofrece solo cuando coordinamos una entrega presencial en CABA. No ingreses datos de tarjeta en el chat."
+      keywords: ["pago", "transferencia", "mercado pago", "efectivo", "tarjeta", "cuotas", "descuento"],
+      answer: "Podés elegir transferencia o Mercado Pago. El efectivo se coordina únicamente para entregas presenciales habilitadas. Nunca envíes números de tarjeta ni códigos de seguridad por este chat o WhatsApp."
     },
     {
-      keywords: ["cambio", "devolver", "devolucion"],
-      response: "Como muchas piezas son únicas, conviene revisar medidas y condición antes de comprar. Para un caso puntual, escribinos con el nombre de la prenda y te explicamos las opciones."
+      keywords: ["cambio", "devolver", "devolucion", "problema", "falla", "reclamo"],
+      answer: "Para revisar un cambio necesitamos el número de pedido, la prenda y el motivo. Como muchas piezas son únicas, revisá medidas y estado antes de comprar. Un caso particular siempre lo confirma una persona de Arvel."
     },
     {
-      keywords: ["drop", "lanzamiento", "proximo"],
-      response: "El próximo drop anunciado es “After Internet”. En la home tenés la cuenta regresiva y el acceso a la comunidad de WhatsApp."
-    },
-    {
-      keywords: ["custom", "personalizada", "personalizado", "intervenir"],
-      response: "Sí, hacemos customs. Contanos qué prenda tenés, talle, idea, colores y presupuesto. Arvel crea una interpretación propia: no hacemos copias exactas."
+      keywords: ["custom", "personalizada", "personalizado", "intervenir", "transformar", "idea propia"],
+      answer: "Podemos transformar una prenda tuya o trabajar sobre una seleccionada por Arvel. Contanos prenda, talle, idea, colores, fecha y presupuesto. Cada diseño es una interpretación propia; no realizamos copias exactas."
     },
     {
       keywords: ["stock", "disponible", "vendida", "vendido"],
-      response: "El stock visible se vuelve a revisar al enviar el pedido por WhatsApp. Si una pieza figura vendida, podemos conversar una custom inspirada, nunca una copia exacta."
+      answer: "El stock se controla por combinación de talle y color. La ficha muestra la disponibilidad publicada, pero una pieza no queda reservada hasta que el pedido se registra y Arvel confirma el pago."
+    },
+    {
+      keywords: ["pedido", "comprar", "carrito", "confirmar", "seguimiento", "estado", "numero"],
+      answer: "Agregá la variante correcta al carrito y completá el checkout. Si el sistema todavía trabaja por WhatsApp, el pedido no se considera recibido hasta que envíes el mensaje preparado. Guardá siempre tu número de pedido."
+    },
+    {
+      keywords: ["lavar", "lavado", "cuidado", "material", "planchar", "secar"],
+      answer: "Cada pieza puede necesitar un cuidado diferente. Revisá “Material y cuidados” en su ficha. En prendas intervenidas recomendamos lavado suave, agua fría, del revés y sin secadora, salvo que la ficha indique otra cosa."
+    },
+    {
+      keywords: ["drop", "lanzamiento", "proximo", "novedad", "comunidad"],
+      answer: "Los drops y accesos anticipados se anuncian en la home, Instagram y la comunidad de WhatsApp. Las piezas limitadas pueden no reponerse."
     }
   ];
 
   function normalize(value) {
-    return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    return String(value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}\s]/gu, " ")
+      .replace(/\s+/g, " ")
+      .trim();
   }
 
-  function appendMessage(text, sender) {
-    const message = document.createElement("div");
-    message.className = `chatbot-message chatbot-message--${sender}`;
-    message.textContent = text;
-    messages.append(message);
+  function getProducts() {
+    return Array.isArray(window.PRODUCTOS)
+      ? window.PRODUCTOS.filter((product) => product && product.status !== "hidden")
+      : [];
+  }
+
+  function getCurrentProduct() {
+    if (!/producto\.html$/i.test(location.pathname)) return null;
+    const id = new URLSearchParams(location.search).get("id");
+    return getProducts().find((product) => String(product.id) === String(id)) || null;
+  }
+
+  function productStock(product) {
+    const values = Object.values(product?.stockByVariant || {});
+    if (values.length) {
+      return values.reduce((total, value) => total + Number(value || 0), 0);
+    }
+    return Number(product?.stock || 0);
+  }
+
+  function appendMessage(text, sender, options = {}) {
+    const wrapper = document.createElement("div");
+    wrapper.className = `chatbot-message chatbot-message--${sender}`;
+    wrapper.textContent = text;
+
+    if (options.link) {
+      const link = document.createElement("a");
+      link.className = "chatbot-message__link";
+      link.href = options.link.href;
+      link.textContent = options.link.label;
+      if (options.link.external) {
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+      }
+      wrapper.append(document.createElement("br"), link);
+    }
+
+    messages.append(wrapper);
     messages.scrollTop = messages.scrollHeight;
+    return wrapper;
+  }
+
+  function showTyping() {
+    const typing = appendMessage("Arvel Assistant está escribiendo…", "bot");
+    typing.classList.add("chatbot-message--typing");
+    return typing;
+  }
+
+  function updateWhatsAppLink() {
+    if (!whatsapp || !window.Arvel?.createWhatsAppUrl) return;
+    const transcript = conversation
+      .slice(-4)
+      .map((item) => `${item.sender === "user" ? "Clienta" : "Asistente"}: ${item.text}`)
+      .join("\n");
+    const current = getCurrentProduct();
+    const context = current ? `\nProducto que estaba viendo: ${current.name}` : "";
+    whatsapp.href = window.Arvel.createWhatsAppUrl(
+      `Hola Arvel, necesito ayuda con esta consulta:${context}\n\n${transcript}`
+    );
+  }
+
+  function productRecommendation(question) {
+    const terms = normalize(question)
+      .split(" ")
+      .filter((term) => term.length > 2 && !stopWords.has(term));
+    if (!terms.length) return null;
+
+    return getProducts()
+      .map((product) => {
+        const searchable = normalize([
+          product.name,
+          product.category,
+          product.collection,
+          product.shortDescription,
+          product.description,
+          ...(product.tags || []),
+          ...(product.colors || [])
+        ].join(" "));
+        const score = terms.reduce(
+          (total, term) => total + (searchable.includes(term) ? 1 : 0),
+          0
+        );
+        return { product, score };
+      })
+      .filter((item) => item.score > 0 && productStock(item.product) > 0)
+      .sort((a, b) => b.score - a.score)[0]?.product || null;
+  }
+
+  function answerForCurrentProduct(normalized) {
+    const product = getCurrentProduct();
+    if (!product) return null;
+    const asksAboutVariant = [
+      "stock", "disponible", "talle", "color", "medida", "material"
+    ].some((term) => normalized.includes(term));
+    if (!asksAboutVariant) return null;
+
+    const stock = productStock(product);
+    const sizes = product.sizes?.length ? product.sizes.join(", ") : "consultar en la ficha";
+    const colors = product.colors?.length ? product.colors.join(", ") : "consultar en la ficha";
+    return {
+      text: `${product.name}: ${stock > 0 ? `hay ${stock} unidad${stock === 1 ? "" : "es"} entre sus variantes` : "no figura con stock disponible"}. Talles: ${sizes}. Colores: ${colors}. Revisá la variante exacta antes de agregarla al carrito.`,
+      link: { href: location.href, label: "Volver a la ficha del producto" }
+    };
   }
 
   function findAnswer(question) {
     const normalized = normalize(question);
-    const match = answers.find((answer) =>
-      answer.keywords.some((keyword) => normalized.includes(normalize(keyword)))
-    );
-    return match?.response || "Quiero ayudarte bien, pero esa consulta necesita que la vea Arvel. Escribinos por WhatsApp y contanos un poco más; te respondemos personalmente.";
+
+    if (/^(hola|buenas|buen dia|buenas tardes|buenas noches|holi)\b/.test(normalized)) {
+      return { text: "¡Hola! ♡ Soy el asistente virtual de Arvel. ¿Buscás una prenda, ayuda con un talle, información de envío o querés pedir una custom?" };
+    }
+    if (/\b(gracias|genial|perfecto|listo)\b/.test(normalized)) {
+      return { text: "¡De nada! ♡ Si necesitás una confirmación personal, podés pasar la conversación a WhatsApp desde el botón de abajo." };
+    }
+    if (/\b(persona|humano|humana|asesora|whatsapp|contacto)\b/.test(normalized)) {
+      return {
+        text: "Te paso con Arvel por WhatsApp. Ya preparé el enlace con el contexto de esta conversación.",
+        link: {
+          href: whatsapp?.href || "#",
+          label: "Hablar con Arvel por WhatsApp",
+          external: true
+        }
+      };
+    }
+
+    const contextual = answerForCurrentProduct(normalized);
+    if (contextual) return contextual;
+
+    const recommendation = productRecommendation(question);
+    const asksForProduct = /\b(busco|producto|prenda|top|pollera|pantalon|vestido|remera|campera|denim|rosa|negro)\b/.test(normalized);
+    if (asksForProduct && recommendation) {
+      return {
+        text: `Encontré una opción que puede servirte: ${recommendation.name}. Tiene stock publicado y podés revisar sus talles, colores, medidas y fotos en la ficha.`,
+        link: {
+          href: `producto.html?id=${encodeURIComponent(recommendation.id)}`,
+          label: `Ver ${recommendation.name}`
+        }
+      };
+    }
+    if (asksForProduct) {
+      return {
+        text: "Contame un poco más: ¿qué tipo de prenda, color, talle o estilo buscás? Por ejemplo: “busco un top negro” o “quiero algo denim”.",
+        link: { href: "tienda.html", label: "Ver todo el shop" }
+      };
+    }
+
+    const matched = knowledge
+      .map((entry) => ({
+        entry,
+        score: entry.keywords.reduce(
+          (total, keyword) => total + (normalized.includes(normalize(keyword)) ? 1 : 0),
+          0
+        )
+      }))
+      .sort((a, b) => b.score - a.score)[0];
+
+    if (matched?.score > 0) return { text: matched.entry.answer };
+    return {
+      text: "No quiero inventarte una respuesta. Puedo ayudarte con productos, stock, talles, envíos, pagos, pedidos, cambios, cuidados o customs. Para algo más específico, pasá la consulta a WhatsApp."
+    };
   }
 
   function answerQuestion(question) {
     appendMessage(question, "user");
+    conversation.push({ sender: "user", text: question });
     input.value = "";
-    window.setTimeout(() => appendMessage(findAnswer(question), "bot"), 180);
+    updateWhatsAppLink();
+
+    const typing = showTyping();
+    window.setTimeout(() => {
+      typing.remove();
+      const answer = findAnswer(question);
+      appendMessage(answer.text, "bot", answer);
+      conversation.push({ sender: "bot", text: answer.text });
+      updateWhatsAppLink();
+    }, 380);
   }
 
   function openPanel() {
@@ -92,11 +270,4 @@
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && !panel.hidden) closePanel();
   });
-
-  /*
-   * Integración futura: reemplazar findAnswer() por un endpoint propio seguro.
-   * Las claves de Tidio, Botpress, Chatbase o IA deben vivir en el backend,
-   * nunca en este JavaScript público.
-   */
 })();
-

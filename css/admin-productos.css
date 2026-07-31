@@ -1,0 +1,317 @@
+.admin-body {
+  min-height: 100vh;
+  background: #f6f3f5;
+}
+
+.admin-header {
+  position: sticky;
+  z-index: 20;
+  top: 0;
+  display: grid;
+  min-height: 4.5rem;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 0 1.25rem;
+  border-bottom: 1px solid rgb(241 91 181 / 45%);
+  background: linear-gradient(105deg, #100b0e, #4a263c, #130c10);
+  color: #fff;
+  box-shadow: 0 0.5rem 2rem rgb(0 0 0 / 18%);
+}
+
+.admin-header > a {
+  display: block;
+  width: 7rem;
+  height: 3rem;
+  overflow: hidden;
+}
+
+.admin-header img {
+  width: 7rem;
+  max-width: none;
+  height: 7rem;
+  transform: translateY(-2rem);
+}
+
+.admin-header > div {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+}
+
+.admin-header .eyebrow {
+  margin: 0;
+  color: rgb(255 255 255 / 60%);
+}
+
+.admin-logout {
+  border-color: rgb(255 255 255 / 65%);
+  color: #fff;
+}
+
+.admin-main {
+  padding: clamp(1rem, 3vw, 2.5rem);
+}
+
+.admin-access {
+  display: grid;
+  width: min(100%, 38rem);
+  min-height: 24rem;
+  place-items: center;
+  align-content: center;
+  gap: 1.25rem;
+  margin: 3rem auto;
+  padding: 2rem;
+  border: 1px solid #d8cdd4;
+  background: #fff;
+  text-align: center;
+}
+
+.admin-access label {
+  width: min(100%, 28rem);
+}
+
+.admin-spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 0.2rem solid rgb(241 91 181 / 25%);
+  border-top-color: #f15bb5;
+  border-radius: 50%;
+  animation: admin-spin 700ms linear infinite;
+}
+
+@keyframes admin-spin { to { transform: rotate(1turn); } }
+
+.admin-shell {
+  display: grid;
+  width: min(100%, 100rem);
+  grid-template-columns: minmax(17rem, 0.65fr) minmax(0, 1.8fr);
+  gap: clamp(1rem, 2vw, 2rem);
+  margin-inline: auto;
+}
+
+.admin-catalog,
+.admin-editor {
+  border: 1px solid #d8cdd4;
+  background: #fff;
+  box-shadow: 0 0.8rem 2.2rem rgb(47 30 42 / 8%);
+}
+
+.admin-catalog {
+  position: sticky;
+  top: 5.5rem;
+  height: calc(100vh - 7rem);
+  padding: 1.25rem;
+  overflow: auto;
+}
+
+.admin-catalog__heading,
+.admin-editor__heading,
+.admin-fieldset__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.admin-catalog h1,
+.admin-editor h2 {
+  font-family: var(--font-display);
+  font-weight: 400;
+}
+
+.admin-product-list {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.admin-product-item {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 3rem 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem;
+  border: 1px solid #ddd4da;
+  background: #fff;
+  text-align: left;
+}
+
+.admin-product-item:hover,
+.admin-product-item.is-active {
+  border-color: #f15bb5;
+  background: #fff1f9;
+}
+
+.admin-product-item img {
+  width: 3rem;
+  height: 3.75rem;
+  background: #eee;
+  object-fit: cover;
+}
+
+.admin-product-item small,
+.admin-product-item span {
+  display: block;
+  color: #6c6269;
+  font-size: 0.72rem;
+}
+
+.admin-status {
+  padding: 0.25rem 0.45rem;
+  border-radius: 99rem;
+  background: #ece8eb;
+  font-size: 0.64rem !important;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.admin-status--published { background: #dff3e4; color: #17672d !important; }
+.admin-status--draft { background: #fff0c9; color: #725200 !important; }
+.admin-status--hidden { background: #eadfe6; color: #5c4052 !important; }
+
+.admin-editor {
+  padding: clamp(1.15rem, 3vw, 2.25rem);
+}
+
+.admin-save-state {
+  color: #667168;
+  font-size: 0.8rem;
+}
+
+#product-admin-form {
+  display: grid;
+  gap: 1.2rem;
+  margin-top: 1.5rem;
+}
+
+.admin-fieldset {
+  display: grid;
+  gap: 1rem;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  border: 1px solid #d9d0d6;
+}
+
+.admin-fieldset > legend,
+.admin-fieldset__heading legend {
+  padding-inline: 0.35rem;
+  font-weight: 800;
+}
+
+.admin-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.admin-form-grid--4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.admin-fieldset label {
+  display: grid;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.admin-variants {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.admin-variant-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 7rem 2.7rem;
+  gap: 0.65rem;
+}
+
+.admin-variant-row button {
+  border: 1px solid #d4cbd1;
+  background: #fff;
+  font-size: 1.25rem;
+}
+
+.admin-preview-images {
+  width: fit-content;
+}
+
+.admin-image-preview {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
+  gap: 0.75rem;
+}
+
+.admin-image-preview figure {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #d7cdd3;
+  aspect-ratio: 3 / 4;
+}
+
+.admin-image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin-image-preview button {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.3rem;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 50%;
+  background: #111;
+  color: #fff;
+}
+
+.admin-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+}
+
+.admin-checks label {
+  display: flex;
+  align-items: center;
+}
+
+.admin-form-error {
+  min-height: 1.4rem;
+  color: #a71919;
+  font-weight: 700;
+}
+
+.admin-form-actions {
+  position: sticky;
+  z-index: 5;
+  bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid #d7cdd3;
+  background: rgb(255 255 255 / 94%);
+  backdrop-filter: blur(0.7rem);
+}
+
+@media (max-width: 63.999rem) {
+  .admin-shell { grid-template-columns: 1fr; }
+  .admin-catalog { position: static; height: auto; max-height: 27rem; }
+  .admin-form-grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 39.999rem) {
+  .admin-header { grid-template-columns: auto 1fr auto; padding-inline: 0.75rem; }
+  .admin-header > a { width: 3.2rem; height: 3.2rem; overflow: visible; }
+  .admin-header img { width: 3.2rem; height: 3.2rem; transform: none; content: url("../assets/logo/IsoBlanco.png"); }
+  .admin-header .eyebrow { display: none; }
+  .admin-logout { min-width: auto; padding-inline: 0.8rem; }
+  .admin-main { padding: 0.65rem; }
+  .admin-form-grid,
+  .admin-form-grid--4 { grid-template-columns: 1fr; }
+  .admin-variant-row { grid-template-columns: 1fr 1fr; }
+  .admin-variant-row button { min-height: 2.7rem; }
+}

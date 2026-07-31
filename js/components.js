@@ -59,6 +59,26 @@
             <span>Customizadas en Buenos Aires</span>
             <span>♡</span>
           </div>
+          <div class="promo-bar__group" aria-hidden="true">
+            <span>Envíos a todo el país</span>
+            <span>✦</span>
+            <span>Piezas únicas: cuando se van, no vuelven</span>
+            <span>♡</span>
+            <span>Acceso anticipado por WhatsApp</span>
+            <span>✦</span>
+            <span>Customizadas en Buenos Aires</span>
+            <span>♡</span>
+          </div>
+          <div class="promo-bar__group" aria-hidden="true">
+            <span>Envíos a todo el país</span>
+            <span>✦</span>
+            <span>Piezas únicas: cuando se van, no vuelven</span>
+            <span>♡</span>
+            <span>Acceso anticipado por WhatsApp</span>
+            <span>✦</span>
+            <span>Customizadas en Buenos Aires</span>
+            <span>♡</span>
+          </div>
         </div>
       </div>
       <header class="site-header" id="site-header-inner">
@@ -75,7 +95,10 @@
           </button>
 
           <a class="site-logo" href="index.html" aria-label="Arvel Customs, inicio">
-            <img src="assets/logo/LogoBlanco.png" alt="" width="1080" height="1080">
+            <picture>
+              <source media="(max-width: 47.999rem)" srcset="assets/logo/IsoBlanco.png">
+              <img src="assets/logo/LogoBlanco.png" alt="" width="1080" height="1080">
+            </picture>
           </a>
 
           <nav class="desktop-navigation" aria-label="Navegación principal">
@@ -99,7 +122,11 @@
               <span class="header-action__label">Favoritos</span>
               <span class="counter" id="favorites-count" aria-label="0 favoritos">0</span>
             </a>
-            <a class="header-action" href="carrito.html" aria-label="Ver carrito">
+            <a class="header-action header-action--account" href="login.html" data-auth-account aria-label="Iniciar sesión">
+              <span class="header-action__account-icon" aria-hidden="true">◎</span>
+              <span class="header-action__label" data-auth-label>Ingresar</span>
+            </a>
+            <a class="header-action header-action--cart" href="carrito.html" aria-label="Ver carrito">
               <img class="header-action__icon" src="assets/icons/carrito-de-compras.png" alt="" width="512" height="512">
               <span class="header-action__label">Carrito</span>
               <span class="counter" id="cart-count" aria-label="0 productos">0</span>
@@ -114,11 +141,14 @@
           aria-hidden="true"
         >
           <div class="mobile-navigation__header">
-            <span class="eyebrow">Navegación</span>
+            <img class="mobile-navigation__watermark" src="assets/logo/IsoBlanco.png" alt="" width="1080" height="1080">
             <button class="mobile-navigation__close" type="button" aria-label="Cerrar menú">×</button>
           </div>
           <div class="mobile-navigation__links">
             ${createNavigationLinks("mobile-navigation__link")}
+            <a class="mobile-navigation__link mobile-navigation__link--account" href="login.html" data-auth-account>
+              <span data-auth-label>Ingresar</span>
+            </a>
           </div>
           <div class="mobile-navigation__social">
             <a href="${ARVEL_CONFIG.instagramUrl}" target="_blank" rel="noopener noreferrer">
@@ -142,81 +172,8 @@
     return `
       <footer class="site-footer">
         <div class="container">
-          <section class="footer-newsletter" aria-labelledby="newsletter-title">
-            <div>
-              <span class="eyebrow">Entrá antes que nadie</span>
-              <h2 class="display-title" id="newsletter-title">El próximo drop llega por mail</h2>
-            </div>
-            <form class="newsletter-form" id="newsletter-form" novalidate>
-              <label class="visually-hidden" for="newsletter-email">Correo electrónico</label>
-              <input
-                class="input"
-                id="newsletter-email"
-                name="email"
-                type="email"
-                autocomplete="email"
-                placeholder="tu@email.com"
-                aria-describedby="newsletter-help newsletter-status"
-                required
-              >
-              <button class="button button--pink" type="submit">Quiero entrar</button>
-              <small class="field-help" id="newsletter-help">
-                Demostración: todavía no se envían datos a un servicio externo.
-              </small>
-              <p class="newsletter-form__status" id="newsletter-status" aria-live="polite"></p>
-            </form>
-          </section>
-
-          <div class="site-footer__grid">
-            <div class="site-footer__brand">
-              <a class="footer-logo" href="index.html" aria-label="Arvel Customs, inicio">
-                <img src="assets/logo/LogoBlanco.png" alt="" width="1080" height="1080">
-              </a>
-              <p>Internet nostalgia, prendas que no se repiten.</p>
-              <div class="cluster">
-                <a href="${ARVEL_CONFIG.instagramUrl}" target="_blank" rel="noopener noreferrer">
-                  Instagram ↗
-                </a>
-                <a href="${ARVEL_CONFIG.tiktokUrl}" target="_blank" rel="noopener noreferrer">
-                  TikTok ↗
-                </a>
-                <a href="${createWhatsAppUrl("Hola Arvel, quiero hacer una consulta.")}" target="_blank" rel="noopener noreferrer">
-                  WhatsApp ↗
-                </a>
-                <a href="${ARVEL_CONFIG.whatsappCommunityUrl}" target="_blank" rel="noopener noreferrer">
-                  Comunidad ↗
-                </a>
-              </div>
-            </div>
-
-            <nav class="footer-column" aria-label="Comprar">
-              <h3>Comprar</h3>
-              <a href="tienda.html">Shop</a>
-              <a href="archivo.html">Archivo</a>
-              <a href="custom.html">Custom by Arvel</a>
-              <a href="lookbook.html">Lookbook</a>
-            </nav>
-
-            <nav class="footer-column" aria-label="Ayuda">
-              <h3>Ayuda</h3>
-              <a href="preguntas-frecuentes.html">Preguntas frecuentes</a>
-              <a href="envios.html">Envíos y entregas</a>
-              <a href="cambios.html">Cambios</a>
-              <a href="contacto.html">Contacto</a>
-            </nav>
-
-            <nav class="footer-column" aria-label="Información legal">
-              <h3>Legal</h3>
-              <a href="terminos.html">Términos</a>
-              <a href="privacidad.html">Privacidad</a>
-              <p>Pagos: Mercado Pago y transferencia.</p>
-              <p>Envíos a toda la Argentina.</p>
-            </nav>
-          </div>
-
           <div class="site-footer__bottom">
             <p>© <span id="current-year"></span> Arvel Customs</p>
-            <p>Diseñado para piezas únicas.</p>
           </div>
         </div>
       </footer>
@@ -254,21 +211,21 @@
             <span class="chatbot-panel__status" aria-hidden="true"></span>
             <div>
               <h2 id="chatbot-title">Arvel Assistant</h2>
-              <p>Asistente virtual · respuestas inmediatas</p>
+              <p>Asistente virtual · disponible ahora</p>
             </div>
           </div>
           <button id="chatbot-close" type="button" aria-label="Cerrar asistente">×</button>
         </header>
         <div class="chatbot-messages" id="chatbot-messages" aria-live="polite">
           <div class="chatbot-message chatbot-message--bot">
-            Hola ♡ Soy el asistente virtual de Arvel. Puedo ayudarte con talles,
-            envíos, pagos, cambios, drops y pedidos custom.
+            Hola ♡ Soy el asistente virtual de Arvel. Puedo buscar prendas y
+            ayudarte con stock, talles, envíos, pagos, cambios y customs.
           </div>
         </div>
         <div class="chatbot-quick-replies" aria-label="Preguntas rápidas">
-          <button type="button" data-chat-question="Ayudame con el talle">Ayudame con el talle</button>
+          <button type="button" data-chat-question="Quiero buscar una prenda">Buscar prendas</button>
+          <button type="button" data-chat-question="Ayudame con el talle">Elegir talle</button>
           <button type="button" data-chat-question="¿Cuánto cuesta el envío?">Consultar envíos</button>
-          <button type="button" data-chat-question="¿Qué medios de pago aceptan?">Medios de pago</button>
           <button type="button" data-chat-question="Quiero pedir una custom">Pedir una custom</button>
         </div>
         <form class="chatbot-form" id="chatbot-form">
@@ -284,7 +241,7 @@
           >
           <button type="submit" aria-label="Enviar pregunta">→</button>
         </form>
-        <a class="chatbot-whatsapp" href="${whatsappUrl}" target="_blank" rel="noopener noreferrer">
+        <a class="chatbot-whatsapp" id="chatbot-whatsapp" href="${whatsappUrl}" target="_blank" rel="noopener noreferrer">
           Hablar con una persona por WhatsApp ↗
         </a>
       </section>
@@ -301,7 +258,7 @@
           aria-controls="chatbot-panel"
           aria-expanded="false"
         >
-          ?
+          <img src="assets/icons/robot-de-chat.png" alt="" width="512" height="512">
         </button>
         <a
           class="floating-button floating-button--whatsapp"
@@ -421,4 +378,7 @@
   });
 
   renderGlobalComponents();
+  import("./firebase-auth.js").catch(() => {
+    // La web pública sigue funcionando aunque Firebase todavía no esté configurado.
+  });
 })();

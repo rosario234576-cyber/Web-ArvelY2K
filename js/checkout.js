@@ -1,9 +1,5 @@
-const CREATE_ORDER_URL =
-  window.ARVEL_SUPABASE_CONFIG?.createOrderUrl ||
-  "https://uwhnxaaivjreeyheuarw.supabase.co/functions/v1/create-order";
-(async function () {
+(function () {
   "use strict";
-  await (window.ArvelCatalogReady || Promise.resolve());
 
   const FREE_SHIPPING_THRESHOLD = 120000;
   const products = Array.isArray(window.ARVEL_PRODUCTS) ? window.ARVEL_PRODUCTS : [];
@@ -43,7 +39,7 @@ const CREATE_ORDER_URL =
   };
 
   function findProduct(id) {
-    return products.find((product) => String(product.id) === String(id));
+    return products.find((product) => product.id === Number(id));
   }
 
   function getVariantStock(product, size, color) {
@@ -354,10 +350,6 @@ const CREATE_ORDER_URL =
       total,
       items: cart.map((item) => ({
         ...item,
-        variantId:
-          item.variant_id ||
-          findProduct(item.id)?.variantIdByKey?.[`${item.size}|${item.color}`] ||
-          null,
         product: findProduct(item.id)
       }))
     };
@@ -401,7 +393,7 @@ const CREATE_ORDER_URL =
       .join("\n");
   }
 
-  function showConfirmation(order, receivedByServer = false) {
+  function showConfirmation(order) {
     elements.content.hidden = true;
     elements.confirmation.hidden = false;
     elements.confirmationName.textContent = order.customer.firstName;
@@ -422,56 +414,11 @@ const CREATE_ORDER_URL =
     elements.confirmationWhatsApp.href = window.Arvel.createWhatsAppUrl(
       buildWhatsAppMessage(order)
     );
-    elements.confirmationNotice.textContent = receivedByServer
-      ? "El pedido fue registrado correctamente con estado Pendiente de pago. No compartas datos de tarjeta por WhatsApp."
-      : "El pedido todavía no fue recibido, guardado, cobrado ni reservado. Para enviarlo a Arvel tenés que tocar el botón y confirmar el mensaje en WhatsApp.";
-    elements.confirmationWhatsAppLabel.textContent = receivedByServer
-      ? "Consultar este pedido por WhatsApp"
-      : "Enviar pedido por WhatsApp";
+    elements.confirmationNotice.textContent =
+      "El pedido todavía no fue recibido, guardado, cobrado ni reservado. Para enviarlo a Arvel tenés que tocar el botón y confirmar el mensaje en WhatsApp.";
+    elements.confirmationWhatsAppLabel.textContent = "Enviar pedido por WhatsApp";
     elements.confirmation.focus();
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  async function createOrder(order) {
-    const client = window.ArvelSupabase?.client;
-    if (!window.ArvelSupabase?.isConfigured || !client) return null;
-
-    const items = order.items.map((item) => ({
-      variant_id: item.variantId,
-      quantity: item.quantity
-    }));
-    if (items.some((item) => !item.variant_id)) {
-      throw new Error(
-        "Una variante del carrito no tiene UUID. Quitala y volvé a agregarla desde el catálogo actualizado."
-      );
-    }
-
-    const functionName = new URL(
-      window.ArvelSupabase.config.createOrderUrl || CREATE_ORDER_URL
-    ).pathname.split("/").filter(Boolean).pop();
-    const { data, error } = await client.functions.invoke(functionName, {
-      body: {
-        customer: order.customer,
-        address: order.address,
-        delivery: order.delivery,
-        payment: order.payment,
-        items,
-        observations: order.address.notes
-      }
-    });
-
-    if (error) {
-      let message = error.message;
-      try {
-        const details = await error.context?.json();
-        message = details?.error || details?.message || message;
-      } catch {
-        // La respuesta puede no incluir un cuerpo JSON.
-      }
-      throw new Error(message || "No se pudo registrar el pedido.");
-    }
-
-    return data;
   }
 
   function bindEvents() {
@@ -504,46 +451,11 @@ const CREATE_ORDER_URL =
       updateCheckoutProgress(event.target.closest(".checkout-block")?.id || null);
     });
 
-    elements.form.addEventListener("submit", async (event) => {
+    elements.form.addEventListener("submit", (event) => {
       event.preventDefault();
       if (!validateForm()) return;
-      const submitButton = event.submitter;
-      if (submitButton) {
-        submitButton.disabled = true;
-        submitButton.textContent = "Preparando...";
-      }
-
-      try {
-        const isConnected = Boolean(window.ArvelSupabase?.isConfigured);
-        const order = buildOrderData(isConnected ? null : generateOrderNumber());
-        const result = await createOrder(order);
-
-        if (result) {
-          order.orderNumber =
-            result.order_number ||
-            result.orderNumber ||
-            result.order?.order_number ||
-            result.order?.orderNumber;
-          order.createdAt = new Date(result.created_at || result.order?.created_at || Date.now());
-          if (!order.orderNumber) {
-            throw new Error("La función respondió sin número de pedido.");
-          }
-          localStorage.removeItem(window.ArvelStore.storageKeys.cart);
-          window.ArvelStore.updateGlobalCounters();
-          showConfirmation(order, true);
-        } else {
-          showConfirmation(order, false);
-        }
-      } catch (error) {
-        elements.globalError.textContent =
-          `${error.message} El pedido no fue recibido ni se eliminó del carrito.`;
-        elements.globalError.focus?.();
-      } finally {
-        if (submitButton) {
-          submitButton.disabled = false;
-          submitButton.textContent = "Preparar pedido";
-        }
-      }
+      const order = buildOrderData(generateOrderNumber());
+      showConfirmation(order);
     });
 
     updateCheckoutProgress("checkout-customer");

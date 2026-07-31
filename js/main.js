@@ -172,7 +172,48 @@
   }
 
   function initRevealAnimations() {
-    const elements = document.querySelectorAll("[data-reveal]");
+    const sections = document.querySelectorAll("main > section, main > article");
+    sections.forEach((section, sectionIndex) => {
+      section.setAttribute("data-reveal-section", "");
+
+      if (
+        !section.classList.contains("home-hero") &&
+        !section.querySelector(":scope > .scroll-sparkle")
+      ) {
+        const sparkle = document.createElement("span");
+        sparkle.className = `scroll-sparkle scroll-sparkle--${
+          sectionIndex % 2 ? "right" : "left"
+        } scroll-sparkle--variant-${sectionIndex % 3}`;
+        sparkle.setAttribute("aria-hidden", "true");
+        sparkle.innerHTML =
+          '<img src="assets/images/ElementosDeHome/25.png" alt="" width="512" height="512">';
+        section.prepend(sparkle);
+      }
+
+      const children = section.querySelectorAll(
+        ":scope > .container > *, :scope > *:not(.home-background-decor):not(.y2k-decor):not(.scroll-sparkle)"
+      );
+      children.forEach((child, childIndex) => {
+        if (child.closest("[data-no-motion]")) return;
+        child.setAttribute("data-reveal", "");
+        child.style.setProperty(
+          "--reveal-delay",
+          `${Math.min(childIndex, 5) * 85}ms`
+        );
+      });
+    });
+
+    const revealGroups = document.querySelectorAll(
+      ".content-card, .product-card, .lookbook-card, .moodboard__photo, " +
+      ".mood-entry-card, .info-editorial__item, .custom-process__steps li"
+    );
+    revealGroups.forEach((element, index) => {
+      if (element.closest("[data-no-motion]")) return;
+      element.setAttribute("data-reveal", "");
+      element.style.setProperty("--reveal-delay", `${Math.min(index % 4, 3) * 70}ms`);
+    });
+
+    const elements = document.querySelectorAll("[data-reveal], [data-reveal-section]");
     if (!elements.length) return;
 
     if (
@@ -191,10 +232,41 @@
           observer.unobserve(entry.target);
         });
       },
-      { threshold: 0.12 }
+      { threshold: 0.1, rootMargin: "0px 0px -6% 0px" }
     );
 
     elements.forEach((element) => observer.observe(element));
+  }
+
+  function initScrollProgress() {
+    const progress = document.createElement("div");
+    progress.className = "scroll-progress";
+    progress.setAttribute("aria-hidden", "true");
+    document.body.append(progress);
+
+    let scheduled = false;
+    function update() {
+      const maximum = document.documentElement.scrollHeight - window.innerHeight;
+      const ratio = maximum > 0 ? Math.min(1, Math.max(0, window.scrollY / maximum)) : 0;
+      progress.style.setProperty("--scroll-progress", String(ratio));
+      scheduled = false;
+    }
+
+    function requestUpdate() {
+      if (scheduled) return;
+      scheduled = true;
+      window.requestAnimationFrame(update);
+    }
+
+    update();
+    window.addEventListener("scroll", requestUpdate, { passive: true });
+    window.addEventListener("resize", requestUpdate);
+  }
+
+  function initPageEntrance() {
+    window.requestAnimationFrame(() => {
+      document.body.classList.add("page-entered");
+    });
   }
 
   function initAccordions() {
@@ -267,6 +339,67 @@
       if (event.key === "ArrowLeft") showSlide(activeIndex - 1);
       if (event.key === "ArrowRight") showSlide(activeIndex + 1);
     });
+  }
+
+  function initStoryMarquee() {
+    const marquee = document.querySelector("[data-story-marquee]");
+    const track = marquee?.querySelector("[data-story-track]");
+    if (!marquee || !track) return;
+
+    const storyFiles = [
+      "Reco1.jpeg", "Reco2.jpeg", "Reco3.jpeg", "Reco4.jpeg", "Reco5.jpeg",
+      "Reco6.jpeg", "Reco7.jpeg", "Reco9.jpeg", "Reco10.jpeg", "Reco11.jpeg",
+      "Reco12.jpeg", "Reco13.jpeg", "Reco14.jpeg", "Reco15.jpeg", "Reco16.jpeg",
+      "Reco17.jpeg", "Reco18.jpeg", "Reco19.jpeg", "Reco20.jpeg"
+    ];
+    const highlightUrl =
+      "https://www.instagram.com/stories/highlights/18113605399635699/";
+
+    function createStory(file, index, duplicate = false) {
+      const link = document.createElement("a");
+      link.className = "story-phone";
+      link.href = highlightUrl;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.setAttribute(
+        "aria-label",
+        duplicate ? "" : `Ver historia destacada de clienta ${index + 1}`
+      );
+      if (duplicate) {
+        link.setAttribute("aria-hidden", "true");
+        link.tabIndex = -1;
+      }
+
+      const progress = Array.from(
+        { length: 5 },
+        (_, itemIndex) => `<i class="${itemIndex === index % 5 ? "is-active" : ""}"></i>`
+      ).join("");
+      link.innerHTML = `
+        <span class="story-phone__shell">
+          <span class="story-phone__speaker" aria-hidden="true"></span>
+          <span class="story-phone__screen">
+            <span class="story-phone__progress" aria-hidden="true">${progress}</span>
+            <img
+              src="assets/images/Referencias/${file}"
+              alt="${duplicate ? "" : `Historia de una clienta usando una pieza Arvel`}"
+              width="736"
+              height="1600"
+              loading="lazy"
+              decoding="async"
+            >
+          </span>
+        </span>
+      `;
+      return link;
+    }
+
+    const original = document.createDocumentFragment();
+    const duplicate = document.createDocumentFragment();
+    storyFiles.forEach((file, index) => {
+      original.append(createStory(file, index));
+      duplicate.append(createStory(file, index, true));
+    });
+    track.append(original, duplicate);
   }
 
   function initMoodboardCarousel() {
@@ -364,6 +497,8 @@
   }
 
   function initialize() {
+    initPageEntrance();
+    initScrollProgress();
     renderFeaturedProducts();
     updateGlobalCounters();
     initPromoBar();
@@ -376,6 +511,7 @@
     initComparison();
     initDropReminder();
     initCommunityCarousel();
+    initStoryMarquee();
     initMoodboardCarousel();
     setCurrentYear();
   }
@@ -387,7 +523,5 @@
     showToast
   });
 
-  Promise.resolve(window.ArvelCatalogReady)
-    .catch(() => null)
-    .then(initialize);
+  initialize();
 })();

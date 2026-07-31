@@ -1,12 +1,11 @@
-(async function () {
+(function () {
   "use strict";
-  await (window.ArvelCatalogReady || Promise.resolve());
 
   const key = window.ArvelStore?.storageKeys.favorites || "arvel-favorites";
   const products = Array.isArray(window.ARVEL_PRODUCTS) ? window.ARVEL_PRODUCTS : [];
 
   function getFavorites() {
-    return window.ArvelStore.readStoredArray(key).map(String);
+    return window.ArvelStore.readStoredArray(key).map(Number);
   }
 
   function saveFavorites(favorites) {
@@ -22,7 +21,7 @@
   function syncButtons() {
     const favorites = getFavorites();
     document.querySelectorAll("[data-favorite-id]").forEach((button) => {
-      const id = String(button.dataset.favoriteId);
+      const id = Number(button.dataset.favoriteId);
       const active = favorites.includes(id);
       button.setAttribute("aria-pressed", String(active));
       button.setAttribute(
@@ -47,7 +46,7 @@
     const button = event.target.closest("[data-favorite-id]");
     if (!button) return;
 
-    const id = String(button.dataset.favoriteId);
+    const id = Number(button.dataset.favoriteId);
     const favorites = getFavorites();
     const index = favorites.indexOf(id);
     const removing = index >= 0;

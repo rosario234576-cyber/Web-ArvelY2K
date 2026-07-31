@@ -1,9 +1,11 @@
 (async function () {
   "use strict";
-  await (window.ArvelCatalogReady || Promise.resolve());
 
-  const products = Array.isArray(window.ARVEL_PRODUCTS)
-    ? window.ARVEL_PRODUCTS.filter((product) => !product.archived)
+  const catalog = window.ARVEL_PRODUCTS_READY
+    ? await window.ARVEL_PRODUCTS_READY
+    : window.ARVEL_PRODUCTS;
+  const products = Array.isArray(catalog)
+    ? catalog.filter((product) => !product.archived && (!product.status || product.status === "published"))
     : [];
   const favoritesOnly = new URLSearchParams(window.location.search).get("favoritos") === "1";
 
@@ -97,7 +99,7 @@
     const favoriteIds = favoritesOnly
       ? window.ArvelStore
           .readStoredArray(window.ArvelStore.storageKeys.favorites)
-          .map(String)
+          .map(Number)
       : [];
 
     return products.filter((product) => {
@@ -115,7 +117,7 @@
         product.price <= state.maxPrice &&
         (!state.available || (!product.soldOut && product.stock > 0)) &&
         (!state.sale || product.discount > 0) &&
-        (!favoritesOnly || favoriteIds.includes(String(product.id)))
+        (!favoritesOnly || favoriteIds.includes(product.id))
       );
     });
   }

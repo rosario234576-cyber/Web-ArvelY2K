@@ -1,6 +1,5 @@
-(async function () {
+(function () {
   "use strict";
-  await (window.ArvelCatalogReady || Promise.resolve());
 
   const FREE_SHIPPING_THRESHOLD = 120000;
   const STANDARD_SHIPPING_COST = 6500;
@@ -37,7 +36,7 @@
   }
 
   function findProduct(id) {
-    return products.find((product) => String(product.id) === String(id));
+    return products.find((product) => product.id === Number(id));
   }
 
   function getVariantStock(product, size, color) {
@@ -63,19 +62,10 @@
         }
 
         const safeQuantity = Math.min(Math.max(1, Number(item.quantity) || 1), stock);
-        const variantId =
-          item.variant_id ||
-          product.variantIdByKey?.[`${item.size}|${item.color}`] ||
-          null;
-        if (
-          safeQuantity !== item.quantity ||
-          item.price !== product.price ||
-          item.variant_id !== variantId
-        ) changed = true;
+        if (safeQuantity !== item.quantity || item.price !== product.price) changed = true;
 
         return {
           id: product.id,
-          variant_id: variantId,
           size: item.size,
           color: item.color,
           quantity: safeQuantity,
@@ -220,7 +210,7 @@
   function findItemIndex(cart, itemElement) {
     return cart.findIndex(
       (item) =>
-        String(item.id) === String(itemElement.dataset.cartId) &&
+        item.id === Number(itemElement.dataset.cartId) &&
         item.size === itemElement.dataset.size &&
         item.color === itemElement.dataset.color
     );
