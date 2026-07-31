@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Administrá tu cuenta de Arvel Customs.">
+    <meta name="robots" content="noindex">
+    <meta name="theme-color" content="#2f1e2a">
+    <link rel="icon" type="image/png" href="assets/logo/IsoNegro.png">
+    <title>Mi cuenta | Arvel Customs</title>
+    <script>document.documentElement.classList.add("js");</script>
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/responsive.css">
+  </head>
+  <body data-page="cuenta">
+    <a class="skip-link" href="#main-content">Saltar al contenido</a>
+    <div id="site-header"></div>
+    <main class="auth-page" id="main-content" data-auth-page="account">
+      <div class="container auth-layout">
+        <div class="auth-intro" data-reveal>
+          <span class="eyebrow">Identidad Arvel</span>
+          <h1 class="display-title">Mi cuenta</h1>
+          <p class="lead">Tu acceso personal, protegido por Firebase Authentication.</p>
+        </div>
+        <section class="auth-card auth-account" aria-labelledby="account-title" data-reveal>
+          <p id="account-loading">Comprobando tu sesión…</p>
+          <div class="auth-config-notice" data-firebase-required hidden>
+            Completá <code>js/firebase-config.js</code> para activar las cuentas.
+          </div>
+          <div id="account-guest" hidden>
+            <h2 id="account-title">Sesión no iniciada</h2>
+            <p>Ingresá para acceder a tu cuenta.</p>
+            <div class="cluster">
+              <a class="button button--pink" href="login.html?next=cuenta.html">Ingresar</a>
+              <a class="button button--secondary" href="registro.html">Registrarme</a>
+            </div>
+          </div>
+          <div id="account-content" hidden>
+            <span class="eyebrow">Sesión activa</span>
+            <h2 id="account-name">Clienta Arvel</h2>
+            <div class="auth-account__identity">
+              <strong>Correo electrónico</strong>
+              <span id="account-email"></span>
+              <span class="auth-account__verification" id="account-verification"></span>
+            </div>
+            <p class="auth-status" id="account-status" role="status" aria-live="polite" hidden></p>
+            <div class="cluster">
+              <button class="button button--pink" id="resend-verification" type="button">Reenviar verificación</button>
+              <button class="button button--secondary" id="account-logout" type="button">Cerrar sesión</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+    <div id="site-footer"></div>
+    <div id="global-overlays"></div>
+    <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
+    <script src="js/components.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/chatbot.js"></script>
+    <script src="js/favoritos.js"></script>
+  </body>
+</html>
