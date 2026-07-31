@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "arvel-custom",
+  "main": "server/worker.js",
+  "compatibility_date": "2026-07-30",
+  "assets": {
+    "directory": ".",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "arvel-custom-orders",
+      "database_id": "REEMPLAZAR_CON_ID_D1"
+    }
+  ]
+}
