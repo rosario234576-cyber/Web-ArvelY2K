@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="Checkout demostrativo de Arvel Customs para revisar entrega, pago y pedido."
+    >
+    <meta name="theme-color" content="#FAFAF8">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="es_AR">
+    <meta property="og:title" content="Finalizar pedido | Arvel Customs">
+    <meta
+      property="og:description"
+      content="Confirmá los datos de tu pedido y envialo a Arvel por WhatsApp."
+    >
+    <link rel="icon" type="image/png" href="assets/logo/IsoNegro.png">
+    <title>Finalizar pedido | Arvel Customs</title>
+    <script>
+      document.documentElement.classList.add("js");
+    </script>
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/responsive.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#contenido-principal">Saltar al contenido</a>
+    <div id="site-header"></div>
+
+    <main id="contenido-principal">
+      <header class="checkout-header">
+        <div class="container">
+          <span class="eyebrow">Último paso</span>
+          <h1>Confirmá <em>tu pedido</em></h1>
+          <div class="notice checkout-demo-notice">
+            <strong>Checkout demostrativo.</strong>
+            <span>
+              No procesa pagos ni almacena tus datos. Al finalizar podrás
+              enviar el resumen por WhatsApp.
+            </span>
+          </div>
+        </div>
+      </header>
+
+      <section class="checkout-section" aria-labelledby="checkout-title">
+        <div class="container">
+          <h2 class="visually-hidden" id="checkout-title">Datos para finalizar el pedido</h2>
+
+          <div class="checkout-empty empty-state" id="checkout-empty" hidden>
+            <div class="stack stack--4">
+              <span class="empty-state__symbol" aria-hidden="true">♡</span>
+              <h2>No hay piezas para confirmar</h2>
+              <p>Agregá al menos una pieza al carrito antes de continuar.</p>
+              <a class="button button--pink" href="tienda.html">Ir al shop</a>
+            </div>
+          </div>
+
+          <div class="checkout-layout" id="checkout-content" hidden>
+            <form class="checkout-form" id="checkout-form" novalidate>
+              <p class="checkout-form__global-error" id="checkout-global-error" role="alert"></p>
+
+              <nav class="checkout-progress" aria-label="Progreso del checkout">
+                <a href="#checkout-customer" data-checkout-step="checkout-customer">
+                  <span>01</span>
+                  <strong>Datos</strong>
+                </a>
+                <a href="#checkout-address" data-checkout-step="checkout-address">
+                  <span>02</span>
+                  <strong>Dirección</strong>
+                </a>
+                <a href="#delivery-group" data-checkout-step="delivery-group">
+                  <span>03</span>
+                  <strong>Entrega</strong>
+                </a>
+                <a href="#payment-group" data-checkout-step="payment-group">
+                  <span>04</span>
+                  <strong>Pago</strong>
+                </a>
+              </nav>
+
+              <fieldset class="checkout-block" id="checkout-customer">
+                <legend>01 · Tus datos</legend>
+                <div class="checkout-fields">
+                  <div class="form-field">
+                    <label for="first-name">Nombre *</label>
+                    <input class="input" id="first-name" name="firstName" type="text" autocomplete="given-name" required>
+                    <p class="field-error" id="first-name-error"></p>
+                  </div>
+                  <div class="form-field">
+                    <label for="last-name">Apellido *</label>
+                    <input class="input" id="last-name" name="lastName" type="text" autocomplete="family-name" required>
+                    <p class="field-error" id="last-name-error"></p>
+                  </div>
+                  <div class="form-field">
+                    <label for="email">Correo electrónico *</label>
+                    <input class="input" id="email" name="email" type="email" autocomplete="email" required>
+                    <p class="field-error" id="email-error"></p>
+                  </div>
+                  <div class="form-field">
+                    <label for="phone">Teléfono *</label>
+                    <input
+                      class="input"
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      autocomplete="tel"
+                      inputmode="tel"
+                      placeholder="11 1234 5678"
+                      minlength="8"
+                      required
+                    >
+                    <p class="field-error" id="phone-error"></p>
+                  </div>
+                  <div class="form-field checkout-field--full" id="dni-field" hidden>
+                    <label for="dni">DNI <span class="text-muted">(requerido para Correo Argentino)</span></label>
+                    <input
+                      class="input"
+                      id="dni"
+                      name="dni"
+                      type="text"
+                      inputmode="numeric"
+                      autocomplete="off"
+                      pattern="[0-9]{7,8}"
+                      placeholder="Sin puntos"
+                    >
+                    <p class="field-help">Se usa únicamente para preparar el envío y no se guarda en este sitio.</p>
+                    <p class="field-error" id="dni-error"></p>
+                  </div>
+                </div>
+              </fieldset>
+
+              <fieldset class="checkout-block" id="checkout-address">
+                <legend>02 · Dirección de entrega</legend>
+                <div class="checkout-fields">
+                  <div class="form-field">
+                    <label for="province">Provincia *</label>
+                    <select class="select" id="province" name="province" autocomplete="address-level1" required>
+                      <option value="">Seleccionar</option>
+                      <option>Buenos Aires</option>
+                      <option>Ciudad Autónoma de Buenos Aires</option>
+                      <option>Catamarca</option>
+                      <option>Chaco</option>
+                      <option>Chubut</option>
+                      <option>Córdoba</option>
+                      <option>Corrientes</option>
+                      <option>Entre Ríos</option>
+                      <option>Formosa</option>
+                      <option>Jujuy</option>
+                      <option>La Pampa</option>
+                      <option>La Rioja</option>
+                      <option>Mendoza</option>
+                      <option>Misiones</option>
+                      <option>Neuquén</option>
+                      <option>Río Negro</option>
+                      <option>Salta</option>
+                      <option>San Juan</option>
+                      <option>San Luis</option>
+                      <option>Santa Cruz</option>
+                      <option>Santa Fe</option>
+                      <option>Santiago del Estero</option>
+                      <option>Tierra del Fuego</option>
+                      <option>Tucumán</option>
+                    </select>
+                    <p class="field-error" id="province-error"></p>
+                  </div>
+                  <div class="form-field">
+                    <label for="city">Ciudad *</label>
+                    <input class="input" id="city" name="city" type="text" autocomplete="address-level2" required>
+                    <p class="field-error" id="city-error"></p>
+                  </div>
+                  <div class="form-field">
+                    <label for="postal-code">Código postal *</label>
+                    <input
+                      class="input"
+                      id="postal-code"
+                      name="postalCode"
+                      type="text"
+                      autocomplete="postal-code"
+                      minlength="4"
+                      maxlength="8"
+                      required
+                    >
+                    <p class="field-error" id="postal-code-error"></p>
+                  </div>
+                  <div class="form-field">
+                    <label for="street">Dirección *</label>
+                    <input class="input" id="street" name="street" type="text" autocomplete="address-line1" required>
+                    <p class="field-error" id="street-error"></p>
+                  </div>
+                  <div class="form-field">
+                    <label for="street-number">Número *</label>
+                    <input class="input" id="street-number" name="streetNumber" type="text" inputmode="numeric" required>
+                    <p class="field-error" id="street-number-error"></p>
+                  </div>
+                  <div class="form-field">
+                    <label for="apartment">Piso o departamento <span class="text-muted">(opcional)</span></label>
+                    <input class="input" id="apartment" name="apartment" type="text" autocomplete="address-line2">
+                    <p class="field-error" id="apartment-error"></p>
+                  </div>
+                  <div class="form-field checkout-field--full">
+                    <label for="delivery-references">Referencias para la entrega <span class="text-muted">(opcional)</span></label>
+                    <textarea class="textarea" id="delivery-references" name="deliveryReferences" rows="2" maxlength="300" placeholder="Ej. portón negro, timbre 2, entre calles..."></textarea>
+                    <p class="field-help">Máximo 300 caracteres.</p>
+                    <p class="field-error" id="delivery-references-error"></p>
+                  </div>
+                  <div class="form-field checkout-field--full">
+                    <label for="notes">Observaciones <span class="text-muted">(opcional)</span></label>
+                    <textarea class="textarea" id="notes" name="notes" rows="3" maxlength="400"></textarea>
+                    <p class="field-help">Máximo 400 caracteres.</p>
+                    <p class="field-error" id="notes-error"></p>
+                  </div>
+                </div>
+              </fieldset>
+
+              <fieldset class="checkout-block choice-group" id="delivery-group" aria-describedby="delivery-error">
+                <legend>03 · Método de entrega *</legend>
+                <div class="checkout-choices">
+                  <label class="checkout-choice">
+                    <input type="radio" name="delivery" value="correo-sucursal" data-label="Correo Argentino a sucursal" data-cost="5500" required>
+                    <span><strong>Correo Argentino a sucursal</strong><small id="correo-branch-cost-label">Ingresá tu código postal para estimar el costo.</small></span>
+                  </label>
+                  <label class="checkout-choice">
+                    <input type="radio" name="delivery" value="correo-domicilio" data-label="Correo Argentino a domicilio" data-cost="7800">
+                    <span><strong>Correo Argentino a domicilio</strong><small id="correo-home-cost-label">Ingresá tu código postal para estimar el costo.</small></span>
+                  </label>
+                  <label class="checkout-choice">
+                    <input type="radio" name="delivery" value="punto" data-label="Punto de retiro" data-cost="4500">
+                    <span><strong>Punto de retiro</strong><small>Retiro en punto asociado · desde $4.500</small></span>
+                  </label>
+                  <label class="checkout-choice">
+                    <input type="radio" name="delivery" value="encuentro" data-label="Encuentro coordinado en CABA" data-cost="0">
+                    <span><strong>Encuentro coordinado en CABA</strong><small>Elegí un punto · viático desde $0</small></span>
+                  </label>
+                </div>
+                <div class="meeting-point-selector" id="meeting-point-selector" hidden>
+                  <label for="meeting-point">Punto de encuentro *</label>
+                  <select class="select" id="meeting-point" name="meetingPoint">
+                    <option value="">Seleccioná un punto</option>
+                    <optgroup label="Sin viático">
+                      <option value="Estación Once" data-cost="0">Estación Once · sin viático</option>
+                      <option value="Congreso de la Nación" data-cost="0">Congreso de la Nación · sin viático</option>
+                      <option value="Estación SUBTE Congreso (Línea A)" data-cost="0">Estación SUBTE Congreso (Línea A) · sin viático</option>
+                    </optgroup>
+                    <optgroup label="Viático $1.500">
+                      <option value="Obelisco" data-cost="1500">Obelisco · $1.500</option>
+                      <option value="Abasto Shopping" data-cost="1500">Abasto Shopping · $1.500</option>
+                      <option value="Teatro Colón" data-cost="1500">Teatro Colón · $1.500</option>
+                      <option value="Facultad de Medicina" data-cost="1500">Facultad de Medicina · $1.500</option>
+                      <option value="Plaza de Mayo" data-cost="1500">Plaza de Mayo · $1.500</option>
+                      <option value="Constitución" data-cost="1500">Constitución · $1.500</option>
+                      <option value="Estación Retiro" data-cost="1500">Estación Retiro · $1.500</option>
+                    </optgroup>
+                    <optgroup label="Viático $2.000">
+                      <option value="Barrio Chino" data-cost="2000">Barrio Chino · $2.000</option>
+                      <option value="Shopping Alto Palermo" data-cost="2000">Shopping Alto Palermo · $2.000</option>
+                      <option value="Parque Centenario" data-cost="2000">Parque Centenario · $2.000</option>
+                      <option value="Parque Patricios" data-cost="2000">Parque Patricios · $2.000</option>
+                    </optgroup>
+                  </select>
+                  <p class="field-error" id="meeting-point-error"></p>
+                  <small class="field-help" id="meeting-point-cost">El día y horario se coordinan después de confirmar la compra.</small>
+                </div>
+                <p class="field-error" id="delivery-error"></p>
+                <p class="field-help checkout-shipping-note">Los importes son orientativos. Arvel confirma manualmente disponibilidad, costo final y coordinación antes del pago.</p>
+              </fieldset>
+
+              <fieldset class="checkout-block choice-group" id="payment-group" aria-describedby="payment-error">
+                <legend>04 · Método de pago *</legend>
+                <div class="checkout-choices">
+                  <label class="checkout-choice">
+                    <input type="radio" name="payment" value="mercado-pago" data-label="Mercado Pago" required>
+                    <span><strong>Mercado Pago</strong><small>Se coordinará un enlace seguro por fuera de esta demo.</small></span>
+                  </label>
+                  <label class="checkout-choice">
+                    <input type="radio" name="payment" value="transferencia" data-label="Transferencia">
+                    <span><strong>Transferencia</strong><small>Los datos se compartirán al confirmar disponibilidad.</small></span>
+                  </label>
+                  <label class="checkout-choice" id="cash-choice">
+                    <input type="radio" name="payment" value="efectivo" data-label="Efectivo al retirar" disabled>
+                    <span><strong>Efectivo al retirar</strong><small>Disponible solo para encuentros coordinados.</small></span>
+                  </label>
+                </div>
+                <p class="field-error" id="payment-error"></p>
+              </fieldset>
+
+              <div class="checkout-terms">
+                <label>
+                  <input id="terms" name="terms" type="checkbox" required>
+                  <span>
+                    Acepto los <a href="terminos.html" target="_blank">términos de compra</a>. *
+                  </span>
+                </label>
+                <p class="field-error" id="terms-error"></p>
+              </div>
+
+              <div class="checkout-terms">
+                <label>
+                  <input id="privacy" name="privacy" type="checkbox" required>
+                  <span>
+                    Acepto que mis datos se utilicen únicamente para preparar este pedido y el mensaje de WhatsApp, según la
+                    <a href="privacidad.html" target="_blank">política de privacidad</a>. *
+                  </span>
+                </label>
+                <p class="field-error" id="privacy-error"></p>
+              </div>
+
+              <button class="button button--pink checkout-submit" type="submit">
+                Preparar pedido
+              </button>
+            </form>
+
+            <aside class="checkout-summary" aria-labelledby="checkout-summary-title">
+              <h2 id="checkout-summary-title">Tu pedido</h2>
+              <div class="checkout-summary__items" id="checkout-items"></div>
+              <dl class="checkout-summary__totals">
+                <div><dt>Subtotal</dt><dd id="checkout-subtotal">$ 0</dd></div>
+                <div><dt>Entrega</dt><dd id="checkout-shipping">A calcular</dd></div>
+                <div class="checkout-summary__total"><dt>Total</dt><dd id="checkout-total">$ 0</dd></div>
+              </dl>
+              <a class="text-link" href="carrito.html">← Editar carrito</a>
+            </aside>
+          </div>
+
+          <section class="order-confirmation" id="order-confirmation" tabindex="-1" aria-labelledby="confirmation-title" hidden>
+            <div class="order-confirmation__mark" aria-hidden="true">✓</div>
+            <span class="eyebrow">Pedido preparado</span>
+            <h2 id="confirmation-title">Gracias, <span id="confirmation-name"></span></h2>
+            <p>
+              Tu número de pedido demostrativo es
+              <strong id="confirmation-order-number"></strong>.
+            </p>
+            <div class="notice" id="confirmation-notice">
+              Este pedido todavía no fue enviado, cobrado ni reservado. Usá el
+              botón para compartirlo con Arvel por WhatsApp.
+            </div>
+            <div class="order-confirmation__summary" id="confirmation-summary"></div>
+            <a
+              class="button button--pink"
+              id="confirmation-whatsapp"
+              href="#"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span id="confirmation-whatsapp-label">Enviar pedido por WhatsApp</span>
+            </a>
+            <a class="button button--secondary" href="tienda.html">Volver al shop</a>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <div id="site-footer"></div>
+    <div id="global-overlays"></div>
+    <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/data/productos.js"></script>
+    <script src="js/supabase-catalog.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/shipping.js"></script>
+    <script src="js/checkout.js"></script>
+    <script src="js/chatbot.js"></script>
+    <script src="js/favoritos.js"></script>
+  </body>
+</html>

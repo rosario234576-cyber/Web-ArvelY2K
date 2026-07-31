@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="Revisá las piezas, variantes y cantidades de tu carrito de Arvel Customs."
+    >
+    <meta name="theme-color" content="#FAFAF8">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="es_AR">
+    <meta property="og:title" content="Tu carrito | Arvel Customs">
+    <meta
+      property="og:description"
+      content="Revisá tu selección de piezas únicas antes de finalizar la compra."
+    >
+    <link rel="icon" type="image/png" href="assets/logo/IsoNegro.png">
+    <title>Tu carrito | Arvel Customs</title>
+    <script>
+      document.documentElement.classList.add("js");
+    </script>
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/responsive.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#contenido-principal">Saltar al contenido</a>
+    <div id="site-header"></div>
+
+    <main id="contenido-principal">
+      <header class="cart-hero">
+        <div class="container">
+          <span class="eyebrow">Tus elegidas</span>
+          <h1>Carrito <em>de compras</em></h1>
+          <p>Las piezas no quedan reservadas hasta confirmar el pedido.</p>
+        </div>
+      </header>
+
+      <section class="cart-section" aria-labelledby="cart-title">
+        <div class="container">
+          <h2 class="visually-hidden" id="cart-title">Productos en el carrito</h2>
+
+          <div class="cart-empty empty-state" id="cart-empty" hidden>
+            <div class="stack stack--4">
+              <span class="empty-state__symbol" aria-hidden="true">♡</span>
+              <h2>Tu carrito está esperando un flechazo</h2>
+              <p>Explorá el drop y guardá una pieza antes de que se vaya.</p>
+              <a class="button button--pink" href="tienda.html">Ir al shop</a>
+            </div>
+          </div>
+
+          <div class="cart-layout" id="cart-content" hidden>
+            <div class="cart-products">
+              <div class="cart-products__header">
+                <p><span id="cart-item-count">0</span> productos</p>
+                <button class="cart-clear-button" id="clear-cart" type="button">
+                  Vaciar carrito
+                </button>
+              </div>
+              <div class="cart-list" id="cart-list" aria-live="polite"></div>
+              <a class="text-link cart-continue" href="tienda.html">← Continuar comprando</a>
+            </div>
+
+            <aside class="cart-summary" aria-labelledby="summary-title">
+              <h2 id="summary-title">Resumen</h2>
+
+              <div class="shipping-progress">
+                <div class="shipping-progress__message" id="shipping-progress-message"></div>
+                <div
+                  class="shipping-progress__track"
+                  role="progressbar"
+                  aria-label="Progreso para obtener envío gratis"
+                  aria-valuemin="0"
+                  aria-valuemax="120000"
+                  aria-valuenow="0"
+                  id="shipping-progress"
+                >
+                  <span id="shipping-progress-bar"></span>
+                </div>
+              </div>
+
+              <dl class="cart-totals">
+                <div>
+                  <dt>Subtotal</dt>
+                  <dd id="cart-subtotal">$ 0</dd>
+                </div>
+                <div class="cart-totals__discount" id="discount-row" hidden>
+                  <dt>Ahorro en productos</dt>
+                  <dd id="cart-discount">− $ 0</dd>
+                </div>
+                <div>
+                  <dt>Envío estimado</dt>
+                  <dd id="cart-shipping">$ 0</dd>
+                </div>
+                <div class="cart-totals__total">
+                  <dt>Total estimado</dt>
+                  <dd id="cart-total">$ 0</dd>
+                </div>
+              </dl>
+
+              <p class="cart-summary__note">
+                El costo final puede cambiar según la provincia y el método de
+                entrega elegido en el checkout.
+              </p>
+
+              <a class="button button--pink cart-checkout-button" href="checkout.html">
+                Finalizar compra
+              </a>
+
+              <div class="cart-summary__payments">
+                <p><strong>◇</strong> Mercado Pago</p>
+                <p><strong>↗</strong> Transferencia</p>
+                <p><strong>⌖</strong> Retiro coordinado</p>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section--pink cart-recommendations" id="cart-recommendations-section" aria-labelledby="cart-recommendations-title" hidden>
+        <div class="container">
+          <div class="section__header">
+            <div>
+              <span class="eyebrow">Todavía disponibles</span>
+              <h2 class="display-title" id="cart-recommendations-title">Sumá al mood</h2>
+            </div>
+          </div>
+          <div class="product-grid" id="cart-recommendations"></div>
+        </div>
+      </section>
+    </main>
+
+    <dialog class="confirm-dialog" id="clear-cart-dialog" aria-labelledby="clear-cart-title">
+      <div class="stack stack--4">
+        <span class="eyebrow">Confirmación</span>
+        <h2 id="clear-cart-title">¿Vaciar todo el carrito?</h2>
+        <p>Las piezas se eliminarán de este dispositivo.</p>
+        <div class="confirm-dialog__actions">
+          <button class="button button--secondary" id="cancel-clear-cart" type="button">
+            Conservar piezas
+          </button>
+          <button class="button button--pink" id="confirm-clear-cart" type="button">
+            Sí, vaciar
+          </button>
+        </div>
+      </div>
+    </dialog>
+
+    <div id="site-footer"></div>
+    <div id="global-overlays"></div>
+    <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/data/productos.js"></script>
+    <script src="js/supabase-catalog.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/carrito.js"></script>
+    <script src="js/chatbot.js"></script>
+    <script src="js/favoritos.js"></script>
+  </body>
+</html>

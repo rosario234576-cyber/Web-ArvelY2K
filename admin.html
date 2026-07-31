@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#2f1e2a">
+    <title>Panel de productos | Arvel Customs</title>
+    <link rel="icon" type="image/png" href="assets/logo/IsoNegro.png">
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/admin.css">
+  </head>
+  <body class="admin-page">
+    <a class="skip-link" href="#admin-main">Saltar al contenido</a>
+
+    <header class="admin-header">
+      <a href="index.html" aria-label="Volver a Arvel Customs">
+        <img src="assets/logo/LogoBlanco.png" alt="Arvel Customs" width="1080" height="1080">
+      </a>
+      <div>
+        <span class="eyebrow">Private access</span>
+        <strong>Product OS</strong>
+      </div>
+      <button class="button button--secondary" id="admin-logout" type="button" hidden>
+        Cerrar sesión
+      </button>
+    </header>
+
+    <main id="admin-main">
+      <section class="admin-login" id="admin-login" aria-labelledby="admin-login-title">
+        <form class="admin-login__card" id="admin-login-form">
+          <span class="eyebrow">Arvel Customs</span>
+          <h1 id="admin-login-title">Panel privado</h1>
+          <p>Ingresá con el usuario administrador creado en Supabase Auth.</p>
+          <label>
+            Correo electrónico
+            <input class="input" id="admin-email" type="email" autocomplete="username" required>
+          </label>
+          <label>
+            Contraseña
+            <input class="input" id="admin-password" type="password" autocomplete="current-password" required>
+          </label>
+          <p class="field-error" id="admin-login-error" role="alert"></p>
+          <button class="button button--pink" type="submit">Ingresar</button>
+          <p class="field-help" id="admin-config-help" hidden>
+            Falta configurar la Publishable/Anon key en <code>js/supabase-config.js</code>.
+          </p>
+        </form>
+      </section>
+
+      <section class="admin-shell" id="admin-shell" hidden>
+        <aside class="admin-sidebar">
+          <span class="eyebrow">Catálogo</span>
+          <h1>Productos</h1>
+          <p>Creá borradores, cargá variantes y publicá cuando la ficha esté lista.</p>
+          <button class="button button--pink" id="admin-new-product" type="button">
+            ＋ Nuevo producto
+          </button>
+          <div class="admin-stats" id="admin-stats"></div>
+        </aside>
+
+        <div class="admin-workspace">
+          <section class="admin-product-list" aria-labelledby="admin-list-title">
+            <div class="admin-section-heading">
+              <div>
+                <span class="eyebrow">Inventario</span>
+                <h2 id="admin-list-title">Todas las piezas</h2>
+              </div>
+              <input class="input" id="admin-product-search" type="search" placeholder="Buscar nombre o SKU">
+            </div>
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th>SKU</th>
+                    <th>Estado</th>
+                    <th>Stock</th>
+                    <th>Precio</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-products-body"></tbody>
+              </table>
+            </div>
+            <div class="empty-state" id="admin-products-empty" hidden>
+              <p>No hay productos para mostrar.</p>
+            </div>
+          </section>
+
+          <section class="admin-editor" id="admin-editor" aria-labelledby="admin-editor-title" hidden>
+            <div class="admin-section-heading">
+              <div>
+                <span class="eyebrow" id="admin-editor-mode">Nuevo registro</span>
+                <h2 id="admin-editor-title">Producto</h2>
+              </div>
+              <button class="admin-editor__close" id="admin-editor-close" type="button" aria-label="Cerrar editor">×</button>
+            </div>
+
+            <form class="admin-product-form" id="admin-product-form">
+              <input id="admin-product-id" type="hidden">
+
+              <fieldset>
+                <legend>01 · Información</legend>
+                <div class="admin-form-grid">
+                  <label>Nombre *<input class="input" id="product-name-admin" required></label>
+                  <label>SKU *<input class="input" id="product-sku-admin" required></label>
+                  <label>Categoría *<input class="input" id="product-category-admin" required></label>
+                  <label>Colección<input class="input" id="product-collection-admin"></label>
+                  <label>Precio *<input class="input" id="product-price-admin" type="number" min="0" step="1" required></label>
+                  <label>Condición
+                    <select class="select" id="product-condition-admin">
+                      <option>Custom</option>
+                      <option>Nueva</option>
+                      <option>Segunda mano</option>
+                    </select>
+                  </label>
+                  <label class="admin-field--full">Descripción breve
+                    <textarea class="textarea" id="product-short-admin" rows="2" maxlength="240"></textarea>
+                  </label>
+                  <label class="admin-field--full">Descripción completa
+                    <textarea class="textarea" id="product-description-admin" rows="5"></textarea>
+                  </label>
+                  <label class="admin-field--full">Material
+                    <textarea class="textarea" id="product-material-admin" rows="2"></textarea>
+                  </label>
+                  <label class="admin-field--full">Cuidados
+                    <textarea class="textarea" id="product-care-admin" rows="2"></textarea>
+                  </label>
+                </div>
+              </fieldset>
+
+              <fieldset>
+                <legend>02 · Medidas y variantes</legend>
+                <div class="admin-form-grid">
+                  <label class="admin-field--full">Medidas
+                    <textarea class="textarea" id="product-measurements-admin" rows="3" placeholder="Busto: 90 cm&#10;Cintura: 72 cm&#10;Largo: 45 cm"></textarea>
+                  </label>
+                  <label>Talles separados por coma *
+                    <input class="input" id="product-sizes-admin" placeholder="S, M, L" required>
+                  </label>
+                  <label>Colores separados por coma *
+                    <input class="input" id="product-colors-admin" placeholder="Negro, Rosa" required>
+                  </label>
+                  <label class="admin-field--full">Etiquetas
+                    <input class="input" id="product-tags-admin" placeholder="y2k, denim, pieza única">
+                  </label>
+                </div>
+                <button class="button button--secondary" id="generate-variants" type="button">
+                  Generar combinaciones
+                </button>
+                <div class="admin-variants" id="admin-variants"></div>
+              </fieldset>
+
+              <fieldset>
+                <legend>03 · Fotografías</legend>
+                <label class="admin-upload">
+                  <span>Elegir varias imágenes</span>
+                  <small>JPG, PNG, WebP o AVIF · máximo 10 MB por archivo</small>
+                  <input id="product-images-admin" type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple>
+                </label>
+                <p class="field-help">Los borradores pueden guardarse sin fotografías.</p>
+                <div class="admin-image-list" id="admin-image-list"></div>
+              </fieldset>
+
+              <fieldset>
+                <legend>04 · Publicación</legend>
+                <div class="admin-form-grid">
+                  <label>Estado
+                    <select class="select" id="product-status-admin">
+                      <option value="draft">Borrador</option>
+                      <option value="published">Publicado</option>
+                      <option value="hidden">Oculto</option>
+                    </select>
+                  </label>
+                  <label class="admin-check"><input id="product-featured-admin" type="checkbox"> Producto destacado</label>
+                  <label class="admin-check"><input id="product-unique-admin" type="checkbox"> Pieza única</label>
+                </div>
+              </fieldset>
+
+              <p class="field-error" id="admin-product-error" role="alert"></p>
+              <div class="admin-form-actions">
+                <button class="button button--pink" id="admin-save-product" type="submit">Guardar producto</button>
+                <button class="button button--secondary" id="admin-cancel-product" type="button">Cancelar</button>
+              </div>
+            </form>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/admin.js"></script>
+  </body>
+</html>
+
