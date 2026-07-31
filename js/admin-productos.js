@@ -49,6 +49,7 @@ const ui = {
 
 let products = [];
 let existingImages = [];
+let activeDocumentId = "";
 
 function slugify(value) {
   return String(value)
@@ -117,6 +118,7 @@ function renderImages() {
 }
 
 function resetForm() {
+  activeDocumentId = "";
   ui.form.reset();
   ui.form.elements.documentId.value = "";
   ui.variants.innerHTML = "";
@@ -126,6 +128,8 @@ function resetForm() {
   renderImages();
   ui.error.textContent = "";
   ui.duplicate.hidden = true;
+  ui.saveDraft.hidden = false;
+  ui.form.querySelector('[type="submit"]').textContent = "Guardar producto";
   ui.editorMode.textContent = "Nuevo producto";
   ui.editorTitle.textContent = "Cargar una pieza";
   ui.list.querySelectorAll(".is-active").forEach((item) => item.classList.remove("is-active"));
@@ -141,6 +145,7 @@ function productVariants(product) {
 
 function fillForm(product) {
   resetForm();
+  activeDocumentId = product.documentId;
   const fields = {
     documentId: product.documentId,
     name: product.name,
@@ -173,6 +178,8 @@ function fillForm(product) {
   ui.imageUrls.value = existingImages.join("\n");
   renderImages();
   ui.duplicate.hidden = false;
+  ui.saveDraft.hidden = product.status === "published";
+  ui.form.querySelector('[type="submit"]').textContent = "Guardar cambios";
   ui.editorMode.textContent = "Editando producto";
   ui.editorTitle.textContent = product.name;
   ui.list.querySelector(`[data-product-id="${CSS.escape(product.documentId)}"]`)?.classList.add("is-active");
@@ -266,7 +273,7 @@ async function saveProduct(statusOverride) {
   }
   setBusy(true);
   try {
-    const currentId = ui.form.elements.documentId.value;
+    const currentId = activeDocumentId || ui.form.elements.documentId.value;
     const documentId = currentId || `${product.slug}-${crypto.randomUUID().slice(0, 8)}`;
     const currentProduct = products.find((item) => item.documentId === currentId);
     product.id = Number(currentProduct?.id) || Date.now();
@@ -310,11 +317,14 @@ ui.form.addEventListener("submit", (event) => {
 });
 ui.saveDraft.addEventListener("click", () => saveProduct("draft"));
 ui.duplicate.addEventListener("click", () => {
+  activeDocumentId = "";
   ui.form.elements.documentId.value = "";
   ui.form.elements.name.value = `${ui.form.elements.name.value} copia`;
   ui.form.elements.sku.value = `${ui.form.elements.sku.value}-COPIA`;
   ui.form.elements.status.value = "draft";
   ui.duplicate.hidden = true;
+  ui.saveDraft.hidden = false;
+  ui.form.querySelector('[type="submit"]').textContent = "Guardar copia";
   ui.editorMode.textContent = "Duplicando producto";
 });
 ui.logout.addEventListener("click", async () => {
