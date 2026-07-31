@@ -1,4 +1,8 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+import {
+  getApp,
+  getApps,
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 import {
   collection,
@@ -11,9 +15,11 @@ import {
   serverTimestamp,
   setDoc
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
-import { firebaseConfig, firebaseConfigured } from "./firebase-config.js?v=20260731-3";
+import { firebaseConfig, firebaseConfigured } from "./firebase-config.js?v=20260731-5";
 
-const app = firebaseConfigured ? initializeApp(firebaseConfig) : null;
+const app = firebaseConfigured
+  ? (getApps().length ? getApp() : initializeApp(firebaseConfig))
+  : null;
 const auth = app ? getAuth(app) : null;
 const db = app ? getFirestore(app) : null;
 const placeholder = "assets/images/moodboard/arvel-editorial-hero.png";

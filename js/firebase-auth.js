@@ -15,7 +15,7 @@ import {
   signOut,
   updateProfile
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
-import { firebaseConfig, firebaseConfigured } from "./firebase-config.js?v=20260731-3";
+import { firebaseConfig, firebaseConfigured } from "./firebase-config.js?v=20260731-5";
 
 const accountLinks = document.querySelectorAll("[data-auth-account]");
 const authPage = document.querySelector("[data-auth-page]")?.dataset.authPage || "";
