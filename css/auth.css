@@ -255,11 +255,14 @@
 }
 
 .account-nav button {
+  appearance: none;
   flex: 0 0 auto;
   padding: 0.7rem 0.85rem;
   border: 1px solid rgb(255 255 255 / 18%);
   border-radius: var(--radius-pill);
+  background: transparent;
   color: rgb(255 255 255 / 78%);
+  font: inherit;
   white-space: nowrap;
 }
 
@@ -278,8 +281,17 @@
   padding: 0.75rem;
   border: 1px solid rgb(255 255 255 / 35%);
   border-radius: var(--radius-md);
+  background: transparent;
   color: inherit;
+  font: inherit;
   text-align: center;
+}
+
+.account-logout:hover,
+.account-logout:focus-visible {
+  border-color: var(--color-pink);
+  background: var(--color-pink);
+  color: var(--color-text);
 }
 
 .account-main {
@@ -492,6 +504,11 @@
     padding-left: 0.65rem;
     background: transparent;
     color: var(--color-pink);
+  }
+
+  .account-nav button:not(.is-active):not(:hover) {
+    background: transparent;
+    color: rgb(255 255 255 / 78%);
   }
 
   .account-form__grid {
