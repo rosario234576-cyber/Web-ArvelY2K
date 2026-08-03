@@ -67,7 +67,7 @@ function shippingZone(postalCode) {
 }
 
 function calculateShipping(delivery, subtotal) {
-  if (subtotal >= 120000 && ["correo-sucursal", "correo-domicilio", "punto"].includes(delivery.method)) {
+  if (subtotal >= 100000 && ["correo-sucursal", "correo-domicilio", "punto"].includes(delivery.method)) {
     return 0;
   }
   if (delivery.method === "punto") return 4500;
@@ -221,7 +221,7 @@ module.exports = async function handler(req, res) {
       return res.status(502).json({ error: "Mercado Pago no pudo preparar el pago." });
     }
 
-    const testMode = accessToken.startsWith("TEST-");
+    const testMode = String(process.env.MP_MODE || "test").toLowerCase() !== "production";
     return res.status(200).json({
       checkoutUrl: testMode ? result.sandbox_init_point : result.init_point,
       preferenceId: result.id,
