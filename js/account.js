@@ -1,4 +1,4 @@
-import { getApps, initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+import { getApp, initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, sendPasswordResetEmail, updateProfile } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 import { collection, doc, getDoc, getDocs, getFirestore, orderBy, query, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import { firebaseConfig, firebaseConfigured } from "./firebase-config.js?v=20260731-5";
@@ -177,8 +177,13 @@ async function initialize() {
     guest.hidden = false;
     return;
   }
-  const app = getApps().find((candidate) => candidate.name === "[DEFAULT]")
-    || initializeApp(firebaseConfig);
+  let app;
+  try {
+    app = getApp();
+  } catch (error) {
+    if (error?.code !== "app/no-app") throw error;
+    app = initializeApp(firebaseConfig);
+  }
   auth = getAuth(app);
   db = getFirestore(app);
 
