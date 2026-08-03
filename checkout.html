@@ -242,6 +242,10 @@
                     <input type="radio" name="payment" value="transferencia" data-label="Transferencia bancaria" checked required>
                     <span><strong>Transferencia bancaria</strong><small>El alias aparecerá después de tocar Comprar.</small></span>
                   </label>
+                  <label class="checkout-choice">
+                    <input type="radio" name="payment" value="mercadopago" data-label="Mercado Pago" required>
+                    <span><strong>Mercado Pago</strong><small>Pagá en el checkout seguro de Mercado Pago. Disponible inicialmente en modo de prueba.</small></span>
+                  </label>
                 </div>
                 <p class="field-error" id="payment-error"></p>
               </fieldset>
@@ -299,7 +303,7 @@
             <div class="order-confirmation__summary" id="confirmation-summary"></div>
             <div class="notice transfer-details" id="transfer-details">
               <span class="eyebrow">Datos para transferir</span>
-              <strong id="transfer-alias">arvel.lemonn</strong>
+              <strong>Alias: <span id="transfer-alias">arvel.lemonn</span></strong>
               <dl class="transfer-details__data">
                 <div><dt>Billetera</dt><dd id="transfer-wallet">Lemon Cash</dd></div>
                 <div><dt>Titular</dt><dd id="transfer-holder">Priscila Analia Fernandez</dd></div>
@@ -324,10 +328,10 @@
                 <button class="text-link" id="remove-receipt" type="button">Quitar</button>
               </div>
               <p class="field-error" id="receipt-error" role="alert"></p>
-              <p class="field-help" id="receipt-help">El archivo no se guarda en la web. Se comparte únicamente cuando confirmás el envío.</p>
+              <p class="field-help" id="receipt-help">El archivo no se guarda en la web. El botón abre el chat correcto con todos tus datos; por seguridad, WhatsApp te pedirá adjuntar el comprobante desde el clip.</p>
             </div>
             <button class="button button--pink" id="confirmation-whatsapp" type="button">
-              <span id="confirmation-whatsapp-label">Enviar pedido y comprobante por WhatsApp</span>
+              <span id="confirmation-whatsapp-label">Abrir WhatsApp y enviar comprobante</span>
             </button>
             <a class="button button--secondary" href="tienda.html">Volver al shop</a>
           </section>
@@ -344,9 +348,10 @@
     <script src="js/firebase-products.js?v=20260803-cart1"></script>
     <script src="js/components.js"></script>
     <script src="js/main.js"></script>
-    <script src="js/transfer-config.js?v=20260803-receipt1"></script>
+    <script src="js/transfer-config.js?v=20260803-payment2"></script>
+    <script src="js/payment-config.js?v=20260803-payment2"></script>
     <script src="js/shipping.js?v=20260803-ca1"></script>
-    <script src="js/checkout.js?v=20260803-shipping100"></script>
+    <script src="js/checkout.js?v=20260803-payment2"></script>
     <script src="js/chatbot.js"></script>
     <script src="js/favoritos.js"></script>
   </body>
