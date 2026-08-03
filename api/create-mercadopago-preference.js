@@ -186,11 +186,12 @@ module.exports = async function handler(req, res) {
     const host = req.headers["x-forwarded-host"] || req.headers.host;
     const apiBase = `https://${host}`;
     const storeBase = "https://www.arvelcustomy2k.store";
+    const fullName = cleanText(customer.fullName, 160).split(/\s+/).filter(Boolean);
     const preference = {
       items,
       payer: {
-        name: cleanText(customer.firstName, 80),
-        surname: cleanText(customer.lastName, 80),
+        name: cleanText(customer.firstName || fullName[0], 80),
+        surname: cleanText(customer.lastName || fullName.slice(1).join(" "), 80),
         email: cleanText(customer.email, 160)
       },
       shipments: { cost: shippingCost, mode: "not_specified" },
@@ -221,9 +222,19 @@ module.exports = async function handler(req, res) {
       return res.status(502).json({ error: "Mercado Pago no pudo preparar el pago." });
     }
 
-    const testMode = String(process.env.MP_MODE || "test").toLowerCase() !== "production";
+    const configuredMode = cleanText(process.env.MP_MODE, 20).toLowerCase();
+    const testMode = configuredMode
+      ? configuredMode !== "production"
+      : accessToken.startsWith("TEST-");
+    const checkoutUrl = testMode
+      ? result.sandbox_init_point || result.init_point
+      : result.init_point || result.sandbox_init_point;
+    if (!checkoutUrl) {
+      console.error("Mercado Pago preference without checkout URL", result);
+      return res.status(502).json({ error: "Mercado Pago no devolvió el enlace de pago." });
+    }
     return res.status(200).json({
-      checkoutUrl: testMode ? result.sandbox_init_point : result.init_point,
+      checkoutUrl,
       preferenceId: result.id,
       mode: testMode ? "test" : "production"
     });
