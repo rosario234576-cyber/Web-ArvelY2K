@@ -334,9 +334,17 @@ body.is-locked {
 
 .home-page .home-hero {
   background:
+    linear-gradient(rgb(255 255 255 / 5%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 5%) 1px, transparent 1px),
     radial-gradient(circle at 14% 20%, rgb(241 91 181 / 34%), transparent 22rem),
     radial-gradient(circle at 88% 75%, rgb(241 91 181 / 22%), transparent 20rem),
     linear-gradient(120deg, #0b0a0c 0%, #30101f 52%, #110d11 100%);
+  background-size:
+    3rem 3rem,
+    3rem 3rem,
+    auto,
+    auto,
+    auto;
   color: var(--color-white);
 }
 

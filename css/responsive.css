@@ -1004,6 +1004,8 @@ body:not(.admin-body) {
     z-index: 0;
     inset: 0;
     background:
+      linear-gradient(rgb(255 255 255 / 3.5%) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(255 255 255 / 3.5%) 1px, transparent 1px),
       linear-gradient(
         0deg,
         rgb(6 5 7 / 100%) 0%,
@@ -1014,6 +1016,12 @@ body:not(.admin-body) {
       ),
       linear-gradient(90deg, rgb(19 5 13 / 34%), transparent 48%, rgb(19 5 13 / 28%)),
       url("../assets/images/Home/HomeFoto.png") center 32% / cover no-repeat;
+    background-size:
+      2.4rem 2.4rem,
+      2.4rem 2.4rem,
+      auto,
+      auto,
+      cover;
     content: "";
     opacity: 1;
     filter: saturate(1.05) contrast(1.04);
