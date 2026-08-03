@@ -1,5 +1,4 @@
 import {
-  getApp,
   getApps,
   initializeApp
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
@@ -294,7 +293,8 @@ async function initializeAuthentication() {
     return;
   }
 
-  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  const app = getApps().find((candidate) => candidate.name === "[DEFAULT]")
+    || initializeApp(firebaseConfig);
   auth = getAuth(app);
   db = getFirestore(app);
   await setPersistence(auth, browserLocalPersistence);

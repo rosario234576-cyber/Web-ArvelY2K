@@ -1,5 +1,4 @@
 import {
-  getApp,
   getApps,
   initializeApp
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
@@ -18,7 +17,7 @@ import {
 import { firebaseConfig, firebaseConfigured } from "./firebase-config.js?v=20260731-5";
 
 const app = firebaseConfigured
-  ? (getApps().length ? getApp() : initializeApp(firebaseConfig))
+  ? (getApps().find((candidate) => candidate.name === "[DEFAULT]") || initializeApp(firebaseConfig))
   : null;
 const auth = app ? getAuth(app) : null;
 const db = app ? getFirestore(app) : null;
