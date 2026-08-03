@@ -20,5 +20,22 @@ service cloud.firestore {
       allow list: if isAdmin() || resource.data.status == "published";
       allow create, update, delete: if isAdmin();
     }
+
+    // Cada clienta puede consultar y editar únicamente su propio perfil.
+    match /users/{userId} {
+      allow read: if signedIn() && request.auth.uid == userId;
+      allow create, update: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly([
+          "email", "profile", "address", "createdAt", "updatedAt"
+        ]);
+      allow delete: if false;
+
+      // Los pedidos se crearán desde un backend seguro. La clienta solo los lee.
+      match /orders/{orderId} {
+        allow read: if signedIn() && request.auth.uid == userId;
+        allow write: if false;
+      }
+    }
   }
 }
