@@ -4,7 +4,7 @@
   const authenticated = await (window.ARVEL_CHECKOUT_AUTH_READY || Promise.resolve(false));
   if (!authenticated) return;
 
-  const FREE_SHIPPING_THRESHOLD = 120000;
+  const FREE_SHIPPING_THRESHOLD = 100000;
   const products = await (
     window.ARVEL_PRODUCTS_READY ||
     Promise.resolve(Array.isArray(window.ARVEL_PRODUCTS) ? window.ARVEL_PRODUCTS : [])

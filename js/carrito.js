@@ -1,7 +1,7 @@
 (async function () {
   "use strict";
 
-  const FREE_SHIPPING_THRESHOLD = 120000;
+  const FREE_SHIPPING_THRESHOLD = 100000;
   const STANDARD_SHIPPING_COST = 6500;
   const catalog = window.ARVEL_PRODUCTS_READY
     ? await window.ARVEL_PRODUCTS_READY
