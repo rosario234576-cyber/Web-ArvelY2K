@@ -10,7 +10,6 @@
     Promise.resolve(Array.isArray(window.ARVEL_PRODUCTS) ? window.ARVEL_PRODUCTS : [])
   );
   let cart = window.ArvelStore.readStoredArray(window.ArvelStore.storageKeys.cart);
-  let agenciesRequestId = 0;
   let preparedOrder = null;
   let receiptObjectUrl = "";
 
@@ -38,7 +37,9 @@
     province: document.querySelector("#province"),
     correoAgencySelector: document.querySelector("#correo-agency-selector"),
     correoAgency: document.querySelector("#correo-agency"),
+    correoAgencyAddress: document.querySelector("#correo-agency-address"),
     correoAgencyStatus: document.querySelector("#correo-agency-status"),
+    homeDeliveryFields: document.querySelectorAll("[data-home-delivery-field]"),
     meetingPointSelector: document.querySelector("#meeting-point-selector"),
     meetingPoint: document.querySelector("#meeting-point"),
     meetingPointCost: document.querySelector("#meeting-point-cost"),
@@ -103,7 +104,7 @@
     if (!selected) return null;
     const input = elements.form.querySelector(`input[name="delivery"][value="${selected}"]`);
     const meetingOption = elements.meetingPoint?.selectedOptions?.[0];
-    const agencyOption = elements.correoAgency?.selectedOptions?.[0];
+    const agencyName = elements.correoAgency?.value?.trim() || "";
     const isMeeting = selected === "encuentro";
     const baseCost = isMeeting
       ? Number(meetingOption?.dataset.cost || 0)
@@ -114,11 +115,11 @@
       value: selected,
       label: isMeeting && meetingOption?.value
         ? `${input.dataset.label} · ${meetingOption.value}`
-        : selected === "correo-sucursal" && agencyOption?.value
-          ? `${input.dataset.label} · ${agencyOption.textContent}`
+        : selected === "correo-sucursal" && agencyName
+          ? `${input.dataset.label} · ${agencyName}`
           : input.dataset.label,
       cost: freeByThreshold ? 0 : baseCost,
-      agencyId: selected === "correo-sucursal" ? agencyOption?.value || "" : ""
+      agencyId: ""
     };
   }
 
@@ -172,6 +173,17 @@
     elements.dni.required = true;
   }
 
+  function updateDeliveryFields() {
+    const isHome = elements.form.elements.delivery?.value === "correo-domicilio";
+    elements.homeDeliveryFields.forEach((wrapper) => {
+      wrapper.hidden = !isHome;
+      wrapper.querySelectorAll("input, textarea").forEach((field) => {
+        field.required = isHome;
+        if (!isHome) field.removeAttribute("aria-invalid");
+      });
+    });
+  }
+
   function updateMeetingAvailability() {
     if (!elements.meetingPointSelector || !elements.meetingPoint) return;
 
@@ -216,63 +228,12 @@
     updateTotals();
   }
 
-  const provinceCodes = Object.freeze({
-    "Salta": "A", "Buenos Aires": "B", "Ciudad Autonoma de Buenos Aires": "C",
-    "San Luis": "D", "Entre Rios": "E", "La Rioja": "F",
-    "Santiago del Estero": "G", "Chaco": "H", "San Juan": "J",
-    "Catamarca": "K", "La Pampa": "L", "Mendoza": "M", "Misiones": "N",
-    "Formosa": "P", "Neuquen": "Q", "Rio Negro": "R", "Santa Fe": "S",
-    "Tucuman": "T", "Chubut": "U", "Tierra del Fuego": "V",
-    "Corrientes": "W", "Cordoba": "X", "Jujuy": "Y", "Santa Cruz": "Z"
-  });
-
-  function normalizeProvince(value) {
-    return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  }
-
-  async function updateCorreoAgencyAvailability() {
+  function updateCorreoAgencyAvailability() {
     if (!elements.correoAgencySelector || !elements.correoAgency) return;
     const isBranch = elements.form.elements.delivery?.value === "correo-sucursal";
     elements.correoAgencySelector.hidden = !isBranch;
-    if (!isBranch) {
-      elements.correoAgency.required = false;
-      return;
-    }
-
-    const stateId = provinceCodes[normalizeProvince(elements.province?.value)];
-    if (!stateId) {
-      elements.correoAgency.required = false;
-      elements.correoAgency.innerHTML = '<option value="">Elegí primero una provincia</option>';
-      elements.correoAgencyStatus.textContent = "Seleccioná la provincia para consultar Paq.Ar.";
-      return;
-    }
-
-    const requestId = ++agenciesRequestId;
-    elements.correoAgency.disabled = true;
-    elements.correoAgency.required = false;
-    elements.correoAgency.innerHTML = '<option value="">Consultando sucursales…</option>';
-    elements.correoAgencyStatus.textContent = "Consultando sucursales oficiales…";
-    try {
-      const agencies = await window.ArvelShipping.getAgencies(stateId);
-      if (requestId !== agenciesRequestId) return;
-      elements.correoAgency.innerHTML = '<option value="">Seleccioná una sucursal</option>' + agencies
-        .map((agency) => {
-          const label = [agency.name, agency.city, agency.address].filter(Boolean).join(" · ");
-          return `<option value="${window.Arvel.escapeHtml(agency.id)}">${window.Arvel.escapeHtml(label)}</option>`;
-        })
-        .join("");
-      elements.correoAgency.disabled = false;
-      elements.correoAgency.required = agencies.length > 0;
-      elements.correoAgencyStatus.textContent = agencies.length
-        ? `${agencies.length} sucursales habilitadas por Correo Argentino.`
-        : "No encontramos sucursales habilitadas para esta provincia.";
-    } catch (error) {
-      if (requestId !== agenciesRequestId) return;
-      elements.correoAgency.innerHTML = '<option value="">La sucursal se coordinará manualmente</option>';
-      elements.correoAgency.disabled = true;
-      elements.correoAgency.required = false;
-      elements.correoAgencyStatus.textContent = `${error.message} Podés continuar y Arvel la coordinará manualmente.`;
-    }
+    elements.correoAgency.required = isBranch;
+    if (elements.correoAgencyAddress) elements.correoAgencyAddress.required = isBranch;
   }
 
   function getErrorElement(input) {
@@ -424,6 +385,8 @@
         streetNumber: data.get("streetNumber").trim(),
         apartment: data.get("apartment").trim(),
         references: data.get("deliveryReferences").trim(),
+        agencyName: String(data.get("correoAgency") || "").trim(),
+        agencyAddress: String(data.get("correoAgencyAddress") || "").trim(),
         notes: data.get("notes").trim()
       },
       delivery,
@@ -438,42 +401,62 @@
   }
 
   function buildWhatsAppMessage(order, hasReceipt = false) {
-    const productLines = order.items.map(
-      (item) =>
-        `• ${item.product.name} | Talle: ${item.size} | Color: ${item.color} | Cantidad: ${item.quantity} | ${window.Arvel.formatPrice(item.product.price * item.quantity)}`
+    const productLines = order.items.map((item, index) =>
+      `${index + 1}. *${item.product.name}*\n` +
+      `   📏 Talle: ${item.size} · 🎨 Color: ${item.color}\n` +
+      `   🔢 Cantidad: ${item.quantity} · 💲 ${window.Arvel.formatPrice(item.product.price * item.quantity)}`
     );
+    const deliveryLines = order.delivery.value === "correo-sucursal"
+      ? [
+          `🏤 Sucursal: ${order.address.agencyName}`,
+          `📍 Dirección: ${order.address.agencyAddress}`
+        ]
+      : [
+          `🏠 Domicilio: ${order.address.street} ${order.address.streetNumber}${order.address.apartment ? `, ${order.address.apartment}` : ""}`,
+          order.address.references ? `↔️ Entre calles: ${order.address.references}` : null
+        ];
 
     return [
-      "Hola Arvel, quiero enviar este pedido para revisión:",
+      "🛙️ *NUEVO PEDIDO ARVEL*",
+      "Hola, quiero enviar este pedido para revisión.",
       "",
-      `Pedido: ${order.orderNumber}`,
-      `Fecha: ${new Intl.DateTimeFormat("es-AR", { dateStyle: "short", timeStyle: "short" }).format(order.createdAt)}`,
-      `Clienta: ${order.customer.fullName}`,
-      `Teléfono: ${order.customer.phone}`,
-      `Correo: ${order.customer.email}`,
-      order.customer.dni ? `DNI para el envío: ${order.customer.dni}` : "",
+      "🔖 *DATOS DEL PEDIDO*",
+      `Pedido: *${order.orderNumber}*`,
+      `📅 Fecha: ${new Intl.DateTimeFormat("es-AR", { dateStyle: "short", timeStyle: "short" }).format(order.createdAt)}`,
       "",
-      "Productos:",
+      "👤 *DATOS DE LA CLIENTA*",
+      `Nombre: ${order.customer.fullName}`,
+      `📱 Teléfono: ${order.customer.phone}`,
+      `✉️ Correo: ${order.customer.email}`,
+      order.customer.dni ? `🪪 DNI: ${order.customer.dni}` : null,
+      "",
+      "🛍️ *PRODUCTOS*",
       ...productLines,
       "",
+      "💳 *PAGO*",
+      `Método: ${order.payment.label}`,
       `Subtotal: ${window.Arvel.formatPrice(order.subtotal)}`,
-      `Envío: ${order.delivery.cost === 0 ? "Gratis / sin costo" : window.Arvel.formatPrice(order.delivery.cost)}`,
-      `Método de entrega: ${order.delivery.label}`,
-      `Método de pago: ${order.payment.label}`,
-      window.ARVEL_TRANSFER?.alias ? `Alias: ${window.ARVEL_TRANSFER.alias}` : "",
-      window.ARVEL_TRANSFER?.wallet ? `Billetera: ${window.ARVEL_TRANSFER.wallet}` : "",
-      `Total: ${window.Arvel.formatPrice(order.total)}`,
+      `Envío: ${order.delivery.cost === 0 ? "GRATIS" : window.Arvel.formatPrice(order.delivery.cost)}`,
+      `💰 *TOTAL: ${window.Arvel.formatPrice(order.total)}*`,
+      window.ARVEL_TRANSFER?.alias ? `Alias: *${window.ARVEL_TRANSFER.alias}*` : null,
+      window.ARVEL_TRANSFER?.wallet ? `Billetera: ${window.ARVEL_TRANSFER.wallet}` : null,
       "",
-      `Entrega: ${order.address.street} ${order.address.streetNumber}${order.address.apartment ? `, ${order.address.apartment}` : ""}, ${order.address.city}, ${order.address.province} (${order.address.postalCode})`,
-      order.address.references ? `Entre calles: ${order.address.references}` : "",
-      order.address.notes ? `Observaciones: ${order.address.notes}` : "",
+      "📦 *ENTREGA*",
+      `Modalidad: ${order.delivery.label}`,
+      ...deliveryLines,
+      `📍 Localidad: ${order.address.city}, ${order.address.province}`,
+      `📮 Código postal: ${order.address.postalCode}`,
+      order.address.notes ? `📝 Observaciones: ${order.address.notes}` : null,
       "",
+      "🧾 *COMPROBANTE*",
       hasReceipt
-        ? "✅ Confirmo que realicé la transferencia. Adjunto el comprobante de pago."
-        : "Todavía no adjunté el comprobante de pago.",
-      "Entiendo que el pedido recién será recibido cuando envíe este mensaje y queda sujeto a confirmación de stock y pago."
+        ? "✅ Confirmo que realicé la transferencia y adjunto el comprobante."
+        : "⏳ Todavía no adjunté el comprobante de pago.",
+      "",
+      "⚠️ *IMPORTANTE*",
+      "El pedido se considera enviado cuando confirme este mensaje. Queda sujeto a verificación de stock y acreditación del pago."
     ]
-      .filter((line) => line !== "")
+      .filter((line) => line !== null && line !== undefined)
       .join("\n");
   }
 
@@ -640,6 +623,7 @@
       if (event.target.name === "delivery") {
         updateMeetingAvailability();
         updateCorreoAgencyAvailability();
+        updateDeliveryFields();
         updateDniAvailability();
         updatePaymentAvailability();
         updateTotals();
@@ -690,6 +674,7 @@
     renderItems();
     updateMeetingAvailability();
     updateCorreoAgencyAvailability();
+    updateDeliveryFields();
     updateDniAvailability();
     updatePaymentAvailability();
     updateTotals();
