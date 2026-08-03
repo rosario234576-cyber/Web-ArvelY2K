@@ -23,7 +23,7 @@
     <link rel="stylesheet" href="css/reset.css">
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/styles.css?v=20260803-receipt1">
+    <link rel="stylesheet" href="css/styles.css?v=20260803-shipping-manual1">
     <link rel="stylesheet" href="css/responsive.css">
   </head>
   <body>
@@ -129,7 +129,7 @@
               </fieldset>
 
               <fieldset class="checkout-block" id="checkout-address">
-                <legend>02 · Dirección de entrega</legend>
+                <legend>02 · Datos del destino</legend>
                 <div class="checkout-fields">
                   <div class="form-field">
                     <label for="province">Provincia *</label>
@@ -181,22 +181,22 @@
                     >
                     <p class="field-error" id="postal-code-error"></p>
                   </div>
-                  <div class="form-field">
+                  <div class="form-field" data-home-delivery-field>
                     <label for="street">Dirección *</label>
                     <input class="input" id="street" name="street" type="text" autocomplete="address-line1" required>
                     <p class="field-error" id="street-error"></p>
                   </div>
-                  <div class="form-field">
+                  <div class="form-field" data-home-delivery-field>
                     <label for="street-number">Número *</label>
                     <input class="input" id="street-number" name="streetNumber" type="text" inputmode="numeric" required>
                     <p class="field-error" id="street-number-error"></p>
                   </div>
-                  <div class="form-field">
+                  <div class="form-field" data-home-delivery-field>
                     <label for="apartment">Piso, departamento o referencia *</label>
                     <input class="input" id="apartment" name="apartment" type="text" autocomplete="address-line2" placeholder="Ej. Piso 2, depto. B o casa al fondo" required>
                     <p class="field-error" id="apartment-error"></p>
                   </div>
-                  <div class="form-field checkout-field--full">
+                  <div class="form-field checkout-field--full" data-home-delivery-field>
                     <label for="delivery-references">Entre calles *</label>
                     <textarea class="textarea" id="delivery-references" name="deliveryReferences" rows="2" maxlength="300" placeholder="Ej. Av. Rivadavia y Bartolomé Mitre" required></textarea>
                     <p class="field-help">Máximo 300 caracteres.</p>
@@ -224,15 +224,25 @@
                   </label>
                 </div>
                 <div class="meeting-point-selector" id="correo-agency-selector" hidden>
-                  <label for="correo-agency">Sucursal de Correo Argentino *</label>
-                  <select class="select" id="correo-agency" name="correoAgency">
-                    <option value="">Elegí primero la provincia y luego una sucursal</option>
-                  </select>
-                  <p class="field-error" id="correo-agency-error"></p>
-                  <small class="field-help" id="correo-agency-status">Las sucursales se consultan directamente en Paq.Ar.</small>
+                  <div class="notice">
+                    Por el momento, debido a los permisos pendientes de Correo Argentino, coordinaremos el envío manualmente. Ingresá los datos de la sucursal que preferís y Arvel confirmará disponibilidad y costo final.
+                  </div>
+                  <div class="checkout-fields">
+                    <div class="form-field">
+                      <label for="correo-agency">Nombre de la sucursal *</label>
+                      <input class="input" id="correo-agency" name="correoAgency" type="text" placeholder="Ej. Correo Argentino Caballito">
+                      <p class="field-error" id="correo-agency-error"></p>
+                    </div>
+                    <div class="form-field">
+                      <label for="correo-agency-address">Dirección de la sucursal *</label>
+                      <input class="input" id="correo-agency-address" name="correoAgencyAddress" type="text" placeholder="Calle y altura">
+                      <p class="field-error" id="correo-agency-address-error"></p>
+                    </div>
+                  </div>
+                  <small class="field-help" id="correo-agency-status">Podés buscar la sucursal más cercana en Correo Argentino y copiar aquí sus datos.</small>
                 </div>
                 <p class="field-error" id="delivery-error"></p>
-                <p class="field-help checkout-shipping-note">Los importes son orientativos. Arvel confirma manualmente disponibilidad, costo final y coordinación antes del pago.</p>
+                <p class="field-help checkout-shipping-note"><strong>Proceso manual temporal:</strong> los importes son orientativos. Si elegís sucursal, necesitamos su nombre y dirección; si elegís domicilio, necesitamos la dirección completa. Arvel confirmará disponibilidad, costo final y coordinación antes del despacho.</p>
               </fieldset>
 
               <fieldset class="checkout-block choice-group" id="payment-group" aria-describedby="payment-error">
@@ -351,7 +361,7 @@
     <script src="js/transfer-config.js?v=20260803-payment2"></script>
     <script src="js/payment-config.js?v=20260803-payment2"></script>
     <script src="js/shipping.js?v=20260803-ca1"></script>
-    <script src="js/checkout.js?v=20260803-payment2"></script>
+    <script src="js/checkout.js?v=20260803-whatsapp-message1"></script>
     <script src="js/chatbot.js"></script>
     <script src="js/favoritos.js"></script>
   </body>
