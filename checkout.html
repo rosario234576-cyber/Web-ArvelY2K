@@ -23,14 +23,14 @@
     <link rel="stylesheet" href="css/reset.css">
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/styles.css?v=20260803-receipt1">
     <link rel="stylesheet" href="css/responsive.css">
   </head>
   <body>
     <a class="skip-link" href="#contenido-principal">Saltar al contenido</a>
     <div id="site-header"></div>
 
-    <main id="contenido-principal">
+    <main id="contenido-principal" hidden>
       <header class="checkout-header">
         <div class="container">
           <span class="eyebrow">Último paso</span>
@@ -84,15 +84,10 @@
               <fieldset class="checkout-block" id="checkout-customer">
                 <legend>01 · Tus datos</legend>
                 <div class="checkout-fields">
-                  <div class="form-field">
-                    <label for="first-name">Nombre *</label>
-                    <input class="input" id="first-name" name="firstName" type="text" autocomplete="given-name" required>
-                    <p class="field-error" id="first-name-error"></p>
-                  </div>
-                  <div class="form-field">
-                    <label for="last-name">Apellido *</label>
-                    <input class="input" id="last-name" name="lastName" type="text" autocomplete="family-name" required>
-                    <p class="field-error" id="last-name-error"></p>
+                  <div class="form-field checkout-field--full">
+                    <label for="full-name">Nombre completo *</label>
+                    <input class="input" id="full-name" name="fullName" type="text" autocomplete="name" minlength="3" required>
+                    <p class="field-error" id="full-name-error"></p>
                   </div>
                   <div class="form-field">
                     <label for="email">Correo electrónico *</label>
@@ -114,8 +109,8 @@
                     >
                     <p class="field-error" id="phone-error"></p>
                   </div>
-                  <div class="form-field checkout-field--full" id="dni-field" hidden>
-                    <label for="dni">DNI <span class="text-muted">(requerido para Correo Argentino)</span></label>
+                  <div class="form-field checkout-field--full" id="dni-field">
+                    <label for="dni">DNI *</label>
                     <input
                       class="input"
                       id="dni"
@@ -125,6 +120,7 @@
                       autocomplete="off"
                       pattern="[0-9]{7,8}"
                       placeholder="Sin puntos"
+                      required
                     >
                     <p class="field-help">Se usa únicamente para preparar el envío y no se guarda en este sitio.</p>
                     <p class="field-error" id="dni-error"></p>
@@ -196,13 +192,13 @@
                     <p class="field-error" id="street-number-error"></p>
                   </div>
                   <div class="form-field">
-                    <label for="apartment">Piso o departamento <span class="text-muted">(opcional)</span></label>
-                    <input class="input" id="apartment" name="apartment" type="text" autocomplete="address-line2">
+                    <label for="apartment">Piso, departamento o referencia *</label>
+                    <input class="input" id="apartment" name="apartment" type="text" autocomplete="address-line2" placeholder="Ej. Piso 2, depto. B o casa al fondo" required>
                     <p class="field-error" id="apartment-error"></p>
                   </div>
                   <div class="form-field checkout-field--full">
-                    <label for="delivery-references">Referencias para la entrega <span class="text-muted">(opcional)</span></label>
-                    <textarea class="textarea" id="delivery-references" name="deliveryReferences" rows="2" maxlength="300" placeholder="Ej. portón negro, timbre 2, entre calles..."></textarea>
+                    <label for="delivery-references">Entre calles *</label>
+                    <textarea class="textarea" id="delivery-references" name="deliveryReferences" rows="2" maxlength="300" placeholder="Ej. Av. Rivadavia y Bartolomé Mitre" required></textarea>
                     <p class="field-help">Máximo 300 caracteres.</p>
                     <p class="field-error" id="delivery-references-error"></p>
                   </div>
@@ -226,42 +222,14 @@
                     <input type="radio" name="delivery" value="correo-domicilio" data-label="Correo Argentino a domicilio" data-cost="7800">
                     <span><strong>Correo Argentino a domicilio</strong><small id="correo-home-cost-label">Ingresá tu código postal para estimar el costo.</small></span>
                   </label>
-                  <label class="checkout-choice">
-                    <input type="radio" name="delivery" value="punto" data-label="Punto de retiro" data-cost="4500">
-                    <span><strong>Punto de retiro</strong><small>Retiro en punto asociado · desde $4.500</small></span>
-                  </label>
-                  <label class="checkout-choice">
-                    <input type="radio" name="delivery" value="encuentro" data-label="Encuentro coordinado en CABA" data-cost="0">
-                    <span><strong>Encuentro coordinado en CABA</strong><small>Elegí un punto · viático desde $0</small></span>
-                  </label>
                 </div>
-                <div class="meeting-point-selector" id="meeting-point-selector" hidden>
-                  <label for="meeting-point">Punto de encuentro *</label>
-                  <select class="select" id="meeting-point" name="meetingPoint">
-                    <option value="">Seleccioná un punto</option>
-                    <optgroup label="Sin viático">
-                      <option value="Estación Once" data-cost="0">Estación Once · sin viático</option>
-                      <option value="Congreso de la Nación" data-cost="0">Congreso de la Nación · sin viático</option>
-                      <option value="Estación SUBTE Congreso (Línea A)" data-cost="0">Estación SUBTE Congreso (Línea A) · sin viático</option>
-                    </optgroup>
-                    <optgroup label="Viático $1.500">
-                      <option value="Obelisco" data-cost="1500">Obelisco · $1.500</option>
-                      <option value="Abasto Shopping" data-cost="1500">Abasto Shopping · $1.500</option>
-                      <option value="Teatro Colón" data-cost="1500">Teatro Colón · $1.500</option>
-                      <option value="Facultad de Medicina" data-cost="1500">Facultad de Medicina · $1.500</option>
-                      <option value="Plaza de Mayo" data-cost="1500">Plaza de Mayo · $1.500</option>
-                      <option value="Constitución" data-cost="1500">Constitución · $1.500</option>
-                      <option value="Estación Retiro" data-cost="1500">Estación Retiro · $1.500</option>
-                    </optgroup>
-                    <optgroup label="Viático $2.000">
-                      <option value="Barrio Chino" data-cost="2000">Barrio Chino · $2.000</option>
-                      <option value="Shopping Alto Palermo" data-cost="2000">Shopping Alto Palermo · $2.000</option>
-                      <option value="Parque Centenario" data-cost="2000">Parque Centenario · $2.000</option>
-                      <option value="Parque Patricios" data-cost="2000">Parque Patricios · $2.000</option>
-                    </optgroup>
+                <div class="meeting-point-selector" id="correo-agency-selector" hidden>
+                  <label for="correo-agency">Sucursal de Correo Argentino *</label>
+                  <select class="select" id="correo-agency" name="correoAgency">
+                    <option value="">Elegí primero la provincia y luego una sucursal</option>
                   </select>
-                  <p class="field-error" id="meeting-point-error"></p>
-                  <small class="field-help" id="meeting-point-cost">El día y horario se coordinan después de confirmar la compra.</small>
+                  <p class="field-error" id="correo-agency-error"></p>
+                  <small class="field-help" id="correo-agency-status">Las sucursales se consultan directamente en Paq.Ar.</small>
                 </div>
                 <p class="field-error" id="delivery-error"></p>
                 <p class="field-help checkout-shipping-note">Los importes son orientativos. Arvel confirma manualmente disponibilidad, costo final y coordinación antes del pago.</p>
@@ -271,16 +239,8 @@
                 <legend>04 · Método de pago *</legend>
                 <div class="checkout-choices">
                   <label class="checkout-choice">
-                    <input type="radio" name="payment" value="mercado-pago" data-label="Mercado Pago" required>
-                    <span><strong>Mercado Pago</strong><small>Pagá de forma segura en el checkout oficial de Mercado Pago.</small></span>
-                  </label>
-                  <label class="checkout-choice">
-                    <input type="radio" name="payment" value="transferencia" data-label="Transferencia">
-                    <span><strong>Transferencia</strong><small>Los datos se compartirán al confirmar disponibilidad.</small></span>
-                  </label>
-                  <label class="checkout-choice" id="cash-choice">
-                    <input type="radio" name="payment" value="efectivo" data-label="Efectivo al retirar" disabled>
-                    <span><strong>Efectivo al retirar</strong><small>Disponible solo para encuentros coordinados.</small></span>
+                    <input type="radio" name="payment" value="transferencia" data-label="Transferencia bancaria" checked required>
+                    <span><strong>Transferencia bancaria</strong><small>El alias aparecerá después de tocar Comprar.</small></span>
                   </label>
                 </div>
                 <p class="field-error" id="payment-error"></p>
@@ -308,7 +268,7 @@
               </div>
 
               <button class="button button--pink checkout-submit" type="submit">
-                Preparar pedido
+                Comprar
               </button>
             </form>
 
@@ -337,15 +297,38 @@
               botón para compartirlo con Arvel por WhatsApp.
             </div>
             <div class="order-confirmation__summary" id="confirmation-summary"></div>
-            <a
-              class="button button--pink"
-              id="confirmation-whatsapp"
-              href="#"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <span id="confirmation-whatsapp-label">Enviar pedido por WhatsApp</span>
-            </a>
+            <div class="notice transfer-details" id="transfer-details">
+              <span class="eyebrow">Datos para transferir</span>
+              <strong id="transfer-alias">arvel.lemonn</strong>
+              <dl class="transfer-details__data">
+                <div><dt>Billetera</dt><dd id="transfer-wallet">Lemon Cash</dd></div>
+                <div><dt>Titular</dt><dd id="transfer-holder">Priscila Analia Fernandez</dd></div>
+                <div><dt>CVU</dt><dd id="transfer-cvu">0000168300000012819548</dd></div>
+              </dl>
+              <button class="button button--secondary" id="copy-transfer-alias" type="button">Copiar alias</button>
+              <small>Transferí el total exacto. Después subí el comprobante para compartirlo con Arvel por WhatsApp.</small>
+            </div>
+            <div class="receipt-upload" id="receipt-upload">
+              <label class="receipt-upload__label" for="payment-receipt">
+                <span class="eyebrow">Comprobante de transferencia</span>
+                <strong>Subí el comprobante</strong>
+                <small>Imagen JPG, PNG, WEBP o PDF · máximo 10 MB.</small>
+              </label>
+              <input id="payment-receipt" type="file" accept="image/jpeg,image/png,image/webp,application/pdf">
+              <div class="receipt-upload__preview" id="receipt-preview" hidden>
+                <img id="receipt-preview-image" src="" alt="Vista previa del comprobante" hidden>
+                <div>
+                  <strong id="receipt-file-name"></strong>
+                  <small id="receipt-file-size"></small>
+                </div>
+                <button class="text-link" id="remove-receipt" type="button">Quitar</button>
+              </div>
+              <p class="field-error" id="receipt-error" role="alert"></p>
+              <p class="field-help" id="receipt-help">El archivo no se guarda en la web. Se comparte únicamente cuando confirmás el envío.</p>
+            </div>
+            <button class="button button--pink" id="confirmation-whatsapp" type="button">
+              <span id="confirmation-whatsapp-label">Enviar pedido y comprobante por WhatsApp</span>
+            </button>
             <a class="button button--secondary" href="tienda.html">Volver al shop</a>
           </section>
         </div>
@@ -356,13 +339,14 @@
     <div id="global-overlays"></div>
     <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
 
+    <script src="js/checkout-auth-guard.js?v=20260803-1"></script>
     <script src="js/data/productos.js"></script>
-    <script src="js/firebase-products.js?v=20260731-mp1"></script>
+    <script src="js/firebase-products.js?v=20260803-cart1"></script>
     <script src="js/components.js"></script>
     <script src="js/main.js"></script>
-    <script src="js/shipping.js"></script>
-    <script src="js/payment-config.js"></script>
-    <script src="js/checkout.js?v=20260731-mp1"></script>
+    <script src="js/transfer-config.js?v=20260803-receipt1"></script>
+    <script src="js/shipping.js?v=20260803-ca1"></script>
+    <script src="js/checkout.js?v=20260803-receipt1"></script>
     <script src="js/chatbot.js"></script>
     <script src="js/favoritos.js"></script>
   </body>
