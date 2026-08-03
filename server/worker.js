@@ -107,7 +107,7 @@ function getShippingCost(delivery, subtotal) {
   if (!allowedCosts[type]?.includes(requestedCost)) {
     throw new Error("La modalidad o el costo de entrega no son válidos.");
   }
-  if (requestedCost === 0 && type !== "encuentro" && subtotal < 120000) {
+  if (requestedCost === 0 && type !== "encuentro" && subtotal < 100000) {
     throw new Error("El envío gratis no corresponde al subtotal informado.");
   }
 
