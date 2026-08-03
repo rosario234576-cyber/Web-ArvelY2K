@@ -23,7 +23,10 @@
         return {
           ...data,
           documentId: item.id,
-          id: Number(data.id) || 0,
+          // Firestore document IDs are the stable public identifier for products.
+          // Keeping them as strings prevents every manually-created product from
+          // collapsing to the numeric ID 0 in product pages and the cart.
+          id: item.id,
           createdAt: data.createdAt?.toDate?.().toISOString() || data.createdAt || "",
           updatedAt: data.updatedAt?.toDate?.().toISOString() || data.updatedAt || ""
         };

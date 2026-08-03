@@ -1,12 +1,18 @@
 (async function () {
   "use strict";
 
+  const authenticated = await (window.ARVEL_CHECKOUT_AUTH_READY || Promise.resolve(false));
+  if (!authenticated) return;
+
   const FREE_SHIPPING_THRESHOLD = 120000;
   const products = await (
     window.ARVEL_PRODUCTS_READY ||
     Promise.resolve(Array.isArray(window.ARVEL_PRODUCTS) ? window.ARVEL_PRODUCTS : [])
   );
   let cart = window.ArvelStore.readStoredArray(window.ArvelStore.storageKeys.cart);
+  let agenciesRequestId = 0;
+  let preparedOrder = null;
+  let receiptObjectUrl = "";
 
   const elements = {
     empty: document.querySelector("#checkout-empty"),
@@ -29,6 +35,10 @@
     correoHomeInput: document.querySelector('input[name="delivery"][value="correo-domicilio"]'),
     correoBranchCostLabel: document.querySelector("#correo-branch-cost-label"),
     correoHomeCostLabel: document.querySelector("#correo-home-cost-label"),
+    province: document.querySelector("#province"),
+    correoAgencySelector: document.querySelector("#correo-agency-selector"),
+    correoAgency: document.querySelector("#correo-agency"),
+    correoAgencyStatus: document.querySelector("#correo-agency-status"),
     meetingPointSelector: document.querySelector("#meeting-point-selector"),
     meetingPoint: document.querySelector("#meeting-point"),
     meetingPointCost: document.querySelector("#meeting-point-cost"),
@@ -38,11 +48,33 @@
     confirmationSummary: document.querySelector("#confirmation-summary"),
     confirmationWhatsApp: document.querySelector("#confirmation-whatsapp"),
     confirmationWhatsAppLabel: document.querySelector("#confirmation-whatsapp-label"),
-    confirmationNotice: document.querySelector("#confirmation-notice")
+    confirmationNotice: document.querySelector("#confirmation-notice"),
+    transferAlias: document.querySelector("#transfer-alias"),
+    copyTransferAlias: document.querySelector("#copy-transfer-alias"),
+    transferWallet: document.querySelector("#transfer-wallet"),
+    transferHolder: document.querySelector("#transfer-holder"),
+    transferCvu: document.querySelector("#transfer-cvu"),
+    receipt: document.querySelector("#payment-receipt"),
+    receiptPreview: document.querySelector("#receipt-preview"),
+    receiptPreviewImage: document.querySelector("#receipt-preview-image"),
+    receiptFileName: document.querySelector("#receipt-file-name"),
+    receiptFileSize: document.querySelector("#receipt-file-size"),
+    receiptError: document.querySelector("#receipt-error"),
+    receiptHelp: document.querySelector("#receipt-help"),
+    removeReceipt: document.querySelector("#remove-receipt")
   };
 
-  function findProduct(id) {
-    return products.find((product) => product.id === Number(id));
+  function findProduct(itemOrId) {
+    const key = String(
+      typeof itemOrId === "object"
+        ? itemOrId?.documentId || itemOrId?.id || ""
+        : itemOrId ?? ""
+    );
+    return products.find(
+      (product) =>
+        String(product.documentId || product.id || "") === key ||
+        String(product.id ?? "") === key
+    );
   }
 
   function getVariantStock(product, size, color) {
@@ -53,7 +85,7 @@
 
   function getValidCart() {
     return cart.filter((item) => {
-      const product = findProduct(item.id);
+      const product = findProduct(item);
       if (!product || product.soldOut || product.archived || item.quantity <= 0) return false;
       return item.quantity <= getVariantStock(product, item.size, item.color);
     });
@@ -61,7 +93,7 @@
 
   function getSubtotal() {
     return cart.reduce((total, item) => {
-      const product = findProduct(item.id);
+      const product = findProduct(item);
       return total + (product ? product.price * item.quantity : 0);
     }, 0);
   }
@@ -71,6 +103,7 @@
     if (!selected) return null;
     const input = elements.form.querySelector(`input[name="delivery"][value="${selected}"]`);
     const meetingOption = elements.meetingPoint?.selectedOptions?.[0];
+    const agencyOption = elements.correoAgency?.selectedOptions?.[0];
     const isMeeting = selected === "encuentro";
     const baseCost = isMeeting
       ? Number(meetingOption?.dataset.cost || 0)
@@ -81,8 +114,11 @@
       value: selected,
       label: isMeeting && meetingOption?.value
         ? `${input.dataset.label} · ${meetingOption.value}`
-        : input.dataset.label,
-      cost: freeByThreshold ? 0 : baseCost
+        : selected === "correo-sucursal" && agencyOption?.value
+          ? `${input.dataset.label} · ${agencyOption.textContent}`
+          : input.dataset.label,
+      cost: freeByThreshold ? 0 : baseCost,
+      agencyId: selected === "correo-sucursal" ? agencyOption?.value || "" : ""
     };
   }
 
@@ -96,7 +132,7 @@
   function renderItems() {
     elements.items.innerHTML = cart
       .map((item) => {
-        const product = findProduct(item.id);
+        const product = findProduct(item);
         if (!product) return "";
         const image = product.images[0] || "assets/images/moodboard/arvel-editorial-hero.png";
         return `
@@ -127,28 +163,13 @@
   }
 
   function updatePaymentAvailability() {
-    const delivery = getDelivery();
-    const allowsCash = delivery?.value === "encuentro";
-    elements.cashInput.disabled = !allowsCash;
-    elements.cashChoice.classList.toggle("is-disabled", !allowsCash);
-
-    if (!allowsCash && elements.cashInput.checked) {
-      elements.cashInput.checked = false;
-    }
+    return;
   }
 
   function updateDniAvailability() {
     if (!elements.dniField || !elements.dni) return;
-    const deliveryType = elements.form.elements.delivery?.value || "";
-    const needsDni = deliveryType.startsWith("correo-");
-    elements.dniField.hidden = !needsDni;
-    elements.dni.required = needsDni;
-
-    if (!needsDni) {
-      elements.dni.value = "";
-      elements.dni.removeAttribute("aria-invalid");
-      document.querySelector("#dni-error").textContent = "";
-    }
+    elements.dniField.hidden = false;
+    elements.dni.required = true;
   }
 
   function updateMeetingAvailability() {
@@ -193,6 +214,65 @@
     elements.correoHomeCostLabel.textContent =
       `${window.Arvel.formatPrice(estimate.homeCost)} estimados · ${estimate.minDays} a ${estimate.maxDays} días hábiles.`;
     updateTotals();
+  }
+
+  const provinceCodes = Object.freeze({
+    "Salta": "A", "Buenos Aires": "B", "Ciudad Autonoma de Buenos Aires": "C",
+    "San Luis": "D", "Entre Rios": "E", "La Rioja": "F",
+    "Santiago del Estero": "G", "Chaco": "H", "San Juan": "J",
+    "Catamarca": "K", "La Pampa": "L", "Mendoza": "M", "Misiones": "N",
+    "Formosa": "P", "Neuquen": "Q", "Rio Negro": "R", "Santa Fe": "S",
+    "Tucuman": "T", "Chubut": "U", "Tierra del Fuego": "V",
+    "Corrientes": "W", "Cordoba": "X", "Jujuy": "Y", "Santa Cruz": "Z"
+  });
+
+  function normalizeProvince(value) {
+    return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  }
+
+  async function updateCorreoAgencyAvailability() {
+    if (!elements.correoAgencySelector || !elements.correoAgency) return;
+    const isBranch = elements.form.elements.delivery?.value === "correo-sucursal";
+    elements.correoAgencySelector.hidden = !isBranch;
+    if (!isBranch) {
+      elements.correoAgency.required = false;
+      return;
+    }
+
+    const stateId = provinceCodes[normalizeProvince(elements.province?.value)];
+    if (!stateId) {
+      elements.correoAgency.required = false;
+      elements.correoAgency.innerHTML = '<option value="">Elegí primero una provincia</option>';
+      elements.correoAgencyStatus.textContent = "Seleccioná la provincia para consultar Paq.Ar.";
+      return;
+    }
+
+    const requestId = ++agenciesRequestId;
+    elements.correoAgency.disabled = true;
+    elements.correoAgency.required = false;
+    elements.correoAgency.innerHTML = '<option value="">Consultando sucursales…</option>';
+    elements.correoAgencyStatus.textContent = "Consultando sucursales oficiales…";
+    try {
+      const agencies = await window.ArvelShipping.getAgencies(stateId);
+      if (requestId !== agenciesRequestId) return;
+      elements.correoAgency.innerHTML = '<option value="">Seleccioná una sucursal</option>' + agencies
+        .map((agency) => {
+          const label = [agency.name, agency.city, agency.address].filter(Boolean).join(" · ");
+          return `<option value="${window.Arvel.escapeHtml(agency.id)}">${window.Arvel.escapeHtml(label)}</option>`;
+        })
+        .join("");
+      elements.correoAgency.disabled = false;
+      elements.correoAgency.required = agencies.length > 0;
+      elements.correoAgencyStatus.textContent = agencies.length
+        ? `${agencies.length} sucursales habilitadas por Correo Argentino.`
+        : "No encontramos sucursales habilitadas para esta provincia.";
+    } catch (error) {
+      if (requestId !== agenciesRequestId) return;
+      elements.correoAgency.innerHTML = '<option value="">La sucursal se coordinará manualmente</option>';
+      elements.correoAgency.disabled = true;
+      elements.correoAgency.required = false;
+      elements.correoAgencyStatus.textContent = `${error.message} Podés continuar y Arvel la coordinará manualmente.`;
+    }
   }
 
   function getErrorElement(input) {
@@ -331,8 +411,7 @@
       createdAt: new Date(),
       discount: 0,
       customer: {
-        firstName: data.get("firstName").trim(),
-        lastName: data.get("lastName").trim(),
+        fullName: data.get("fullName").trim(),
         email: data.get("email").trim(),
         phone: data.get("phone").trim(),
         dni: data.get("dni").trim()
@@ -353,12 +432,12 @@
       total,
       items: cart.map((item) => ({
         ...item,
-        product: findProduct(item.id)
+        product: findProduct(item)
       }))
     };
   }
 
-  function buildWhatsAppMessage(order) {
+  function buildWhatsAppMessage(order, hasReceipt = false) {
     const productLines = order.items.map(
       (item) =>
         `• ${item.product.name} | Talle: ${item.size} | Color: ${item.color} | Cantidad: ${item.quantity} | ${window.Arvel.formatPrice(item.product.price * item.quantity)}`
@@ -369,7 +448,7 @@
       "",
       `Pedido: ${order.orderNumber}`,
       `Fecha: ${new Intl.DateTimeFormat("es-AR", { dateStyle: "short", timeStyle: "short" }).format(order.createdAt)}`,
-      `Clienta: ${order.customer.firstName} ${order.customer.lastName}`,
+      `Clienta: ${order.customer.fullName}`,
       `Teléfono: ${order.customer.phone}`,
       `Correo: ${order.customer.email}`,
       order.customer.dni ? `DNI para el envío: ${order.customer.dni}` : "",
@@ -378,18 +457,20 @@
       ...productLines,
       "",
       `Subtotal: ${window.Arvel.formatPrice(order.subtotal)}`,
-      order.payment.value === "transferencia"
-        ? `Descuento por transferencia: ${window.Arvel.formatPrice(order.discount)}`
-        : "",
       `Envío: ${order.delivery.cost === 0 ? "Gratis / sin costo" : window.Arvel.formatPrice(order.delivery.cost)}`,
       `Método de entrega: ${order.delivery.label}`,
       `Método de pago: ${order.payment.label}`,
+      window.ARVEL_TRANSFER?.alias ? `Alias: ${window.ARVEL_TRANSFER.alias}` : "",
+      window.ARVEL_TRANSFER?.wallet ? `Billetera: ${window.ARVEL_TRANSFER.wallet}` : "",
       `Total: ${window.Arvel.formatPrice(order.total)}`,
       "",
       `Entrega: ${order.address.street} ${order.address.streetNumber}${order.address.apartment ? `, ${order.address.apartment}` : ""}, ${order.address.city}, ${order.address.province} (${order.address.postalCode})`,
-      order.address.references ? `Referencias: ${order.address.references}` : "",
+      order.address.references ? `Entre calles: ${order.address.references}` : "",
       order.address.notes ? `Observaciones: ${order.address.notes}` : "",
       "",
+      hasReceipt
+        ? "✅ Confirmo que realicé la transferencia. Adjunto el comprobante de pago."
+        : "Todavía no adjunté el comprobante de pago.",
       "Entiendo que el pedido recién será recibido cuando envíe este mensaje y queda sujeto a confirmación de stock y pago."
     ]
       .filter((line) => line !== "")
@@ -397,9 +478,10 @@
   }
 
   function showConfirmation(order) {
+    preparedOrder = order;
     elements.content.hidden = true;
     elements.confirmation.hidden = false;
-    elements.confirmationName.textContent = order.customer.firstName;
+    elements.confirmationName.textContent = order.customer.fullName;
     elements.confirmationOrder.textContent = order.orderNumber;
     elements.confirmationSummary.innerHTML = `
       <dl>
@@ -407,21 +489,94 @@
         <div><dt>Entrega</dt><dd>${order.delivery.label}</dd></div>
         <div><dt>Pago</dt><dd>${order.payment.label}</dd></div>
         <div><dt>Subtotal</dt><dd>${window.Arvel.formatPrice(order.subtotal)}</dd></div>
-        ${order.payment.value === "transferencia"
-          ? `<div><dt>Descuento por transferencia</dt><dd>${window.Arvel.formatPrice(order.discount)}</dd></div>`
-          : ""}
         <div><dt>Envío</dt><dd>${order.delivery.cost === 0 ? "Sin costo" : window.Arvel.formatPrice(order.delivery.cost)}</dd></div>
         <div><dt>Total</dt><dd>${window.Arvel.formatPrice(order.total)}</dd></div>
       </dl>
     `;
-    elements.confirmationWhatsApp.href = window.Arvel.createWhatsAppUrl(
-      buildWhatsAppMessage(order)
-    );
     elements.confirmationNotice.textContent =
       "El pedido todavía no fue recibido, guardado, cobrado ni reservado. Para enviarlo a Arvel tenés que tocar el botón y confirmar el mensaje en WhatsApp.";
-    elements.confirmationWhatsAppLabel.textContent = "Enviar pedido por WhatsApp";
+    elements.confirmationWhatsAppLabel.textContent = "Enviar pedido y comprobante por WhatsApp";
+    const alias = String(window.ARVEL_TRANSFER?.alias || "").trim();
+    elements.transferAlias.textContent = alias || "Alias todavía no configurado";
+    elements.transferWallet.textContent = window.ARVEL_TRANSFER?.wallet || "";
+    elements.transferHolder.textContent = window.ARVEL_TRANSFER?.holder || "";
+    elements.transferCvu.textContent = window.ARVEL_TRANSFER?.cvu || "";
+    elements.copyTransferAlias.disabled = !alias;
     elements.confirmation.focus();
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function clearReceipt() {
+    if (receiptObjectUrl) URL.revokeObjectURL(receiptObjectUrl);
+    receiptObjectUrl = "";
+    elements.receipt.value = "";
+    elements.receiptPreview.hidden = true;
+    elements.receiptPreviewImage.hidden = true;
+    elements.receiptPreviewImage.removeAttribute("src");
+    elements.receiptFileName.textContent = "";
+    elements.receiptFileSize.textContent = "";
+    elements.receiptError.textContent = "";
+  }
+
+  function updateReceiptPreview() {
+    const file = elements.receipt.files?.[0];
+    elements.receiptError.textContent = "";
+    if (!file) {
+      clearReceipt();
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      clearReceipt();
+      elements.receiptError.textContent = "El comprobante supera los 10 MB. Elegí un archivo más liviano.";
+      return;
+    }
+    const allowed = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+    if (!allowed.includes(file.type)) {
+      clearReceipt();
+      elements.receiptError.textContent = "Usá una imagen JPG, PNG, WEBP o un archivo PDF.";
+      return;
+    }
+    if (receiptObjectUrl) URL.revokeObjectURL(receiptObjectUrl);
+    receiptObjectUrl = "";
+    elements.receiptPreview.hidden = false;
+    elements.receiptFileName.textContent = file.name;
+    elements.receiptFileSize.textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB`;
+    if (file.type.startsWith("image/")) {
+      receiptObjectUrl = URL.createObjectURL(file);
+      elements.receiptPreviewImage.src = receiptObjectUrl;
+      elements.receiptPreviewImage.hidden = false;
+    } else {
+      elements.receiptPreviewImage.hidden = true;
+    }
+  }
+
+  async function sendOrderWithReceipt() {
+    if (!preparedOrder) return;
+    const file = elements.receipt.files?.[0];
+    if (!file) {
+      elements.receiptError.textContent = "Subí el comprobante antes de enviar el pedido.";
+      elements.receipt.focus();
+      return;
+    }
+
+    const message = buildWhatsAppMessage(preparedOrder, true);
+    const shareData = { files: [file], title: `Pedido ${preparedOrder.orderNumber}`, text: message };
+    elements.receiptError.textContent = "";
+
+    if (navigator.share && navigator.canShare?.(shareData)) {
+      try {
+        await navigator.share(shareData);
+        elements.confirmationNotice.textContent =
+          "Se abrió el menú para compartir. Elegí WhatsApp y enviáselo a Arvel al 11 3254-7101. Verificá que el mensaje y el comprobante aparezcan antes de enviarlos.";
+        return;
+      } catch (error) {
+        if (error.name === "AbortError") return;
+      }
+    }
+
+    window.open(window.Arvel.createWhatsAppUrl(message), "_blank", "noopener,noreferrer");
+    elements.receiptHelp.textContent =
+      "WhatsApp abrió el chat de Arvel. Tocá el clip, adjuntá el comprobante seleccionado y recién después enviá el mensaje.";
   }
 
   async function startMercadoPago(order) {
@@ -443,7 +598,8 @@
             delivery: {
               method: order.delivery.value,
               postalCode: order.address.postalCode,
-              meetingPoint: elements.meetingPoint?.value || ""
+              meetingPoint: elements.meetingPoint?.value || "",
+              agencyId: order.delivery.agencyId || ""
             },
             items: order.items.map((item) => ({
               documentId: item.product.documentId || item.documentId || "",
@@ -468,11 +624,21 @@
   }
 
   function bindEvents() {
+    elements.copyTransferAlias?.addEventListener("click", async () => {
+      const alias = String(window.ARVEL_TRANSFER?.alias || "").trim();
+      if (!alias) return;
+      await navigator.clipboard.writeText(alias);
+      elements.copyTransferAlias.textContent = "Alias copiado ✓";
+    });
+    elements.receipt?.addEventListener("change", updateReceiptPreview);
+    elements.removeReceipt?.addEventListener("click", clearReceipt);
+    elements.confirmationWhatsApp?.addEventListener("click", sendOrderWithReceipt);
     elements.postalCode.addEventListener("change", updateCorreoEstimate);
     elements.postalCode.addEventListener("blur", updateCorreoEstimate);
     elements.form.addEventListener("change", (event) => {
       if (event.target.name === "delivery") {
         updateMeetingAvailability();
+        updateCorreoAgencyAvailability();
         updateDniAvailability();
         updatePaymentAvailability();
         updateTotals();
@@ -480,6 +646,9 @@
       if (event.target.name === "meetingPoint") {
         updateMeetingAvailability();
         updateTotals();
+      }
+      if (event.target.name === "province") {
+        updateCorreoAgencyAvailability();
       }
       if (event.target.matches("[aria-invalid]")) {
         event.target.removeAttribute("aria-invalid");
@@ -501,10 +670,6 @@
       event.preventDefault();
       if (!validateForm()) return;
       const order = buildOrderData(generateOrderNumber());
-      if (order.payment.value === "mercado-pago") {
-        await startMercadoPago(order);
-        return;
-      }
       showConfirmation(order);
     });
 
@@ -519,6 +684,7 @@
   if (hasItems) {
     renderItems();
     updateMeetingAvailability();
+    updateCorreoAgencyAvailability();
     updateDniAvailability();
     updatePaymentAvailability();
     updateTotals();

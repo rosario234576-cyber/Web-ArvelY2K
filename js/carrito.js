@@ -1,9 +1,12 @@
-(function () {
+(async function () {
   "use strict";
 
   const FREE_SHIPPING_THRESHOLD = 120000;
   const STANDARD_SHIPPING_COST = 6500;
-  const products = Array.isArray(window.ARVEL_PRODUCTS) ? window.ARVEL_PRODUCTS : [];
+  const catalog = window.ARVEL_PRODUCTS_READY
+    ? await window.ARVEL_PRODUCTS_READY
+    : window.ARVEL_PRODUCTS;
+  const products = Array.isArray(catalog) ? catalog : [];
 
   const elements = {
     empty: document.querySelector("#cart-empty"),
@@ -35,8 +38,19 @@
     window.ArvelStore.updateGlobalCounters();
   }
 
-  function findProduct(id) {
-    return products.find((product) => product.id === Number(id));
+  function productKey(product) {
+    return String(product?.documentId || product?.id || "");
+  }
+
+  function itemKey(item) {
+    return String(item?.documentId || item?.id || "");
+  }
+
+  function findProduct(itemOrId) {
+    const key = typeof itemOrId === "object" ? itemKey(itemOrId) : String(itemOrId ?? "");
+    return products.find(
+      (product) => productKey(product) === key || String(product.id ?? "") === key
+    );
   }
 
   function getVariantStock(product, size, color) {
@@ -49,7 +63,7 @@
     let changed = false;
     const sanitized = cart
       .map((item) => {
-        const product = findProduct(item.id);
+        const product = findProduct(item);
         if (!product || product.soldOut || product.archived) {
           changed = true;
           return null;
@@ -65,7 +79,8 @@
         if (safeQuantity !== item.quantity || item.price !== product.price) changed = true;
 
         return {
-          id: product.id,
+          id: productKey(product),
+          documentId: product.documentId || "",
           size: item.size,
           color: item.color,
           quantity: safeQuantity,
@@ -79,7 +94,8 @@
   }
 
   function createCartItem(item) {
-    const product = findProduct(item.id);
+    const product = findProduct(item);
+    const key = productKey(product);
     const stock = getVariantStock(product, item.size, item.color);
     const image = product.images[0] || "assets/images/moodboard/arvel-editorial-hero.png";
     const lineTotal = product.price * item.quantity;
@@ -87,11 +103,11 @@
     return `
       <article
         class="cart-item"
-        data-cart-id="${product.id}"
+        data-cart-id="${key}"
         data-size="${item.size}"
         data-color="${item.color}"
       >
-        <a class="cart-item__image" href="producto.html?id=${product.id}">
+        <a class="cart-item__image" href="producto.html?id=${encodeURIComponent(key)}">
           <img
             src="${image}"
             alt="${product.name}"
@@ -103,7 +119,7 @@
         <div class="cart-item__info">
           <div>
             <p class="eyebrow">${product.collection}</p>
-            <h3><a href="producto.html?id=${product.id}">${product.name}</a></h3>
+            <h3><a href="producto.html?id=${encodeURIComponent(key)}">${product.name}</a></h3>
             <p class="cart-item__variants">Talle ${item.size} · ${item.color}</p>
           </div>
           <div class="cart-item__controls">
@@ -134,7 +150,7 @@
   function calculateTotals(cart) {
     return cart.reduce(
       (totals, item) => {
-        const product = findProduct(item.id);
+        const product = findProduct(item);
         totals.subtotal += product.price * item.quantity;
         if (product.oldPrice) {
           totals.discount += (product.oldPrice - product.price) * item.quantity;
@@ -173,11 +189,11 @@
   }
 
   function renderRecommendations(cart) {
-    const cartIds = new Set(cart.map((item) => item.id));
+    const cartIds = new Set(cart.map(itemKey));
     const suggestions = products
       .filter(
         (product) =>
-          !cartIds.has(product.id) &&
+          !cartIds.has(productKey(product)) &&
           !product.soldOut &&
           !product.archived &&
           product.stock > 0
@@ -210,7 +226,7 @@
   function findItemIndex(cart, itemElement) {
     return cart.findIndex(
       (item) =>
-        item.id === Number(itemElement.dataset.cartId) &&
+        itemKey(item) === itemElement.dataset.cartId &&
         item.size === itemElement.dataset.size &&
         item.color === itemElement.dataset.color
     );
@@ -222,7 +238,7 @@
     if (index < 0) return;
 
     const item = cart[index];
-    const product = findProduct(item.id);
+    const product = findProduct(item);
     const stock = getVariantStock(product, item.size, item.color);
 
     if (action === "remove") cart.splice(index, 1);

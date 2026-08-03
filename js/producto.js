@@ -3,12 +3,15 @@
 
   const RECENT_KEY = "arvel-recent-products";
   const params = new URLSearchParams(window.location.search);
-  const productId = Number(params.get("id"));
+  const productId = String(params.get("id") || "");
   const catalog = window.ARVEL_PRODUCTS_READY
     ? await window.ARVEL_PRODUCTS_READY
     : window.ARVEL_PRODUCTS;
   const products = Array.isArray(catalog) ? catalog : [];
-  const product = products.find((item) => item.id === productId);
+  const productKey = (item) => String(item?.documentId || item?.id || "");
+  const product = products.find(
+    (item) => productKey(item) === productId || String(item.id ?? "") === productId
+  );
   let suppressZoom = false;
 
   const elements = {
@@ -233,7 +236,7 @@
     const cart = window.ArvelStore.readStoredArray(window.ArvelStore.storageKeys.cart);
     const existing = cart.find(
       (item) =>
-        item.id === product.id &&
+        String(item.documentId || item.id) === productKey(product) &&
         item.size === selection.size &&
         item.color === selection.color
     );
@@ -248,7 +251,7 @@
     if (existing) existing.quantity = nextQuantity;
     else {
       cart.push({
-        id: product.id,
+        id: productKey(product),
         documentId: product.documentId || "",
         size: selection.size,
         color: selection.color,
@@ -277,7 +280,7 @@
 
   function updateFavoriteButton() {
     const favorites = window.ArvelStore.readStoredArray(window.ArvelStore.storageKeys.favorites);
-    const isFavorite = favorites.includes(product.id);
+    const isFavorite = favorites.some((id) => String(id) === productKey(product));
     elements.favoriteButton.setAttribute("aria-pressed", String(isFavorite));
     elements.favoriteButton.querySelector("span").textContent = isFavorite
       ? "Guardada en favoritos"
@@ -287,9 +290,9 @@
 
   function toggleFavorite() {
     const favorites = window.ArvelStore.readStoredArray(window.ArvelStore.storageKeys.favorites);
-    const index = favorites.indexOf(product.id);
+    const index = favorites.findIndex((id) => String(id) === productKey(product));
     if (index >= 0) favorites.splice(index, 1);
-    else favorites.push(product.id);
+    else favorites.push(productKey(product));
     localStorage.setItem(window.ArvelStore.storageKeys.favorites, JSON.stringify(favorites));
     updateFavoriteButton();
     window.ArvelStore.updateGlobalCounters();
@@ -303,8 +306,8 @@
   }
 
   function storeRecentlyViewed() {
-    const recent = window.ArvelStore.readStoredArray(RECENT_KEY).filter((id) => id !== product.id);
-    recent.unshift(product.id);
+    const recent = window.ArvelStore.readStoredArray(RECENT_KEY).filter((id) => String(id) !== productKey(product));
+    recent.unshift(productKey(product));
     localStorage.setItem(RECENT_KEY, JSON.stringify(recent.slice(0, 6)));
   }
 
@@ -312,7 +315,7 @@
     const related = products
       .filter(
         (item) =>
-          item.id !== product.id &&
+          productKey(item) !== productKey(product) &&
           !item.archived &&
           !item.soldOut &&
           (item.category === product.category || item.collection === product.collection)
@@ -324,9 +327,9 @@
       elements.relatedSection.hidden = false;
     }
 
-    const recentIds = window.ArvelStore.readStoredArray(RECENT_KEY).filter((id) => id !== product.id);
+    const recentIds = window.ArvelStore.readStoredArray(RECENT_KEY).filter((id) => String(id) !== productKey(product));
     const recentProducts = recentIds
-      .map((id) => products.find((item) => item.id === id))
+      .map((id) => products.find((item) => productKey(item) === String(id)))
       .filter(Boolean)
       .slice(0, 4);
 
