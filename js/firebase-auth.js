@@ -85,7 +85,10 @@ function updateAccountLinks(user) {
       "aria-label",
       user ? `Abrir cuenta de ${user.displayName || user.email}` : "Iniciar sesión"
     );
-    if (label) label.textContent = user ? "Mi cuenta" : "Ingresar";
+    if (label) {
+      const firstName = String(user?.displayName || "").trim().split(/\s+/)[0];
+      label.textContent = user ? `Hola, ${firstName || "Arvel"}` : "Ingresar";
+    }
   });
 }
 
@@ -117,6 +120,11 @@ function bindRegistration() {
   const form = document.querySelector("#register-form");
   if (!form) return;
   const status = document.querySelector("#register-status");
+  const next = new URLSearchParams(location.search).get("next");
+  const loginLink = document.querySelector('a[href="login.html"]');
+  if (loginLink && next && /^[a-z0-9-]+\.html(?:\?.*)?$/i.test(next)) {
+    loginLink.href = `login.html?next=${encodeURIComponent(next)}`;
+  }
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -152,7 +160,7 @@ function bindRegistration() {
         "success"
       );
       window.setTimeout(() => {
-        location.href = "cuenta.html?registro=ok";
+        location.href = safeNextPage();
       }, 1200);
     } catch (error) {
       reportAuthError("registro", error);
@@ -168,6 +176,11 @@ function bindLogin() {
   if (!form) return;
   const status = document.querySelector("#login-status");
   const reset = document.querySelector("#password-reset");
+  const next = new URLSearchParams(location.search).get("next");
+  const registerLink = document.querySelector('a[href="registro.html"]');
+  if (registerLink && next && /^[a-z0-9-]+\.html(?:\?.*)?$/i.test(next)) {
+    registerLink.href = `registro.html?next=${encodeURIComponent(next)}`;
+  }
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();

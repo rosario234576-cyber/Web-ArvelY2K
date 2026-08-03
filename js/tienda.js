@@ -99,7 +99,7 @@
     const favoriteIds = favoritesOnly
       ? window.ArvelStore
           .readStoredArray(window.ArvelStore.storageKeys.favorites)
-          .map(Number)
+          .map(String)
       : [];
 
     return products.filter((product) => {
@@ -117,7 +117,7 @@
         product.price <= state.maxPrice &&
         (!state.available || (!product.soldOut && product.stock > 0)) &&
         (!state.sale || product.discount > 0) &&
-        (!favoritesOnly || favoriteIds.includes(product.id))
+        (!favoritesOnly || favoriteIds.includes(String(product.documentId || product.id)))
       );
     });
   }

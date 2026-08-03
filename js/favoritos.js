@@ -2,10 +2,10 @@
   "use strict";
 
   const key = window.ArvelStore?.storageKeys.favorites || "arvel-favorites";
-  const products = Array.isArray(window.ARVEL_PRODUCTS) ? window.ARVEL_PRODUCTS : [];
+  let products = Array.isArray(window.ARVEL_PRODUCTS) ? window.ARVEL_PRODUCTS : [];
 
   function getFavorites() {
-    return window.ArvelStore.readStoredArray(key).map(Number);
+    return window.ArvelStore.readStoredArray(key).map(String);
   }
 
   function saveFavorites(favorites) {
@@ -15,13 +15,15 @@
   }
 
   function getProductName(id) {
-    return products.find((product) => product.id === id)?.name || "esta pieza";
+    return products.find(
+      (product) => String(product.documentId || product.id) === String(id)
+    )?.name || "esta pieza";
   }
 
   function syncButtons() {
     const favorites = getFavorites();
     document.querySelectorAll("[data-favorite-id]").forEach((button) => {
-      const id = Number(button.dataset.favoriteId);
+      const id = String(button.dataset.favoriteId);
       const active = favorites.includes(id);
       button.setAttribute("aria-pressed", String(active));
       button.setAttribute(
@@ -46,7 +48,7 @@
     const button = event.target.closest("[data-favorite-id]");
     if (!button) return;
 
-    const id = Number(button.dataset.favoriteId);
+    const id = String(button.dataset.favoriteId);
     const favorites = getFavorites();
     const index = favorites.indexOf(id);
     const removing = index >= 0;
@@ -71,5 +73,8 @@
   });
   observer.observe(document.body, { childList: true, subtree: true });
 
-  syncButtons();
+  (window.ARVEL_PRODUCTS_READY || Promise.resolve(products)).then((catalog) => {
+    products = Array.isArray(catalog) ? catalog : products;
+    syncButtons();
+  });
 })();
