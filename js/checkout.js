@@ -495,7 +495,7 @@
     `;
     elements.confirmationNotice.textContent =
       "El pedido todavía no fue recibido, guardado, cobrado ni reservado. Para enviarlo a Arvel tenés que tocar el botón y confirmar el mensaje en WhatsApp.";
-    elements.confirmationWhatsAppLabel.textContent = "Enviar pedido y comprobante por WhatsApp";
+    elements.confirmationWhatsAppLabel.textContent = "Abrir WhatsApp y enviar comprobante";
     const alias = String(window.ARVEL_TRANSFER?.alias || "").trim();
     elements.transferAlias.textContent = alias || "Alias todavía no configurado";
     elements.transferWallet.textContent = window.ARVEL_TRANSFER?.wallet || "";
@@ -560,23 +560,14 @@
     }
 
     const message = buildWhatsAppMessage(preparedOrder, true);
-    const shareData = { files: [file], title: `Pedido ${preparedOrder.orderNumber}`, text: message };
     elements.receiptError.textContent = "";
-
-    if (navigator.share && navigator.canShare?.(shareData)) {
-      try {
-        await navigator.share(shareData);
-        elements.confirmationNotice.textContent =
-          "Se abrió el menú para compartir. Elegí WhatsApp y enviáselo a Arvel al 11 3254-7101. Verificá que el mensaje y el comprobante aparezcan antes de enviarlos.";
-        return;
-      } catch (error) {
-        if (error.name === "AbortError") return;
-      }
-    }
-
-    window.open(window.Arvel.createWhatsAppUrl(message), "_blank", "noopener,noreferrer");
+    const adminNumber = String(window.ARVEL_TRANSFER?.whatsappNumber || "5491160153234")
+      .replace(/\D/g, "");
+    const whatsappUrl = `https://wa.me/${adminNumber}?text=${encodeURIComponent(message)}`;
+    const whatsappWindow = window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+    if (!whatsappWindow) window.location.href = whatsappUrl;
     elements.receiptHelp.textContent =
-      "WhatsApp abrió el chat de Arvel. Tocá el clip, adjuntá el comprobante seleccionado y recién después enviá el mensaje.";
+      "Se abrió el chat administrativo de Arvel al +54 9 11 6015-3234 con todos tus datos. WhatsApp no permite adjuntar el archivo desde un enlace: tocá el clip, elegí el comprobante y enviá el mensaje.";
   }
 
   async function startMercadoPago(order) {
@@ -587,8 +578,15 @@
     elements.globalError.textContent = "";
 
     try {
+      const paymentApiBase = String(
+        window.ARVEL_PAYMENT_API_BASE || window.ARVEL_API_BASE || ""
+      ).replace(/\/+$/, "");
+      if (!paymentApiBase) {
+        throw new Error("Falta configurar la dirección segura de Mercado Pago.");
+      }
+
       const response = await fetch(
-        `${window.ARVEL_PAYMENT_API_BASE}/api/create-mercadopago-preference`,
+        `${paymentApiBase}/api/create-mercadopago-preference`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -610,7 +608,10 @@
           })
         }
       );
-      const result = await response.json();
+      const contentType = response.headers.get("content-type") || "";
+      const result = contentType.includes("application/json")
+        ? await response.json()
+        : { error: "El servidor de pagos devolvió una respuesta inválida." };
       if (!response.ok || !result.checkoutUrl) {
         throw new Error(result.error || "No pudimos iniciar Mercado Pago.");
       }
@@ -670,6 +671,10 @@
       event.preventDefault();
       if (!validateForm()) return;
       const order = buildOrderData(generateOrderNumber());
+      if (order.payment.value === "mercadopago") {
+        await startMercadoPago(order);
+        return;
+      }
       showConfirmation(order);
     });
 
