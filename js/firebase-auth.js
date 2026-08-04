@@ -25,6 +25,60 @@ const accountLinks = document.querySelectorAll("[data-auth-account]");
 const authPage = document.querySelector("[data-auth-page]")?.dataset.authPage || "";
 let auth = null;
 let db = null;
+const SESSION_ACTIVITY_KEY = "arvel-session-last-activity";
+const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
+const SESSION_WARNING_MS = 2 * 60 * 1000;
+let sessionTimer = 0;
+let sessionWarningShown = false;
+
+function rememberSessionActivity() {
+  if (!auth?.currentUser) return;
+  localStorage.setItem(SESSION_ACTIVITY_KEY, String(Date.now()));
+  sessionWarningShown = false;
+}
+
+function stopSessionTimeout() {
+  window.clearInterval(sessionTimer);
+  sessionTimer = 0;
+  sessionWarningShown = false;
+  localStorage.removeItem(SESSION_ACTIVITY_KEY);
+}
+
+function startSessionTimeout() {
+  if (sessionTimer) return;
+  rememberSessionActivity();
+
+  let lastRecordedActivity = 0;
+  ["pointerdown", "keydown", "touchstart", "scroll"].forEach((eventName) => {
+    window.addEventListener(eventName, () => {
+      const now = Date.now();
+      if (now - lastRecordedActivity < 15000) return;
+      lastRecordedActivity = now;
+      rememberSessionActivity();
+    }, { passive: true });
+  });
+
+  sessionTimer = window.setInterval(async () => {
+    if (!auth?.currentUser) return;
+    const lastActivity = Number(localStorage.getItem(SESSION_ACTIVITY_KEY)) || Date.now();
+    const remaining = SESSION_TIMEOUT_MS - (Date.now() - lastActivity);
+
+    if (remaining <= 0) {
+      stopSessionTimeout();
+      await signOut(auth);
+      const next = /^(cuenta|checkout)\.html$/i.test(location.pathname.split("/").pop() || "")
+        ? `?next=${encodeURIComponent(location.pathname.split("/").pop())}`
+        : "";
+      location.replace(`login.html${next}&session=expired`.replace("?&", "?"));
+      return;
+    }
+
+    if (remaining <= SESSION_WARNING_MS && !sessionWarningShown) {
+      sessionWarningShown = true;
+      window.ArvelStore?.showToast?.("Tu sesión se cerrará en 2 minutos si no usás la página.");
+    }
+  }, 15000);
+}
 
 function setStatus(target, message, type = "") {
   if (!target) return;
@@ -312,6 +366,9 @@ async function initializeAuthentication() {
     updateAccountLinks(user);
     renderAccount(user);
     updateAdminAccess(user);
+
+    if (user) startSessionTimeout();
+    else stopSessionTimeout();
 
     if (authPage === "login" && user) {
       location.replace(safeNextPage());
