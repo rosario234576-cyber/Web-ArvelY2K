@@ -418,8 +418,8 @@
     function getActiveIndex() {
       const left = carousel.scrollLeft;
       return items.reduce((closest, item, index) => {
-        const currentDistance = Math.abs(item.offsetLeft - carousel.offsetLeft - left);
-        const closestDistance = Math.abs(items[closest].offsetLeft - carousel.offsetLeft - left);
+        const currentDistance = Math.abs(item.offsetLeft - left);
+        const closestDistance = Math.abs(items[closest].offsetLeft - left);
         return currentDistance < closestDistance ? index : closest;
       }, 0);
     }
@@ -430,7 +430,11 @@
 
     function goTo(index) {
       const normalized = (index + items.length) % items.length;
-      items[normalized].scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
+      const target = items[normalized];
+      const targetLeft = carousel.scrollLeft
+        + target.getBoundingClientRect().left
+        - carousel.getBoundingClientRect().left;
+      carousel.scrollTo({ left: targetLeft, behavior: "smooth" });
     }
 
     previous.addEventListener("click", () => goTo(getActiveIndex() - 1));
