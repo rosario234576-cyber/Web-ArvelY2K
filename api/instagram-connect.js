@@ -16,11 +16,11 @@ module.exports = async function handler(req, res) {
   const signature = crypto.createHmac("sha256", secret).update(nonce).digest("hex");
   const params = new URLSearchParams({
     enable_fb_login: "0",
-    force_authentication: "1",
+    force_reauth: "true",
     client_id: appId,
     redirect_uri: getRedirectUri(req),
     response_type: "code",
-    scope: "instagram_business_basic,instagram_business_manage_comments,instagram_business_manage_messages",
+    scope: "instagram_business_basic",
     state: `${nonce}.${signature}`
   });
   res.setHeader("Cache-Control", "no-store");
