@@ -55,8 +55,11 @@
 
   function getVariantStock(product, size, color) {
     const key = `${size}|${color}`;
-    if (Object.hasOwn(product.stockByVariant, key)) return product.stockByVariant[key];
-    return Object.keys(product.stockByVariant).length ? 0 : product.stock;
+    const variants = product?.stockByVariant && typeof product.stockByVariant === "object"
+      ? product.stockByVariant
+      : {};
+    if (Object.hasOwn(variants, key)) return Math.max(0, Number(variants[key]) || 0);
+    return Object.keys(variants).length ? 0 : Math.max(0, Number(product?.stock) || 0);
   }
 
   function sanitizeCart(cart) {

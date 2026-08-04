@@ -501,15 +501,23 @@
         return;
       }
 
-      const size = String(product.sizes?.[0] || "Único");
-      const color = String(product.colors?.[0] || "Único");
+      const stockedVariant = Object.entries(product.stockByVariant || {})
+        .find(([, variantStock]) => Number(variantStock) > 0);
+      const [stockedSize, stockedColor] = stockedVariant
+        ? String(stockedVariant[0]).split("|")
+        : [];
+      const size = String(stockedSize || product.sizes?.[0] || "Único");
+      const color = String(stockedColor || product.colors?.[0] || "Según publicación");
       const key = String(product.documentId || product.id);
       const variantId = `${key}::${size}::${color}`;
       const cart = readStoredArray(STORAGE_KEYS.cart);
       const existing = cart.find(
         (item) => String(item.variant_id || item.variantId) === variantId
       );
-      const stock = Math.max(1, Number(product.stock) || 1);
+      const stock = Math.max(
+        1,
+        Number(stockedVariant?.[1]) || Number(product.stock) || 1
+      );
 
       if (existing && Number(existing.quantity || 1) >= stock) {
         showToast(`Ya tenés el máximo disponible de ${product.name}.`, {
@@ -529,7 +537,10 @@
           size,
           color,
           quantity: 1,
-          price: Number(product.price) || 0
+          price: Number(product.price) || 0,
+          name: String(product.name || "Pieza Arvel"),
+          image: String(product.images?.[0] || ""),
+          stock
         });
       }
 
