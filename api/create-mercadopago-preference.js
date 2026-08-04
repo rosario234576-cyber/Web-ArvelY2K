@@ -220,6 +220,9 @@ module.exports = async function handler(req, res) {
         failure: `${storeBase}/pago-resultado.html?resultado=rechazado`
       },
       auto_return: "approved",
+      payment_methods: {
+        installments: 3
+      },
       notification_url: `${apiBase}/api/mercadopago-webhook`,
       metadata: { order_number: orderNumber }
     };
