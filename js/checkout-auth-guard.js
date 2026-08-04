@@ -31,6 +31,7 @@ window.ARVEL_CHECKOUT_AUTH_READY = (async function () {
       return false;
     }
 
+    window.ARVEL_CHECKOUT_USER = user;
     document.querySelector("#contenido-principal")?.removeAttribute("hidden");
     return true;
   } catch (error) {

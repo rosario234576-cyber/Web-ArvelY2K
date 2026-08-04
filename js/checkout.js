@@ -572,7 +572,10 @@
         `${paymentApiBase}/api/create-mercadopago-preference`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${await window.ARVEL_CHECKOUT_USER.getIdToken()}`
+          },
           body: JSON.stringify({
             orderNumber: order.orderNumber,
             customer: order.customer,
@@ -582,6 +585,7 @@
               meetingPoint: elements.meetingPoint?.value || "",
               agencyId: order.delivery.agencyId || ""
             },
+            address: order.address,
             items: order.items.map((item) => ({
               documentId: item.product.documentId || item.documentId || "",
               variant_id: item.variant_id || item.variantId || `${item.product.documentId || item.documentId || item.product.id}::${item.size}::${item.color}`,
