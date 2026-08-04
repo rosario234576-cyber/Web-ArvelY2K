@@ -44,6 +44,20 @@ function cleanText(value, maxLength = 120) {
   return String(value || "").trim().slice(0, maxLength);
 }
 
+function getInstallmentFeeRate() {
+  const value = Number(process.env.MP_3_INSTALLMENTS_FEE_RATE || 0);
+  return Number.isFinite(value) && value >= 0 && value < 0.9 ? value : 0;
+}
+
+function calculateMercadoPagoPrice(basePrice) {
+  const base = Math.round(Number(basePrice) || 0);
+  const feeRate = getInstallmentFeeRate();
+  if (base <= 0 || feeRate <= 0) return base;
+  // Gross-up: luego de descontar el costo porcentual queda, como mÃ­nimo,
+  // el precio publicado para transferencia. Se redondea a $100 hacia arriba.
+  return Math.ceil((base / (1 - feeRate)) / 100) * 100;
+}
+
 function validOrderNumber(value) {
   return /^ARV-\d{8}-\d{4}$/.test(String(value || ""));
 }
@@ -171,7 +185,8 @@ module.exports = async function handler(req, res) {
       }
 
       const stock = Number(product.stockByVariant?.[`${size}|${color}`] || 0);
-      const price = Math.round(Number(product.price) || 0);
+      const transferPrice = Math.round(Number(product.transferPrice || product.price) || 0);
+      const price = calculateMercadoPagoPrice(transferPrice);
       if (stock < quantity || price <= 0) {
         return res.status(409).json({ error: `No hay stock disponible de ${product.name}.` });
       }

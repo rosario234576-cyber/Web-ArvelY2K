@@ -18,6 +18,12 @@ module.exports = async function handler(req, res) {
   }
 
   const accessToken = String(process.env.MP_ACCESS_TOKEN || "").trim();
+  const configuredFeeRate = Number(process.env.MP_3_INSTALLMENTS_FEE_RATE || 0);
+  const installmentFeeRate = Number.isFinite(configuredFeeRate)
+    && configuredFeeRate >= 0
+    && configuredFeeRate < 0.9
+      ? configuredFeeRate
+      : 0;
   if (!accessToken) {
     return res.status(503).json({ connected: false, reason: "missing_token" });
   }
@@ -31,7 +37,9 @@ module.exports = async function handler(req, res) {
     }
     return res.status(200).json({
       connected: true,
-      mode: accessToken.startsWith("TEST-") ? "test" : "production"
+      mode: accessToken.startsWith("TEST-") ? "test" : "production",
+      installmentFeeRate,
+      installments: 3
     });
   } catch (error) {
     console.error("mercadopago-health", error);
