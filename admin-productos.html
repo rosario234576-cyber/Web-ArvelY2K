@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/admin-productos.css">
+    <link rel="stylesheet" href="css/admin-productos.css?v=20260803-admin2">
     <link rel="stylesheet" href="css/responsive.css">
   </head>
   <body class="admin-body">
@@ -42,7 +42,44 @@
         <a class="button button--pink" href="login.html?next=admin-productos.html">Cambiar de cuenta</a>
       </section>
 
-      <div class="admin-shell" id="admin-content" hidden>
+      <div id="admin-content" hidden>
+        <nav class="admin-tabs" aria-label="Secciones del panel">
+          <button class="is-active" type="button" data-admin-view="summary">Resumen</button>
+          <button type="button" data-admin-view="products">Productos</button>
+          <button type="button" data-admin-view="instagram">Instagram</button>
+          <button type="button" data-admin-view="duplicates">Duplicados</button>
+          <button type="button" data-admin-view="inventory">Inventario</button>
+          <button type="button" data-admin-view="sales">Ventas</button>
+          <button type="button" data-admin-view="settings">Configuración</button>
+        </nav>
+
+        <section class="admin-view" data-admin-panel="summary">
+          <div class="admin-page-heading">
+            <div><span class="eyebrow">Centro de control</span><h1>Todo Arvel, en un lugar</h1></div>
+            <button class="button button--pink" type="button" data-open-products>+ Cargar producto</button>
+          </div>
+          <div class="admin-stats">
+            <article><span>Productos</span><strong id="stat-products">0</strong><small>Total registrado</small></article>
+            <article><span>Publicados</span><strong id="stat-published">0</strong><small>Visibles en la tienda</small></article>
+            <article><span>Vendidos</span><strong id="stat-sold">0</strong><small>Sin stock</small></article>
+            <article><span>Stock bajo</span><strong id="stat-low-stock">0</strong><small>Una unidad disponible</small></article>
+            <article><span>Borradores</span><strong id="stat-drafts">0</strong><small>Pendientes de publicar</small></article>
+            <article><span>Duplicados</span><strong id="stat-duplicates">0</strong><small>Requieren revisión</small></article>
+          </div>
+          <div class="admin-dashboard-grid">
+            <article class="admin-card admin-card--dark">
+              <span class="eyebrow">Instagram</span><h2>Sincronización preparada</h2>
+              <p id="instagram-summary">Falta conectar Meta en Vercel para comenzar a analizar el feed.</p>
+              <button class="button button--pink" type="button" data-open-view="instagram">Ver conexión</button>
+            </article>
+            <article class="admin-card">
+              <span class="eyebrow">Atención</span><h2>Revisión del catálogo</h2>
+              <div id="admin-alerts"><p>No hay alertas por el momento.</p></div>
+            </article>
+          </div>
+        </section>
+
+        <div class="admin-view admin-shell" data-admin-panel="products" hidden>
         <aside class="admin-catalog">
           <div class="admin-catalog__heading">
             <div>
@@ -150,22 +187,26 @@
 
             <fieldset class="admin-fieldset">
               <legend>Fotografías</legend>
-              <label>Rutas o enlaces de las imágenes
-                <textarea
-                  class="textarea"
-                  id="product-image-urls"
-                  name="imageUrls"
-                  rows="5"
-                  placeholder="assets/images/productos/denim-orbit-1.jpg&#10;assets/images/productos/denim-orbit-2.jpg"
-                ></textarea>
+              <label class="admin-image-uploader" for="product-image-files">
+                <span>Seleccionar fotografías</span>
+                <strong>Elegí una o varias imágenes desde tu dispositivo</strong>
+                <small>JPG, PNG o WEBP · máximo 8 MB por imagen</small>
+                <input id="product-image-files" type="file" accept="image/jpeg,image/png,image/webp" multiple>
               </label>
-              <button class="button button--secondary admin-preview-images" id="preview-image-urls" type="button">
-                Previsualizar fotografías
-              </button>
+              <div class="admin-upload-progress" id="image-upload-progress" hidden>
+                <div><span id="image-upload-label">Subiendo fotografías…</span><strong id="image-upload-percent">0%</strong></div>
+                <progress id="image-upload-bar" max="100" value="0"></progress>
+              </div>
               <div class="admin-image-preview" id="image-preview"></div>
+              <details class="admin-image-links">
+                <summary>Agregar una imagen mediante enlace</summary>
+                <label>Una ruta o enlace por línea
+                  <textarea class="textarea" id="product-image-urls" name="imageUrls" rows="4"></textarea>
+                </label>
+                <button class="button button--secondary admin-preview-images" id="preview-image-urls" type="button">Agregar enlaces</button>
+              </details>
               <p class="field-help">
-                Subí las fotos a <strong>assets/images/productos</strong> en GitHub y escribí una ruta por línea.
-                Un borrador puede guardarse sin fotos.
+                La primera fotografía será la portada. Las imágenes se guardarán en Firebase Storage usando tu sesión de administradora. Un borrador puede guardarse sin fotos.
               </p>
             </fieldset>
 
@@ -178,6 +219,20 @@
                 <label><input name="featured" type="checkbox"> Destacar en la tienda</label>
                 <label><input name="uniquePiece" type="checkbox"> Pieza única</label>
               </div>
+              <div class="admin-form-grid admin-source-fields">
+                <label>Origen
+                  <select class="select" name="source">
+                    <option value="manual">Carga manual</option>
+                    <option value="instagram">Instagram</option>
+                  </select>
+                </label>
+                <label>ID de publicación de Instagram
+                  <input class="input" name="instagramMediaId" autocomplete="off">
+                </label>
+                <label class="admin-form-wide">Enlace de la publicación
+                  <input class="input" name="instagramPermalink" type="url" placeholder="https://www.instagram.com/p/…">
+                </label>
+              </div>
             </fieldset>
 
             <p class="admin-form-error" id="admin-form-error" role="alert"></p>
@@ -188,9 +243,71 @@
             </div>
           </form>
         </section>
+        </div>
+
+        <section class="admin-view" data-admin-panel="instagram" hidden>
+          <div class="admin-page-heading"><div><span class="eyebrow">Automatización</span><h1>Instagram → tienda</h1></div></div>
+          <div class="admin-dashboard-grid">
+            <article class="admin-card admin-card--dark">
+              <span class="admin-connection-dot" id="instagram-dot"></span>
+              <h2 id="instagram-connection-title">Comprobando conexión</h2>
+              <p id="instagram-connection-copy">La conexión se realiza de forma segura desde Vercel.</p>
+              <button class="button button--pink" id="instagram-sync" type="button">Sincronizar ahora</button>
+              <small id="instagram-sync-state" role="status"></small>
+            </article>
+            <article class="admin-card">
+              <span class="eyebrow">Regla principal</span><h2>Solo productos</h2>
+              <p>Las publicaciones con el marcador configurado se importarán. Anuncios, sorteos e información general quedarán afuera.</p>
+              <p><strong>Marcador actual:</strong> <code id="instagram-marker-preview">#productoarvel</code></p>
+            </article>
+          </div>
+          <article class="admin-card admin-card--flush">
+            <div class="admin-section-heading"><div><span class="eyebrow">Importados</span><h2>Productos vinculados al feed</h2></div><span id="instagram-product-count">0</span></div>
+            <div class="admin-management-list" id="instagram-products"></div>
+          </article>
+        </section>
+
+        <section class="admin-view" data-admin-panel="duplicates" hidden>
+          <div class="admin-page-heading"><div><span class="eyebrow">Control de calidad</span><h1>Posibles duplicados</h1></div></div>
+          <p class="admin-intro">Comparamos SKU, ID y enlace de Instagram. Si hay una coincidencia, no se crea automáticamente otro producto.</p>
+          <div class="admin-management-list" id="duplicate-products"></div>
+        </section>
+
+        <section class="admin-view" data-admin-panel="inventory" hidden>
+          <div class="admin-page-heading"><div><span class="eyebrow">Stock</span><h1>Inventario</h1></div></div>
+          <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Producto</th><th>SKU</th><th>Stock</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="inventory-products"></tbody></table></div>
+        </section>
+
+        <section class="admin-view" data-admin-panel="sales" hidden>
+          <div class="admin-page-heading"><div><span class="eyebrow">Pedidos</span><h1>Ventas</h1></div></div>
+          <div class="admin-dashboard-grid">
+            <article class="admin-card"><h2>Mercado Pago</h2><p>Los pagos aprobados descontarán stock cuando terminemos de conectar el webhook con Firestore.</p><span class="admin-pill admin-pill--pending">Conexión pendiente</span></article>
+            <article class="admin-card"><h2>Transferencias</h2><p>Confirmá manualmente el comprobante antes de marcar el pedido como pagado y descontar el stock.</p><span class="admin-pill">Control manual</span></article>
+          </div>
+          <article class="admin-card admin-empty-state"><strong>Todavía no hay pedidos sincronizados</strong><p>Esta sección se completará al conectar el backend de pedidos.</p></article>
+        </section>
+
+        <section class="admin-view" data-admin-panel="settings" hidden>
+          <div class="admin-page-heading"><div><span class="eyebrow">Reglas automáticas</span><h1>Configuración</h1></div></div>
+          <form class="admin-card admin-settings-form" id="automation-settings-form">
+            <label>Marcador para reconocer productos
+              <input class="input" name="productMarker" value="#productoarvel">
+            </label>
+            <label>Palabras que indican vendido
+              <input class="input" name="soldWords" value="vendida, vendido, agotada, agotado">
+            </label>
+            <label>Categorías permitidas
+              <textarea class="textarea" name="categories" rows="3">Tops, Faldas, Pantalones, Vestidos, Abrigos, Accesorios, Mini customs</textarea>
+            </label>
+            <label class="admin-switch"><input name="autoPublish" type="checkbox"><span></span>Publicar automáticamente solo coincidencias completas</label>
+            <p class="field-help">Las publicaciones incompletas o dudosas siempre quedarán como borrador.</p>
+            <button class="button button--pink" type="submit">Guardar configuración</button>
+            <span id="settings-state" role="status"></span>
+          </form>
+        </section>
       </div>
     </main>
 
-    <script type="module" src="js/admin-productos.js?v=20260731-7"></script>
+    <script type="module" src="js/admin-productos.js?v=20260803-admin2"></script>
   </body>
 </html>
