@@ -493,6 +493,7 @@
     }
 
     container.innerHTML = featured.map(window.Arvel.createProductCard).join("");
+    container.querySelectorAll("[data-reveal]").forEach((card) => card.classList.add("is-visible"));
   }
 
   function setCurrentYear() {
@@ -511,6 +512,12 @@
         renderFeaturedProducts();
       });
     }
+    document.addEventListener("arvel:products-updated", (event) => {
+      const catalog = event.detail?.products;
+      if (!Array.isArray(catalog)) return;
+      window.ARVEL_PRODUCTS = catalog;
+      renderFeaturedProducts();
+    });
     updateGlobalCounters();
     initPromoBar();
     initMobileNavigation();
