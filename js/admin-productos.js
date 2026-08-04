@@ -107,8 +107,17 @@ function instagramPostAnalysis(post) {
   const marker = String(ui.markerPreview?.textContent || "").trim().toLowerCase();
   const marked = Boolean(marker && normalized.includes(marker));
   const isProduct = !announcement && (marked || productSignals);
-  const priceMatch = caption.match(/\$\s*([\d.]+(?:,\d{1,2})?)/);
-  const price = priceMatch ? Number(priceMatch[1].replace(/\./g, "").replace(",", ".")) : 0;
+  const priceMatch = caption.match(/(?:\$\s*(\d+(?:[.,]\d+)?)\s*(k)?\b)|(?:\b(\d+(?:[.,]\d+)?)\s*k\b)/i);
+  let price = 0;
+  if (priceMatch) {
+    const rawPrice = priceMatch[1] || priceMatch[3];
+    const hasThousandsSuffix = Boolean(priceMatch[2] || priceMatch[3]);
+    if (hasThousandsSuffix) {
+      price = Math.round(Number(rawPrice.replace(",", ".")) * 1000);
+    } else {
+      price = Number(rawPrice.replace(/\./g, "").replace(",", "."));
+    }
+  }
   const firstLine = caption.split(/\r?\n/).map((line) => line.trim()).find(Boolean) || "Producto de Instagram";
   const name = firstLine.replace(/[#@][\w.]+/g, "").replace(/[✨💗🖤🎀⭐]+/gu, "").trim().slice(0, 80) || "Producto de Instagram";
   const categories = [
@@ -527,27 +536,25 @@ async function changeStockState(documentId, action) {
 
 async function checkInstagramConnection() {
   try {
-    const response = await fetch("/api/instagram-sync?status=1", { headers: { Accept: "application/json" } });
+    const response = await fetch(`data/instagram-feed.json?t=${Date.now()}`, { headers: { Accept: "application/json" } });
     const result = await response.json();
     const connected = response.ok && result.connected;
-    const canConnect = response.ok && result.canConnect;
     ui.instagramDot.classList.toggle("is-connected", connected);
-    ui.instagramTitle.textContent = connected ? "Instagram conectado" : "Falta conectar Meta";
-    ui.instagramCopy.textContent = connected ? `Cuenta preparada: ${result.username || "Arvel Customs"}.` : "Agregaremos el token y el ID de Instagram en Vercel en el próximo paso.";
-    ui.instagramSync.disabled = !connected;
-    if (!connected && canConnect) {
-      ui.instagramCopy.textContent = "La aplicación de Meta está lista. Autorizá la cuenta para continuar.";
-      ui.instagramSync.textContent = "Conectar Instagram";
-      ui.instagramSync.disabled = false;
-      ui.instagramSync.dataset.action = "connect";
-    } else {
-      ui.instagramSync.textContent = connected ? "Sincronizar ahora" : "Conectar Instagram";
-      ui.instagramSync.dataset.action = connected ? "sync" : "connect";
-    }
+    ui.instagramTitle.textContent = connected ? "Instagram conectado con GitHub" : "Falta configurar GitHub Actions";
+    ui.instagramCopy.textContent = connected
+      ? `Última actualización: ${result.updatedAt ? new Date(result.updatedAt).toLocaleString("es-AR") : "sin fecha"} · @${result.username || "arvel.customsy2k"}.`
+      : "Agregá el token y el ID de Instagram en GitHub Secrets y ejecutá la acción Sincronizar Instagram.";
+    ui.instagramSync.textContent = "Cargar última sincronización";
+    ui.instagramSync.dataset.action = "sync";
+    ui.instagramSync.disabled = false;
+    instagramFeedPosts = Array.isArray(result.posts) ? result.posts : [];
+    renderInstagramFeed();
   } catch {
-    ui.instagramTitle.textContent = "Falta conectar Meta";
-    ui.instagramCopy.textContent = "El panel está preparado; todavía falta activar el servicio en Vercel.";
-    ui.instagramSync.disabled = true;
+    ui.instagramTitle.textContent = "Falta publicar el archivo de Instagram";
+    ui.instagramCopy.textContent = "Ejecutá la acción Sincronizar Instagram desde GitHub y volvé a cargar esta página.";
+    ui.instagramSync.textContent = "Reintentar";
+    ui.instagramSync.dataset.action = "sync";
+    ui.instagramSync.disabled = false;
   }
 }
 
@@ -649,23 +656,15 @@ ui.settingsForm.addEventListener("submit", async (event) => {
   }
 });
 ui.instagramSync.addEventListener("click", async () => {
-  if (ui.instagramSync.dataset.action === "connect") {
-    window.location.assign("/api/instagram-connect");
-    return;
-  }
   ui.instagramSync.disabled = true;
-  ui.instagramSyncState.textContent = "Sincronizando…";
+  ui.instagramSyncState.textContent = "Cargando la última sincronización de GitHub…";
   try {
-    const token = await auth.currentUser.getIdToken();
-    const response = await fetch("/api/instagram-sync", { method: "POST", headers: { Authorization: `Bearer ${token}` } });
+    const response = await fetch(`data/instagram-feed.json?t=${Date.now()}`, { headers: { Accept: "application/json" } });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.error || "No pudimos sincronizar.");
-    ui.instagramSyncState.textContent = result.detected != null
-      ? `${result.detected} publicaciones leídas correctamente`
-      : `${result.imported || 0} importados · ${result.updated || 0} actualizados`;
+    if (!response.ok || !result.connected) throw new Error("GitHub todavía no generó una sincronización válida.");
     instagramFeedPosts = Array.isArray(result.posts) ? result.posts : [];
+    ui.instagramSyncState.textContent = `${instagramFeedPosts.length} publicaciones · actualización ${result.updatedAt ? new Date(result.updatedAt).toLocaleString("es-AR") : "sin fecha"}`;
     renderInstagramFeed();
-    await loadProducts();
   } catch (error) {
     ui.instagramSyncState.textContent = error.message;
   } finally {
