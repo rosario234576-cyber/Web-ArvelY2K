@@ -307,11 +307,26 @@
     return ["Nuevo", ""];
   }
 
+  function calculateMercadoPagoPrice(basePrice, feeRate = window.ARVEL_MP_3_INSTALLMENTS_FEE_RATE) {
+    const base = Math.round(Number(basePrice) || 0);
+    const rate = Number(feeRate) || 0;
+    if (base <= 0 || rate <= 0 || rate >= 0.9) return base;
+    return Math.ceil((base / (1 - rate)) / 100) * 100;
+  }
+
+  function updateMercadoPagoPrices() {
+    document.querySelectorAll("[data-mp-base-price]").forEach((container) => {
+      const basePrice = Number(container.dataset.mpBasePrice) || 0;
+      const cardPrice = calculateMercadoPagoPrice(basePrice);
+      const card = container.querySelector("[data-mp-card-price]");
+      const installment = container.querySelector("[data-mp-installment-price]");
+      if (card) card.textContent = formatPrice(cardPrice);
+      if (installment) installment.textContent = formatPrice(cardPrice / 3);
+    });
+  }
+
   function createProductCard(product) {
     const [badgeLabel, badgeClass] = getProductBadge(product);
-    const price = product.oldPrice
-      ? `<span class="product-card__old-price">${formatPrice(product.oldPrice)}</span>${formatPrice(product.price)}`
-      : formatPrice(product.price);
     const image = escapeHtml(
       product.images[0] || "assets/images/moodboard/arvel-editorial-hero.png"
     );
@@ -320,7 +335,7 @@
     const productName = escapeHtml(product.name);
     const shortDescription = escapeHtml(product.shortDescription);
     const transferPrice = Number(product.transferPrice || product.price || 0);
-    const cardPrice = Number(product.price || 0);
+    const cardPrice = calculateMercadoPagoPrice(transferPrice);
     const installmentCount = 3;
     const installmentPrice = cardPrice / installmentCount;
     const mercadoPagoReady = window.ARVEL_MERCADOPAGO_READY === true;
@@ -352,13 +367,13 @@
             Vista rápida
           </a>
         </div>
-        <div class="product-card__body">
+        <div class="product-card__body" data-mp-base-price="${transferPrice}">
           <h3 class="product-card__name">
             <a href="producto.html?id=${productId}">${productName}</a>
           </h3>
-          <p class="product-card__price">Tarjeta: ${price}</p>
+          <p class="product-card__price">Mercado Pago: <span data-mp-card-price>${formatPrice(cardPrice)}</span></p>
           <p class="product-card__transfer">Transferencia: ${formatPrice(transferPrice)}</p>
-          <p class="product-card__installments" data-mercadopago-financing ${mercadoPagoReady ? "" : "hidden"}>Hasta ${installmentCount} cuotas de ${formatPrice(installmentPrice)} con Mercado Pago</p>
+          <p class="product-card__installments" data-mercadopago-financing ${mercadoPagoReady ? "" : "hidden"}>3 cuotas de <span data-mp-installment-price>${formatPrice(installmentPrice)}</span> con Mercado Pago</p>
           <div class="product-card__actions">
             <button
               class="product-card__buy-link"
@@ -396,19 +411,25 @@
     formatPrice,
     escapeHtml,
     createProductCard,
+    calculateMercadoPagoPrice,
     renderGlobalComponents
   });
 
   window.ARVEL_MERCADOPAGO_READY = false;
+  window.ARVEL_MP_3_INSTALLMENTS_FEE_RATE = 0;
   fetch("https://web-arvel-y2-k.vercel.app/api/mercadopago-health", { cache: "no-store" })
     .then((response) => response.ok ? response.json() : null)
     .then((result) => {
       const ready = result?.connected === true && result?.mode === "production";
       window.ARVEL_MERCADOPAGO_READY = ready;
+      window.ARVEL_MP_3_INSTALLMENTS_FEE_RATE = Number(result?.installmentFeeRate) || 0;
+      updateMercadoPagoPrices();
       document.querySelectorAll("[data-mercadopago-financing]").forEach((element) => {
         element.hidden = !ready;
       });
-      window.dispatchEvent(new CustomEvent("arvel:mercadopago-ready", { detail: { ready } }));
+      window.dispatchEvent(new CustomEvent("arvel:mercadopago-ready", {
+        detail: { ready, installmentFeeRate: window.ARVEL_MP_3_INSTALLMENTS_FEE_RATE }
+      }));
     })
     .catch(() => {
       window.ARVEL_MERCADOPAGO_READY = false;

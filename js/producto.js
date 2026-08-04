@@ -83,13 +83,13 @@
     const oldPrice = product.oldPrice
       ? `<del>${window.Arvel.formatPrice(product.oldPrice)}</del>`
       : "";
-    const cardPrice = Number(product.price || 0);
-    const transferPrice = Number(product.transferPrice || cardPrice);
+    const transferPrice = Number(product.transferPrice || product.price || 0);
+    const cardPrice = window.Arvel.calculateMercadoPagoPrice(transferPrice);
     const installmentPrice = cardPrice / 3;
     elements.price.innerHTML = `
-      <span class="product-info__price-main">${oldPrice}<strong>Tarjeta: ${window.Arvel.formatPrice(cardPrice)}</strong></span>
+      <span class="product-info__price-main">${oldPrice}<strong>Mercado Pago: ${window.Arvel.formatPrice(cardPrice)}</strong></span>
       <span class="product-info__price-option">Transferencia: ${window.Arvel.formatPrice(transferPrice)}</span>
-      <span class="product-info__price-option" data-mercadopago-financing hidden>Hasta 3 cuotas de ${window.Arvel.formatPrice(installmentPrice)} con Mercado Pago</span>
+      <span class="product-info__price-option" data-mercadopago-financing hidden>3 cuotas de ${window.Arvel.formatPrice(installmentPrice)} con Mercado Pago</span>
     `;
     if (window.ARVEL_MERCADOPAGO_READY === true) {
       elements.price.querySelector("[data-mercadopago-financing]").hidden = false;
@@ -386,8 +386,7 @@
 
   function bindEvents() {
     window.addEventListener("arvel:mercadopago-ready", (event) => {
-      const financing = elements.price.querySelector("[data-mercadopago-financing]");
-      if (financing) financing.hidden = event.detail?.ready !== true;
+      renderPrice();
     });
     elements.form.addEventListener("submit", (event) => {
       event.preventDefault();
