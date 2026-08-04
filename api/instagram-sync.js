@@ -14,6 +14,7 @@ module.exports = async function handler(req, res) {
   if (req.method === "GET") {
     return res.status(200).json({
       connected: configured(),
+      canConnect: Boolean(process.env.INSTAGRAM_APP_ID && process.env.INSTAGRAM_APP_SECRET),
       username: process.env.INSTAGRAM_USERNAME || ""
     });
   }
