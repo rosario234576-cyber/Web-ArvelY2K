@@ -1,6 +1,7 @@
 const ALLOWED_ORIGINS = new Set([
   "https://arvelcustomy2k.store",
   "https://www.arvelcustomy2k.store",
+  "https://web-arvel-y2-k.vercel.app",
   "https://rosario234576-cyber.github.io"
 ]);
 
