@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/admin-productos.css?v=20260803-admin2">
+    <link rel="stylesheet" href="css/admin-productos.css?v=20260803-instagram-feed1">
     <link rel="stylesheet" href="css/responsive.css">
   </head>
   <body class="admin-body">
@@ -262,6 +262,11 @@
             </article>
           </div>
           <article class="admin-card admin-card--flush">
+            <div class="admin-section-heading"><div><span class="eyebrow">Feed reciente</span><h2>Publicaciones detectadas</h2></div><span id="instagram-feed-count">0</span></div>
+            <p class="admin-intro">Revisá la detección antes de crear el producto. Siempre se guardará como borrador.</p>
+            <div class="admin-instagram-feed" id="instagram-feed-preview"><p>Tocá “Sincronizar ahora” para cargar el feed.</p></div>
+          </article>
+          <article class="admin-card admin-card--flush">
             <div class="admin-section-heading"><div><span class="eyebrow">Importados</span><h2>Productos vinculados al feed</h2></div><span id="instagram-product-count">0</span></div>
             <div class="admin-management-list" id="instagram-products"></div>
           </article>
@@ -308,6 +313,6 @@
       </div>
     </main>
 
-    <script type="module" src="js/admin-productos.js?v=20260803-facebook1"></script>
+    <script type="module" src="js/admin-productos.js?v=20260803-instagram-feed1"></script>
   </body>
 </html>
