@@ -1094,6 +1094,26 @@ body:not(.admin-body) {
     padding: 0.8rem 0.15rem 1.2rem;
   }
 
+  .shop-section .product-card__actions {
+    grid-template-columns: 1fr;
+    gap: 0.45rem;
+  }
+
+  .shop-section .product-card__actions .button {
+    min-height: 2.65rem;
+    border-color: #f3e9ef;
+    color: #fff;
+  }
+
+  .shop-section .product-card__actions .button--pink {
+    border-color: #f15bb5;
+    color: #090709;
+  }
+
+  .shop-section .product-card__payment {
+    color: #c9c0c6;
+  }
+
   .shop-section .product-card__name,
   .shop-section .product-card__price {
     font-weight: 700;
