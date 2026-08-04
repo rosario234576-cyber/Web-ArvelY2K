@@ -10,10 +10,10 @@
     <script>document.documentElement.classList.add("js");</script>
     <link rel="stylesheet" href="css/reset.css">
     <link rel="stylesheet" href="css/variables.css">
-    <link rel="stylesheet" href="css/components.css?v=20260804-card-actions">
+    <link rel="stylesheet" href="css/components.css?v=20260804-card-payment-layout">
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/admin-productos.css?v=20260803-instagram-feed1">
-    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/responsive.css?v=20260804-card-payment-layout">
   </head>
   <body class="admin-body">
     <a class="skip-link" href="#admin-main">Saltar al formulario</a>
@@ -287,7 +287,7 @@
         <section class="admin-view" data-admin-panel="sales" hidden>
           <div class="admin-page-heading"><div><span class="eyebrow">Pedidos</span><h1>Ventas</h1></div></div>
           <div class="admin-dashboard-grid">
-            <article class="admin-card"><h2>Mercado Pago</h2><p>Los pagos aprobados descontarán stock cuando terminemos de conectar el webhook con Firestore.</p><span class="admin-pill admin-pill--pending">Conexión pendiente</span></article>
+            <article class="admin-card"><h2>Mercado Pago</h2><p id="mercadopago-connection-copy">Comprobando el acceso seguro configurado en Vercel.</p><span class="admin-pill admin-pill--pending" id="mercadopago-connection-state">Comprobando</span></article>
             <article class="admin-card"><h2>Transferencias</h2><p>Confirmá manualmente el comprobante antes de marcar el pedido como pagado y descontar el stock.</p><span class="admin-pill">Control manual</span></article>
           </div>
           <article class="admin-card admin-empty-state"><strong>Todavía no hay pedidos sincronizados</strong><p>Esta sección se completará al conectar el backend de pedidos.</p></article>
@@ -314,6 +314,6 @@
       </div>
     </main>
 
-    <script type="module" src="js/admin-productos.js?v=20260804-instagram-publish"></script>
+    <script type="module" src="js/admin-productos.js?v=20260804-mercadopago-health"></script>
   </body>
 </html>
