@@ -222,6 +222,39 @@
                     <input type="radio" name="delivery" value="correo-domicilio" data-label="Correo Argentino a domicilio" data-cost="7800">
                     <span><strong>Correo Argentino a domicilio</strong><small id="correo-home-cost-label">Ingresá tu código postal para estimar el costo.</small></span>
                   </label>
+                  <label class="checkout-choice">
+                    <input type="radio" name="delivery" value="encuentro" data-label="Coordinar con la vendedora" data-cost="0">
+                    <span><strong>Coordinar con la vendedora</strong><small>Elegí un punto de encuentro en CABA. El día y horario se coordinan después de la compra.</small></span>
+                  </label>
+                </div>
+                <div class="meeting-point-selector" id="meeting-point-selector" hidden>
+                  <label for="meeting-point">Punto de encuentro *</label>
+                  <select class="select" id="meeting-point" name="meetingPoint">
+                    <option value="">Elegí un punto</option>
+                    <optgroup label="Sin viático">
+                      <option value="Estación Once" data-cost="0">Estación Once · sin viático</option>
+                      <option value="Congreso de la Nación" data-cost="0">Congreso de la Nación · sin viático</option>
+                      <option value="Estación SUBTE Congreso (Línea A)" data-cost="0">Estación SUBTE Congreso (Línea A) · sin viático</option>
+                    </optgroup>
+                    <optgroup label="Viático $1.500">
+                      <option value="Obelisco" data-cost="1500">Obelisco · $1.500</option>
+                      <option value="Abasto Shopping" data-cost="1500">Abasto Shopping · $1.500</option>
+                      <option value="Teatro Colón" data-cost="1500">Teatro Colón · $1.500</option>
+                      <option value="Facultad de Medicina" data-cost="1500">Facultad de Medicina · $1.500</option>
+                      <option value="Plaza de Mayo" data-cost="1500">Plaza de Mayo · $1.500</option>
+                      <option value="Constitución" data-cost="1500">Constitución · $1.500</option>
+                      <option value="Estación Retiro" data-cost="1500">Estación Retiro · $1.500</option>
+                    </optgroup>
+                    <optgroup label="Viático $2.000">
+                      <option value="Barrio Chino" data-cost="2000">Barrio Chino · $2.000</option>
+                      <option value="Shopping Alto Palermo" data-cost="2000">Shopping Alto Palermo · $2.000</option>
+                      <option value="Parque Centenario" data-cost="2000">Parque Centenario · $2.000</option>
+                      <option value="Parque Patricios" data-cost="2000">Parque Patricios · $2.000</option>
+                    </optgroup>
+                  </select>
+                  <p class="field-help" id="meeting-point-cost">El día y horario se coordinan después de confirmar la compra.</p>
+                  <p class="field-error" id="meeting-point-error"></p>
+                  <a class="text-link" href="https://wa.me/5491160153234?text=Hola%20Arvel%2C%20quiero%20consultar%20por%20otro%20punto%20de%20encuentro" target="_blank" rel="noopener">Consultar por otro punto →</a>
                 </div>
                 <div class="meeting-point-selector" id="correo-agency-selector" hidden>
                   <div class="notice">
@@ -252,7 +285,7 @@
                     <input type="radio" name="payment" value="transferencia" data-label="Transferencia bancaria" checked required>
                     <span><strong>Transferencia bancaria</strong><small>Pagá por transferencia. Al confirmar verás el alias y podrás enviar el comprobante por WhatsApp.</small></span>
                   </label>
-                  <label class="checkout-choice" id="mercadopago-payment-option" hidden>
+                  <label class="checkout-choice" id="mercadopago-payment-option">
                     <input type="radio" name="payment" value="mercadopago" data-label="Mercado Pago" required>
                     <span><strong>Mercado Pago</strong><small>Pagá de forma segura con tarjeta, dinero disponible o hasta 3 cuotas. Mercado Pago mostrará el costo final antes de confirmar.</small></span>
                   </label>
@@ -359,9 +392,9 @@
     <script src="js/components.js?v=20260804-mp-conditional"></script>
     <script src="js/main.js?v=20260804-cart-variant-fix"></script>
     <script src="js/transfer-config.js?v=20260803-payment2"></script>
-    <script src="js/payment-config.js?v=20260804-mp-conditional"></script>
+    <script src="js/payment-config.js?v=20260804-mp-delivery-fix"></script>
     <script src="js/shipping.js?v=20260803-ca1"></script>
-    <script src="js/checkout.js?v=20260804-mp-orders"></script>
+    <script src="js/checkout.js?v=20260804-mp-delivery-fix"></script>
     <script src="js/chatbot.js"></script>
     <script src="js/favoritos.js"></script>
   </body>
