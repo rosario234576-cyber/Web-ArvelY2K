@@ -315,7 +315,8 @@
     const image = escapeHtml(
       product.images[0] || "assets/images/moodboard/arvel-editorial-hero.png"
     );
-    const productId = encodeURIComponent(String(product.id));
+    const productKey = String(product.documentId || product.id);
+    const productId = encodeURIComponent(productKey);
     const productName = escapeHtml(product.name);
     const shortDescription = escapeHtml(product.shortDescription);
     const sizes = escapeHtml(product.sizes.join("/"));
@@ -353,6 +354,21 @@
           </h3>
           <p class="product-card__meta">Talle ${sizes} · ${condition}</p>
           <p class="product-card__price">${price}</p>
+          <div class="product-card__actions">
+            <button
+              class="button product-card__cart"
+              type="button"
+              data-card-add="${productId}"
+              ${product.soldOut || product.stock <= 0 ? "disabled" : ""}
+            >${product.soldOut || product.stock <= 0 ? "Sin stock" : "Agregar al carrito"}</button>
+            <button
+              class="button button--pink product-card__buy"
+              type="button"
+              data-card-buy="${productId}"
+              ${product.soldOut || product.stock <= 0 ? "disabled" : ""}
+            >Comprar · transferencia</button>
+          </div>
+          <p class="product-card__payment">Pago únicamente por transferencia bancaria</p>
         </div>
       </article>
     `;

@@ -479,6 +479,80 @@
     }, 4500);
   }
 
+  function initProductCardActions() {
+    document.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-card-add], [data-card-buy]");
+      if (!button || button.disabled) return;
+
+      const rawId = button.dataset.cardAdd || button.dataset.cardBuy || "";
+      let id = rawId;
+      try {
+        id = decodeURIComponent(rawId);
+      } catch {
+        id = rawId;
+      }
+
+      const products = Array.isArray(window.ARVEL_PRODUCTS) ? window.ARVEL_PRODUCTS : [];
+      const product = products.find(
+        (item) => String(item.documentId || item.id) === String(id)
+      );
+      if (!product || product.soldOut || Number(product.stock) <= 0) {
+        showToast("Esta pieza ya no tiene stock disponible.");
+        return;
+      }
+
+      const size = String(product.sizes?.[0] || "Único");
+      const color = String(product.colors?.[0] || "Único");
+      const key = String(product.documentId || product.id);
+      const variantId = `${key}::${size}::${color}`;
+      const cart = readStoredArray(STORAGE_KEYS.cart);
+      const existing = cart.find(
+        (item) => String(item.variant_id || item.variantId) === variantId
+      );
+      const stock = Math.max(1, Number(product.stock) || 1);
+
+      if (existing && Number(existing.quantity || 1) >= stock) {
+        showToast(`Ya tenés el máximo disponible de ${product.name}.`, {
+          href: "carrito.html",
+          label: "Ver carrito →"
+        });
+        return;
+      }
+
+      if (existing) existing.quantity = Number(existing.quantity || 1) + 1;
+      else {
+        cart.push({
+          id: key,
+          documentId: product.documentId || "",
+          variant_id: variantId,
+          variantId,
+          size,
+          color,
+          quantity: 1,
+          price: Number(product.price) || 0
+        });
+      }
+
+      localStorage.setItem(STORAGE_KEYS.cart, JSON.stringify(cart));
+      updateGlobalCounters();
+
+      if (button.matches("[data-card-buy]")) {
+        window.location.href = "carrito.html";
+        return;
+      }
+
+      const original = button.textContent;
+      button.textContent = "Agregado ✓";
+      showToast(`${product.name} se agregó al carrito.`, {
+        href: "carrito.html",
+        label: "Ver carrito →"
+      });
+      window.setTimeout(() => {
+        button.textContent = original;
+      }, 1600);
+    });
+  }
+
   function renderFeaturedProducts() {
     const container = document.querySelector("#featured-products");
     if (!container || !Array.isArray(window.ARVEL_PRODUCTS)) return;
@@ -531,6 +605,7 @@
     initCommunityCarousel();
     initStoryMarquee();
     initMoodboardCarousel();
+    initProductCardActions();
     setCurrentYear();
   }
 
