@@ -21,6 +21,11 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    match /settings/{settingId} {
+      allow read, create, update: if isAdmin();
+      allow delete: if false;
+    }
+
     // Cada clienta puede consultar y editar únicamente su propio perfil.
     match /users/{userId} {
       allow read: if signedIn() && request.auth.uid == userId;
