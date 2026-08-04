@@ -501,6 +501,30 @@
   backdrop-filter: blur(0.7rem);
 }
 
+.admin-instagram-feed {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: 1rem;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+}
+
+.admin-instagram-post {
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid #d8ced4;
+  background: #fff;
+}
+
+.admin-instagram-post.is-skipped { opacity: 0.62; }
+.admin-instagram-post > img { width: 100%; height: 100%; min-height: 13rem; object-fit: cover; }
+.admin-instagram-post__body { display: grid; align-content: start; gap: 0.55rem; padding: 0.85rem; }
+.admin-instagram-post__body p { margin: 0; font-size: 0.78rem; line-height: 1.45; }
+.admin-instagram-post__body small { color: #6d6369; }
+.admin-instagram-post__badges { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.admin-instagram-post__badges span { padding: 0.2rem 0.45rem; border-radius: 999px; background: #f5c6e3; font-size: 0.62rem; font-weight: 800; text-transform: uppercase; }
+.admin-instagram-post.is-skipped .admin-instagram-post__badges span:first-child { background: #e4e0e2; }
+
 @media (max-width: 63.999rem) {
   .admin-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .admin-shell { grid-template-columns: 1fr; }
@@ -527,4 +551,6 @@
   .admin-form-grid--4 { grid-template-columns: 1fr; }
   .admin-variant-row { grid-template-columns: 1fr 1fr; }
   .admin-variant-row button { min-height: 2.7rem; }
+  .admin-instagram-feed { grid-template-columns: 1fr; padding: 0.75rem; }
+  .admin-instagram-post { grid-template-columns: 6.5rem minmax(0, 1fr); }
 }
