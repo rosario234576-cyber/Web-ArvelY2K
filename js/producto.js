@@ -13,6 +13,7 @@
     (item) => productKey(item) === productId || String(item.id ?? "") === productId
   );
   let suppressZoom = false;
+  let imageIsZoomed = false;
 
   const elements = {
     loading: document.querySelector("#product-loading"),
@@ -66,7 +67,7 @@
         <a class="button button--pink" href="tienda.html">Volver al shop</a>
       </div>
     `;
-    document.title = "Pieza no encontrada | Arvel Customs";
+    document.title = "Pieza no encontrada | Arvel Custom Y2K";
   }
 
   function createBadges() {
@@ -250,9 +251,12 @@
 
     if (existing) existing.quantity = nextQuantity;
     else {
+      const variantId = `${productKey(product)}::${selection.size}::${selection.color}`;
       cart.push({
         id: productKey(product),
         documentId: product.documentId || "",
+        variant_id: variantId,
+        variantId,
         size: selection.size,
         color: selection.color,
         quantity: selection.quantity,
@@ -395,11 +399,32 @@
         suppressZoom = false;
         return;
       }
+      imageIsZoomed = false;
+      elements.zoomImage.classList.remove("is-zoomed");
+      elements.zoomImage.setAttribute("aria-pressed", "false");
       elements.zoomDialog.showModal();
+    });
+    elements.zoomImage.addEventListener("click", () => {
+      imageIsZoomed = !imageIsZoomed;
+      elements.zoomImage.classList.toggle("is-zoomed", imageIsZoomed);
+      elements.zoomImage.setAttribute("aria-pressed", String(imageIsZoomed));
+      if (!imageIsZoomed) {
+        elements.zoomDialog.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+      }
+    });
+    elements.zoomImage.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      elements.zoomImage.click();
     });
     elements.zoomClose.addEventListener("click", () => elements.zoomDialog.close());
     elements.zoomDialog.addEventListener("click", (event) => {
       if (event.target === elements.zoomDialog) elements.zoomDialog.close();
+    });
+    elements.zoomDialog.addEventListener("close", () => {
+      imageIsZoomed = false;
+      elements.zoomImage.classList.remove("is-zoomed");
+      elements.zoomImage.setAttribute("aria-pressed", "false");
     });
 
     elements.shippingForm.addEventListener("submit", (event) => {
@@ -426,9 +451,9 @@
   }
 
   function renderProduct() {
-    document.title = `${product.name} | Arvel Customs`;
+    document.title = `${product.name} | Arvel Custom Y2K`;
     document.querySelector('meta[name="description"]').content = product.shortDescription;
-    document.querySelector('meta[property="og:title"]').content = `${product.name} | Arvel Customs`;
+    document.querySelector('meta[property="og:title"]').content = `${product.name} | Arvel Custom Y2K`;
     document.querySelector('meta[property="og:description"]').content = product.shortDescription;
     elements.breadcrumb.textContent = product.name;
     elements.collection.textContent = `${product.collection} · ${product.sku}`;

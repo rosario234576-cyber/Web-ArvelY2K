@@ -584,6 +584,7 @@
             },
             items: order.items.map((item) => ({
               documentId: item.product.documentId || item.documentId || "",
+              variant_id: item.variant_id || item.variantId || `${item.product.documentId || item.documentId || item.product.id}::${item.size}::${item.color}`,
               size: item.size,
               color: item.color,
               quantity: item.quantity

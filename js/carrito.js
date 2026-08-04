@@ -81,6 +81,8 @@
         return {
           id: productKey(product),
           documentId: product.documentId || "",
+          variant_id: item.variant_id || item.variantId || `${productKey(product)}::${item.size}::${item.color}`,
+          variantId: item.variantId || item.variant_id || `${productKey(product)}::${item.size}::${item.color}`,
           size: item.size,
           color: item.color,
           quantity: safeQuantity,
