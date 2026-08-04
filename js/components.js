@@ -314,17 +314,6 @@
     return Math.ceil((base / (1 - rate)) / 100) * 100;
   }
 
-  function updateMercadoPagoPrices() {
-    document.querySelectorAll("[data-mp-base-price]").forEach((container) => {
-      const basePrice = Number(container.dataset.mpBasePrice) || 0;
-      const cardPrice = calculateMercadoPagoPrice(basePrice);
-      const card = container.querySelector("[data-mp-card-price]");
-      const installment = container.querySelector("[data-mp-installment-price]");
-      if (card) card.textContent = formatPrice(cardPrice);
-      if (installment) installment.textContent = formatPrice(cardPrice / 3);
-    });
-  }
-
   function createProductCard(product) {
     const [badgeLabel, badgeClass] = getProductBadge(product);
     const image = escapeHtml(
@@ -335,9 +324,6 @@
     const productName = escapeHtml(product.name);
     const shortDescription = escapeHtml(product.shortDescription);
     const transferPrice = Number(product.transferPrice || product.price || 0);
-    const cardPrice = calculateMercadoPagoPrice(transferPrice);
-    const installmentCount = 3;
-    const installmentPrice = cardPrice / installmentCount;
     const mercadoPagoReady = window.ARVEL_MERCADOPAGO_READY === true;
     const unavailable = product.soldOut || product.stock <= 0;
 
@@ -367,13 +353,13 @@
             Vista rápida
           </a>
         </div>
-        <div class="product-card__body" data-mp-base-price="${transferPrice}">
+        <div class="product-card__body">
           <h3 class="product-card__name">
             <a href="producto.html?id=${productId}">${productName}</a>
           </h3>
-          <p class="product-card__price">Mercado Pago: <span data-mp-card-price>${formatPrice(cardPrice)}</span></p>
-          <p class="product-card__transfer">Transferencia: ${formatPrice(transferPrice)}</p>
-          <p class="product-card__installments" data-mercadopago-financing ${mercadoPagoReady ? "" : "hidden"}>3 cuotas de <span data-mp-installment-price>${formatPrice(installmentPrice)}</span> con Mercado Pago</p>
+          <p class="product-card__price">${formatPrice(transferPrice)}</p>
+          <p class="product-card__transfer">Precio por transferencia o depÃ³sito</p>
+          <p class="product-card__installments" data-mercadopago-financing ${mercadoPagoReady ? "" : "hidden"}>Mercado Pago calcula el total y las cuotas al comprar</p>
           <div class="product-card__actions">
             <button
               class="product-card__buy-link"
@@ -423,7 +409,6 @@
       const ready = result?.connected === true && result?.mode === "production";
       window.ARVEL_MERCADOPAGO_READY = ready;
       window.ARVEL_MP_3_INSTALLMENTS_FEE_RATE = Number(result?.installmentFeeRate) || 0;
-      updateMercadoPagoPrices();
       document.querySelectorAll("[data-mercadopago-financing]").forEach((element) => {
         element.hidden = !ready;
       });

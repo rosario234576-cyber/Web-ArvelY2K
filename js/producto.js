@@ -84,12 +84,10 @@
       ? `<del>${window.Arvel.formatPrice(product.oldPrice)}</del>`
       : "";
     const transferPrice = Number(product.transferPrice || product.price || 0);
-    const cardPrice = window.Arvel.calculateMercadoPagoPrice(transferPrice);
-    const installmentPrice = cardPrice / 3;
     elements.price.innerHTML = `
-      <span class="product-info__price-main">${oldPrice}<strong>Mercado Pago: ${window.Arvel.formatPrice(cardPrice)}</strong></span>
-      <span class="product-info__price-option">Transferencia: ${window.Arvel.formatPrice(transferPrice)}</span>
-      <span class="product-info__price-option" data-mercadopago-financing hidden>3 cuotas de ${window.Arvel.formatPrice(installmentPrice)} con Mercado Pago</span>
+      <span class="product-info__price-main">${oldPrice}<strong>${window.Arvel.formatPrice(transferPrice)}</strong></span>
+      <span class="product-info__price-option">Precio por transferencia o depÃ³sito</span>
+      <span class="product-info__price-option" data-mercadopago-financing hidden>Mercado Pago calcula el total y las cuotas al comprar</span>
     `;
     if (window.ARVEL_MERCADOPAGO_READY === true) {
       elements.price.querySelector("[data-mercadopago-financing]").hidden = false;
