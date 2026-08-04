@@ -281,7 +281,7 @@
     return new Intl.NumberFormat("es-AR", {
       style: "currency",
       currency: "ARS",
-      maximumFractionDigits: 0
+      maximumFractionDigits: 2
     }).format(value);
   }
 
@@ -320,10 +320,10 @@
     const productName = escapeHtml(product.name);
     const shortDescription = escapeHtml(product.shortDescription);
     const transferPrice = Number(product.transferPrice || product.price || 0);
-    const installmentCount = Number(product.installmentCount || 3);
-    const installmentPrice = installmentCount > 0
-      ? Math.ceil(Number(product.price || 0) / installmentCount)
-      : 0;
+    const cardPrice = Number(product.price || 0);
+    const installmentCount = 3;
+    const installmentPrice = cardPrice / installmentCount;
+    const mercadoPagoReady = window.ARVEL_MERCADOPAGO_READY === true;
     const unavailable = product.soldOut || product.stock <= 0;
 
     return `
@@ -356,9 +356,9 @@
           <h3 class="product-card__name">
             <a href="producto.html?id=${productId}">${productName}</a>
           </h3>
-          <p class="product-card__price">${price}</p>
-          <p class="product-card__transfer">${formatPrice(transferPrice)} con transferencia o dep&oacute;sito</p>
-          <p class="product-card__installments">${installmentCount} cuotas sin inter&eacute;s de ${formatPrice(installmentPrice)}</p>
+          <p class="product-card__price">Tarjeta: ${price}</p>
+          <p class="product-card__transfer">Transferencia: ${formatPrice(transferPrice)}</p>
+          <p class="product-card__installments" data-mercadopago-financing ${mercadoPagoReady ? "" : "hidden"}>Hasta ${installmentCount} cuotas de ${formatPrice(installmentPrice)} con Mercado Pago</p>
           <div class="product-card__actions">
             <button
               class="product-card__buy-link"
@@ -398,6 +398,21 @@
     createProductCard,
     renderGlobalComponents
   });
+
+  window.ARVEL_MERCADOPAGO_READY = false;
+  fetch("https://web-arvel-y2-k.vercel.app/api/mercadopago-health", { cache: "no-store" })
+    .then((response) => response.ok ? response.json() : null)
+    .then((result) => {
+      const ready = result?.connected === true && result?.mode === "production";
+      window.ARVEL_MERCADOPAGO_READY = ready;
+      document.querySelectorAll("[data-mercadopago-financing]").forEach((element) => {
+        element.hidden = !ready;
+      });
+      window.dispatchEvent(new CustomEvent("arvel:mercadopago-ready", { detail: { ready } }));
+    })
+    .catch(() => {
+      window.ARVEL_MERCADOPAGO_READY = false;
+    });
 
   renderGlobalComponents();
   if (!document.querySelector("[data-auth-page]")) {
