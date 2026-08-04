@@ -1,5 +1,11 @@
+html,
 body {
+  width: 100%;
+  max-width: 100%;
   overflow-x: clip;
+}
+
+body {
   background: var(--color-background);
   color: var(--color-text);
   font-family: var(--font-body);
@@ -1238,12 +1244,17 @@ body.is-locked {
   position: relative;
   z-index: 1;
   display: flex;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   gap: var(--space-3);
   overflow-x: auto;
+  overflow-y: hidden;
   overscroll-behavior-inline: contain;
   scroll-behavior: smooth;
   scroll-snap-type: x mandatory;
   touch-action: pan-x;
+  contain: inline-size;
 }
 
 .moodboard-section {
@@ -1255,6 +1266,9 @@ body.is-locked {
 .moodboard-section > .container {
   position: relative;
   z-index: 1;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .y2k-decor {
