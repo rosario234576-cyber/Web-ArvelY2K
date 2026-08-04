@@ -411,6 +411,11 @@
           `🏤 Sucursal: ${order.address.agencyName}`,
           `📍 Dirección: ${order.address.agencyAddress}`
         ]
+      : order.delivery.value === "encuentro"
+        ? [
+            `🤝 Punto coordinado: ${elements.meetingPoint?.value || "A coordinar"}`,
+            "🗓️ Día y horario: a coordinar con la vendedora"
+          ]
       : [
           `🏠 Domicilio: ${order.address.street} ${order.address.streetNumber}${order.address.apartment ? `, ${order.address.apartment}` : ""}`,
           order.address.references ? `↔️ Entre calles: ${order.address.references}` : null
