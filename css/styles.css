@@ -3127,6 +3127,8 @@ body.is-locked {
   padding: var(--space-4);
   border: 0;
   background: var(--color-background);
+  overflow: auto;
+  overscroll-behavior: contain;
 }
 
 .image-zoom-dialog::backdrop {
@@ -3137,6 +3139,16 @@ body.is-locked {
   width: 100%;
   max-height: calc(94vh - 2rem);
   object-fit: contain;
+  cursor: zoom-in;
+  touch-action: pan-x pan-y pinch-zoom;
+  transition: width 220ms ease;
+}
+
+.image-zoom-dialog img.is-zoomed {
+  width: 200%;
+  max-width: none;
+  max-height: none;
+  cursor: zoom-out;
 }
 
 .image-zoom-dialog__close {
@@ -4558,4 +4570,28 @@ body.is-locked {
   height: 1.2rem;
   flex: 0 0 auto;
   accent-color: var(--color-pink);
+}
+/* Scrollbar Arvel: integrada con la paleta bordó, negra y rosa. */
+html {
+  scrollbar-color: #f15bb5 #210a17;
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  width: 0.72rem;
+  height: 0.58rem;
+}
+
+*::-webkit-scrollbar-track {
+  background: #210a17;
+}
+
+*::-webkit-scrollbar-thumb {
+  border: 2px solid #210a17;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #f58bc9, #d83f98);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #ff9bd5;
 }
