@@ -201,18 +201,20 @@
 }
 
 .product-card__body {
-  display: grid;
+  display: flex;
   flex: 1;
-  grid-template-columns: 1fr auto;
-  grid-template-rows: minmax(2.6rem, auto) minmax(1.5rem, auto) 1fr auto auto;
-  gap: var(--space-2) var(--space-4);
-  align-content: stretch;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
   padding-block: var(--space-3);
+  text-align: center;
 }
 
 .product-card__name {
-  grid-column: 1;
-  grid-row: 1;
+  display: flex;
+  min-height: 2.6rem;
+  align-items: flex-start;
+  justify-content: center;
   font-size: var(--text-base);
   font-weight: 700;
   line-height: 1.3;
@@ -226,8 +228,7 @@
 }
 
 .product-card__price {
-  grid-column: 2;
-  grid-row: 1;
+  min-height: 1.4rem;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -241,45 +242,61 @@
 }
 
 .product-card__actions {
-  display: grid;
-  grid-column: 1 / -1;
-  grid-row: 4;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.55rem;
-  margin-top: 0.35rem;
+  display: flex;
+  min-height: 2rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-top: auto;
+  padding-top: 0.35rem;
 }
 
-.product-card__actions .button {
-  min-height: 2.75rem;
-  padding: 0.65rem 0.7rem;
-  font-size: 0.7rem;
-  line-height: 1.15;
-  text-align: center;
+.product-card__transfer,
+.product-card__installments {
+  min-height: 1.2rem;
+  color: var(--color-text);
+  font-size: 0.72rem;
+  line-height: 1.35;
 }
 
 .product-card__cart {
-  border-color: #171217;
-  color: #fff;
-  background: #171217;
+  display: inline-grid;
+  width: 1.65rem;
+  height: 1.65rem;
+  padding: 0;
+  border: 0;
+  place-items: center;
+  color: var(--color-text);
+  background: transparent;
+  cursor: pointer;
 }
 
-.product-card__cart:hover,
-.product-card__cart:focus-visible {
-  border-color: #4b2038;
-  color: #fff;
-  background: #4b2038;
+.product-card__cart img {
+  width: 1rem;
+  height: 1rem;
+  object-fit: contain;
 }
 
-.product-card__actions .button:disabled {
-  opacity: 0.52;
+.product-card__buy-link {
+  padding: 0.15rem 0;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  color: var(--color-text);
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.92rem;
+  cursor: pointer;
 }
 
-.product-card__payment {
-  grid-column: 1 / -1;
-  grid-row: 5;
-  color: var(--color-text-muted);
-  font-size: 0.68rem;
-  text-align: center;
+.product-card__buy-link:hover,
+.product-card__buy-link:focus-visible {
+  color: var(--color-pink-dark);
+}
+
+.product-card__buy-link:disabled,
+.product-card__cart:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 .product-card__quick-view {

@@ -1095,7 +1095,7 @@ body:not(.admin-body) {
   }
 
   .shop-section .product-card__actions {
-    grid-template-columns: 1fr;
+    flex-direction: row;
     gap: 0.45rem;
   }
 
@@ -1112,6 +1112,16 @@ body:not(.admin-body) {
 
   .shop-section .product-card__payment {
     color: #c9c0c6;
+  }
+
+  .shop-section .product-card__transfer,
+  .shop-section .product-card__installments,
+  .shop-section .product-card__buy-link {
+    color: #fff9fc;
+  }
+
+  .shop-section .product-card__cart img {
+    filter: invert(1) brightness(2);
   }
 
   .shop-section .product-card__name,
