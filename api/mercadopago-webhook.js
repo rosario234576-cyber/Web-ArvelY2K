@@ -1,4 +1,89 @@
 const crypto = require("crypto");
+const { getAdminDb } = require("./_firebase-admin");
+
+function validOrderNumber(value) {
+  return /^ARV-\d{8}-\d{4}$/.test(String(value || ""));
+}
+
+async function registerPayment(payment) {
+  const orderNumber = String(payment.external_reference || payment.metadata?.order_number || "");
+  if (!validOrderNumber(orderNumber)) return;
+
+  const db = getAdminDb();
+  const orderRef = db.collection("orders").doc(orderNumber);
+  await db.runTransaction(async (transaction) => {
+    const orderSnapshot = await transaction.get(orderRef);
+    if (!orderSnapshot.exists) return;
+    const order = orderSnapshot.data();
+    const approved = payment.status === "approved";
+    const shouldCommitStock = approved && !order.stockCommitted;
+    const productSnapshots = [];
+
+    if (shouldCommitStock) {
+      const itemsByProduct = new Map();
+      for (const item of order.items || []) {
+        const documentId = String(item.documentId || "");
+        if (!documentId) continue;
+        if (!itemsByProduct.has(documentId)) itemsByProduct.set(documentId, []);
+        itemsByProduct.get(documentId).push(item);
+      }
+      for (const [documentId, items] of itemsByProduct) {
+        const ref = db.collection("products").doc(documentId);
+        productSnapshots.push({ items, ref, snapshot: await transaction.get(ref) });
+      }
+    }
+
+    let stockConflict = false;
+    const productUpdates = [];
+    for (const entry of productSnapshots) {
+      const product = entry.snapshot.data();
+      const stockByVariant = { ...(product?.stockByVariant || {}) };
+      if (!entry.snapshot.exists) stockConflict = true;
+      for (const item of entry.items) {
+        const current = Number(stockByVariant[item.variantKey] || 0);
+        const quantity = Number(item.quantity || 0);
+        if (current < quantity || quantity < 1) {
+          stockConflict = true;
+          break;
+        }
+        stockByVariant[item.variantKey] = current - quantity;
+      }
+      if (stockConflict) break;
+      const totalStock = Object.values(stockByVariant).reduce((sum, value) => sum + Number(value || 0), 0);
+      productUpdates.push({
+        ref: entry.ref,
+        data: { stockByVariant, stock: totalStock, soldOut: totalStock <= 0, updatedAt: new Date() }
+      });
+    }
+
+    if (shouldCommitStock && !stockConflict) {
+      productUpdates.forEach((entry) => transaction.update(entry.ref, entry.data));
+    }
+
+    const paymentData = {
+      mercadoPagoPaymentId: String(payment.id),
+      mercadoPagoStatusDetail: String(payment.status_detail || ""),
+      paymentStatus: String(payment.status || "pending"),
+      paidAmount: Number(payment.transaction_amount || 0),
+      updatedAt: new Date()
+    };
+    if (approved) {
+      paymentData.paidAt = payment.date_approved ? new Date(payment.date_approved) : new Date();
+      paymentData.status = stockConflict ? "stock_conflict" : "payment_confirmed";
+      paymentData.stockCommitted = !stockConflict;
+      if (stockConflict) paymentData.adminAttention = "Pago aprobado con conflicto de stock";
+    }
+
+    transaction.set(orderRef, paymentData, { merge: true });
+    if (order.uid) {
+      transaction.set(
+        db.collection("users").doc(order.uid).collection("orders").doc(orderNumber),
+        { ...order, ...paymentData, orderNumber },
+        { merge: true }
+      );
+    }
+  });
+}
 
 function isValidSignature(req) {
   const secret = process.env.MP_WEBHOOK_SECRET;
@@ -39,6 +124,7 @@ module.exports = async function handler(req, res) {
       status: payment.status,
       statusDetail: payment.status_detail
     });
+    await registerPayment(payment);
     return res.status(200).json({ received: true });
   } catch (error) {
     console.error("mercadopago-webhook", error);

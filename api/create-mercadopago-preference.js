@@ -1,3 +1,5 @@
+const { getAdminDb, verifyFirebaseUser } = require("./_firebase-admin");
+
 const ALLOWED_ORIGINS = new Set([
   "https://arvelcustomy2k.store",
   "https://www.arvelcustomy2k.store",
@@ -12,7 +14,7 @@ function setCors(req, res) {
     res.setHeader("Vary", "Origin");
   }
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 }
 
 function firestoreValue(value) {
@@ -132,11 +134,19 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    let authUser;
+    try {
+      authUser = await verifyFirebaseUser(req);
+    } catch (error) {
+      return res.status(401).json({ error: "Inicia sesion para continuar con la compra." });
+    }
+
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
     const orderNumber = cleanText(body?.orderNumber, 32);
     const customer = body?.customer || {};
     const requestedItems = Array.isArray(body?.items) ? body.items : [];
     const delivery = body?.delivery || {};
+    const address = body?.address || {};
 
     if (!validOrderNumber(orderNumber)) {
       return res.status(400).json({ error: "Número de pedido inválido." });
@@ -168,6 +178,10 @@ module.exports = async function handler(req, res) {
 
       items.push({
         id: documentId,
+        documentId,
+        size,
+        color,
+        variantKey: `${size}|${color}`,
         title: cleanText(`${product.name} · ${size} · ${color}`, 120),
         quantity,
         currency_id: "ARS",
@@ -189,7 +203,9 @@ module.exports = async function handler(req, res) {
     const storeBase = "https://www.arvelcustomy2k.store";
     const fullName = cleanText(customer.fullName, 160).split(/\s+/).filter(Boolean);
     const preference = {
-      items,
+      items: items.map(({ id, title, quantity, currency_id, unit_price }) => ({
+        id, title, quantity, currency_id, unit_price
+      })),
       payer: {
         name: cleanText(customer.firstName || fullName[0], 80),
         surname: cleanText(customer.lastName || fullName.slice(1).join(" "), 80),
@@ -207,6 +223,41 @@ module.exports = async function handler(req, res) {
       notification_url: `${apiBase}/api/mercadopago-webhook`,
       metadata: { order_number: orderNumber }
     };
+
+    const db = getAdminDb();
+    const orderRef = db.collection("orders").doc(orderNumber);
+    const existingOrder = await orderRef.get();
+    if (existingOrder.exists && existingOrder.data()?.uid !== authUser.uid) {
+      return res.status(409).json({ error: "El numero de pedido ya existe." });
+    }
+    const now = new Date();
+    await orderRef.set({
+      orderNumber,
+      uid: authUser.uid,
+      customer: {
+        fullName: cleanText(customer.fullName, 160),
+        firstName: cleanText(customer.firstName, 80),
+        lastName: cleanText(customer.lastName, 80),
+        email: cleanText(customer.email || authUser.email, 160),
+        phone: cleanText(customer.phone, 40),
+        dni: cleanText(customer.dni, 20)
+      },
+      address,
+      delivery,
+      items: items.map(({ documentId, title, quantity, unit_price, size, color, variantKey }) => ({
+        documentId, title, quantity, unitPrice: unit_price, size, color, variantKey
+      })),
+      subtotal,
+      shippingCost,
+      total: subtotal + shippingCost,
+      currency: "ARS",
+      paymentMethod: "mercadopago",
+      paymentStatus: "pending",
+      status: "pending_payment",
+      stockCommitted: false,
+      createdAt: existingOrder.exists ? existingOrder.data().createdAt || now : now,
+      updatedAt: now
+    }, { merge: true });
 
     const response = await fetch("https://api.mercadopago.com/checkout/preferences", {
       method: "POST",
@@ -234,6 +285,7 @@ module.exports = async function handler(req, res) {
       console.error("Mercado Pago preference without checkout URL", result);
       return res.status(502).json({ error: "Mercado Pago no devolvió el enlace de pago." });
     }
+    await orderRef.set({ mercadoPagoPreferenceId: result.id, updatedAt: new Date() }, { merge: true });
     return res.status(200).json({
       checkoutUrl,
       preferenceId: result.id,
