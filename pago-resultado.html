@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex">
+    <meta name="theme-color" content="#2f1e2a">
+    <link rel="icon" type="image/png" href="assets/logo/IsoBlanco.png?v=20260804-brand">
+    <title>Estado del pago | Arvel Custom Y2K</title>
+    <script>document.documentElement.classList.add("js");</script>
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/components.css?v=20260804-card-actions">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/responsive.css">
+  </head>
+  <body>
+    <div id="site-header"></div>
+    <main class="auth-page" id="main-content">
+      <div class="container auth-layout">
+        <div class="auth-intro">
+          <span class="eyebrow">Checkout seguro</span>
+          <h1 class="display-title">Tu pago</h1>
+          <p class="lead">Estamos verificando el resultado directamente con Mercado Pago.</p>
+        </div>
+        <section class="auth-card auth-account" aria-live="polite">
+          <span class="eyebrow" id="payment-result-eyebrow">Verificando</span>
+          <h2 id="payment-result-title">Un momento…</h2>
+          <p id="payment-result-message">No cierres esta ventana mientras consultamos el estado.</p>
+          <div class="auth-account__identity" id="payment-result-details" hidden></div>
+          <div class="cluster">
+            <a class="button button--pink" href="tienda.html">Volver al shop</a>
+            <a class="button button--secondary" href="contacto.html">Necesito ayuda</a>
+          </div>
+        </section>
+      </div>
+    </main>
+    <div id="site-footer"></div>
+    <div id="global-overlays"></div>
+    <script src="js/components.js?v=20260804-card-actions"></script>
+    <script src="js/main.js?v=20260804-card-actions"></script>
+    <script src="js/payment-config.js"></script>
+    <script src="js/pago-resultado.js"></script>
+  </body>
+</html>

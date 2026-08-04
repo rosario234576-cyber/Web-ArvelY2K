@@ -15,16 +15,16 @@
       property="og:description"
       content="Contanos tu idea y creemos una prenda customizada que no se repite."
     >
-    <link rel="icon" type="image/png" href="assets/logo/IsoNegro.png">
-    <title>Custom by Arvel | Piezas con identidad propia</title>
+    <link rel="icon" type="image/png" href="assets/logo/IsoBlanco.png?v=20260804-brand">
+    <title>Custom by Arvel | Arvel Custom Y2K</title>
     <script>
       document.documentElement.classList.add("js");
     </script>
     <link rel="stylesheet" href="css/reset.css">
     <link rel="stylesheet" href="css/variables.css">
-    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/components.css?v=20260804-card-actions">
     <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/responsive.css?v=20260731-custom-centered1">
   </head>
   <body>
     <a class="skip-link" href="#contenido-principal">Saltar al contenido</a>
@@ -131,14 +131,26 @@
               <h2 class="display-title" id="custom-before-title">Antes / después</h2>
             </div>
           </div>
-          <div class="comparison custom-comparison" data-comparison data-reveal>
-            <div class="comparison__layer comparison__before custom-comparison__before">
+          <div class="comparison comparison--real" data-comparison data-reveal>
+            <div class="comparison__layer comparison__before">
               <span class="badge">Antes</span>
-              <strong>Remera<br>sin usar</strong>
+              <img
+                src="assets/images/AntesYDespues/Antes.jpg"
+                alt="Cartera antes de la intervención de Arvel"
+                width="1080"
+                height="1350"
+                loading="lazy"
+              >
             </div>
-            <div class="comparison__layer comparison__after custom-comparison__after" data-comparison-after>
+            <div class="comparison__layer comparison__after" data-comparison-after>
               <span class="badge badge--pink">Después</span>
-              <strong>Top<br>reconstruido</strong>
+              <img
+                src="assets/images/AntesYDespues/Despues.jpg"
+                alt="Cartera terminada después de la intervención custom de Arvel"
+                width="1080"
+                height="1350"
+                loading="lazy"
+              >
             </div>
             <label class="visually-hidden" for="custom-comparison-range">
               Mostrar el resultado de la transformación
@@ -146,6 +158,9 @@
             <input class="comparison__range" id="custom-comparison-range" type="range" min="0" max="100" value="55">
             <div class="comparison__handle" data-comparison-handle aria-hidden="true">↔</div>
           </div>
+          <p class="comparison__caption" data-reveal>
+            De cartera olvidada a pieza <em>one-of-one</em>. Mové el control para ver la transformación.
+          </p>
         </div>
       </section>
 
@@ -372,9 +387,9 @@
     <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
 
     <script src="js/data/productos.js"></script>
-    <script src="js/components.js"></script>
-    <script src="js/main.js"></script>
-    <script src="js/custom.js"></script>
+    <script src="js/components.js?v=20260804-card-actions"></script>
+    <script src="js/main.js?v=20260804-card-actions"></script>
+    <script src="js/custom.js?v=20260731-mobile-lock1"></script>
     <script src="js/chatbot.js"></script>
     <script src="js/favoritos.js"></script>
   </body>
