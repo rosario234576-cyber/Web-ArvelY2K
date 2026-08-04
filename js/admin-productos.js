@@ -61,6 +61,8 @@ const ui = {
   inventory: document.querySelector("#inventory-products"),
   instagramProducts: document.querySelector("#instagram-products"),
   instagramCount: document.querySelector("#instagram-product-count"),
+  instagramFeed: document.querySelector("#instagram-feed-preview"),
+  instagramFeedCount: document.querySelector("#instagram-feed-count"),
   duplicateProducts: document.querySelector("#duplicate-products"),
   instagramSync: document.querySelector("#instagram-sync"),
   instagramSyncState: document.querySelector("#instagram-sync-state"),
@@ -78,6 +80,7 @@ let existingImages = [];
 let selectedImages = [];
 let previewObjectUrls = [];
 let activeDocumentId = "";
+let instagramFeedPosts = [];
 
 function slugify(value) {
   return String(value)
@@ -93,6 +96,81 @@ function escapeHtml(value) {
   return String(value || "").replace(/[&<>"']/g, (character) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
   })[character]);
+}
+
+function instagramPostAnalysis(post) {
+  const caption = String(post.caption || "").trim();
+  const normalized = caption.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const sold = /\b(vendid[oa]s?|agotad[oa]s?|sin stock|no disponible)\b/.test(normalized);
+  const announcement = /\b(sorteo|aviso|anuncio|horarios?|envios?|aclaracion|proximo drop|giveaway)\b/.test(normalized);
+  const productSignals = /\$\s*[\d.]+|\b(precio|talle|medidas?|material|stock|unico|unica|disponible|remera|top|pollera|pantalon|jean|vestido|campera|buzo|cartera|bolso|accesorio)\b/.test(normalized);
+  const marker = String(ui.markerPreview?.textContent || "").trim().toLowerCase();
+  const marked = Boolean(marker && normalized.includes(marker));
+  const isProduct = !announcement && (marked || productSignals);
+  const priceMatch = caption.match(/\$\s*([\d.]+(?:,\d{1,2})?)/);
+  const price = priceMatch ? Number(priceMatch[1].replace(/\./g, "").replace(",", ".")) : 0;
+  const firstLine = caption.split(/\r?\n/).map((line) => line.trim()).find(Boolean) || "Producto de Instagram";
+  const name = firstLine.replace(/[#@][\w.]+/g, "").replace(/[✨💗🖤🎀⭐]+/gu, "").trim().slice(0, 80) || "Producto de Instagram";
+  const categories = [
+    ["Tops", /\b(top|remera|corset|musculosa)\b/],
+    ["Polleras", /\b(pollera|falda)\b/],
+    ["Pantalones", /\b(pantalon|jean|denim)\b/],
+    ["Vestidos", /\bvestido\b/],
+    ["Abrigos", /\b(campera|buzo|abrigo)\b/],
+    ["Accesorios", /\b(cartera|bolso|accesorio|collar|aro|orejera)\b/]
+  ];
+  const category = categories.find(([, pattern]) => pattern.test(normalized))?.[0] || "Sin categorizar";
+  const duplicate = products.find((item) => item.instagramMediaId === post.id || item.instagramPermalink === post.permalink);
+  return { caption, sold, announcement, isProduct, price, name, category, duplicate };
+}
+
+function renderInstagramFeed() {
+  if (!ui.instagramFeed) return;
+  ui.instagramFeedCount.textContent = String(instagramFeedPosts.length);
+  ui.instagramFeed.innerHTML = instagramFeedPosts.length ? instagramFeedPosts.map((post) => {
+    const analysis = instagramPostAnalysis(post);
+    const state = analysis.duplicate ? "Ya vinculado" : analysis.sold ? "Vendido" : analysis.isProduct ? "Posible producto" : "No parece producto";
+    return `<article class="admin-instagram-post ${analysis.isProduct ? "is-product" : "is-skipped"}">
+      <img src="${escapeHtml(post.image || placeholder)}" alt="">
+      <div class="admin-instagram-post__body">
+        <div class="admin-instagram-post__badges"><span>${escapeHtml(state)}</span><span>${escapeHtml(analysis.category)}</span></div>
+        <strong>${escapeHtml(analysis.name)}</strong>
+        <p>${escapeHtml(analysis.caption.slice(0, 260))}${analysis.caption.length > 260 ? "…" : ""}</p>
+        <small>${post.timestamp ? new Date(post.timestamp).toLocaleDateString("es-AR") : "Sin fecha"}${analysis.price ? ` · $ ${analysis.price.toLocaleString("es-AR")}` : " · precio pendiente"}</small>
+        <div class="admin-management-actions">
+          ${post.permalink ? `<a href="${escapeHtml(post.permalink)}" target="_blank" rel="noopener">Ver publicación</a>` : ""}
+          ${analysis.isProduct && !analysis.duplicate ? `<button type="button" data-import-instagram="${escapeHtml(post.id)}">Crear borrador</button>` : ""}
+          ${analysis.duplicate ? `<button type="button" data-edit-product="${escapeHtml(analysis.duplicate.documentId)}">Editar vinculado</button>` : ""}
+        </div>
+      </div>
+    </article>`;
+  }).join("") : "<p>No se encontraron publicaciones.</p>";
+}
+
+async function importInstagramDraft(mediaId) {
+  const post = instagramFeedPosts.find((item) => item.id === mediaId);
+  if (!post) return;
+  const analysis = instagramPostAnalysis(post);
+  if (analysis.duplicate) return;
+  const documentId = `instagram-${slugify(analysis.name) || "producto"}-${String(post.id).slice(-8)}`;
+  const sku = `IG-${String(post.id).slice(-10)}`.toUpperCase();
+  const stock = analysis.sold ? 0 : 1;
+  await setDoc(doc(db, "products", documentId), {
+    id: Date.now(), name: analysis.name, slug: slugify(analysis.name), sku,
+    category: analysis.category, collection: "Instagram", price: analysis.price,
+    oldPrice: null, condition: "Seleccionada", status: "draft",
+    shortDescription: analysis.caption.slice(0, 180) || "Producto importado desde Instagram.",
+    description: analysis.caption, material: "A completar", care: "A completar",
+    measurements: { bust: "A completar", waist: "A completar", hip: "A completar", length: "A completar" },
+    sizes: ["Único"], colors: ["A completar"], stockByVariant: { "Único|A completar": stock },
+    stock, soldOut: analysis.sold, archived: false, discount: 0, featured: false, uniquePiece: false,
+    tags: ["instagram", analysis.sold ? "vendido" : "revisar"], source: "instagram",
+    instagramMediaId: post.id, instagramPermalink: post.permalink, instagramTimestamp: post.timestamp || "",
+    images: post.image ? [post.image] : [], createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+  }, { merge: false });
+  await loadProducts();
+  renderInstagramFeed();
+  ui.instagramSyncState.textContent = `Borrador creado: ${analysis.name}`;
 }
 
 function setState(message, type = "") {
@@ -585,12 +663,24 @@ ui.instagramSync.addEventListener("click", async () => {
     ui.instagramSyncState.textContent = result.detected != null
       ? `${result.detected} publicaciones leídas correctamente`
       : `${result.imported || 0} importados · ${result.updated || 0} actualizados`;
+    instagramFeedPosts = Array.isArray(result.posts) ? result.posts : [];
+    renderInstagramFeed();
     await loadProducts();
   } catch (error) {
     ui.instagramSyncState.textContent = error.message;
   } finally {
     ui.instagramSync.disabled = false;
   }
+});
+
+ui.instagramFeed?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-import-instagram]");
+  if (!button) return;
+  button.disabled = true;
+  importInstagramDraft(button.dataset.importInstagram).catch((error) => {
+    button.disabled = false;
+    ui.instagramSyncState.textContent = error.message || "No pudimos crear el borrador.";
+  });
 });
 
 ui.addVariant.addEventListener("click", () => addVariantRow());
