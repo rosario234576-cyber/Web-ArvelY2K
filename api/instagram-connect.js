@@ -14,15 +14,24 @@ module.exports = async function handler(req, res) {
 
   const nonce = crypto.randomBytes(18).toString("hex");
   const signature = crypto.createHmac("sha256", secret).update(nonce).digest("hex");
-  const params = new URLSearchParams({
-    enable_fb_login: "0",
-    force_reauth: "true",
-    client_id: appId,
-    redirect_uri: getRedirectUri(req),
-    response_type: "code",
-    scope: "instagram_business_basic",
-    state: `${nonce}.${signature}`
-  });
+  const state = `${nonce}.${signature}`;
+  let authorizationUrl;
+  if (process.env.INSTAGRAM_AUTH_URL) {
+    authorizationUrl = new URL(process.env.INSTAGRAM_AUTH_URL);
+    authorizationUrl.searchParams.set("redirect_uri", getRedirectUri(req));
+    authorizationUrl.searchParams.set("state", state);
+  } else {
+    authorizationUrl = new URL("https://www.instagram.com/oauth/authorize");
+    authorizationUrl.search = new URLSearchParams({
+      enable_fb_login: "0",
+      force_reauth: "true",
+      client_id: appId,
+      redirect_uri: getRedirectUri(req),
+      response_type: "code",
+      scope: "instagram_business_basic",
+      state
+    }).toString();
+  }
   res.setHeader("Cache-Control", "no-store");
-  return res.redirect(302, `https://www.instagram.com/oauth/authorize?${params}`);
+  return res.redirect(302, authorizationUrl.toString());
 };
