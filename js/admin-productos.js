@@ -452,10 +452,20 @@ async function checkInstagramConnection() {
     const response = await fetch("/api/instagram-sync?status=1", { headers: { Accept: "application/json" } });
     const result = await response.json();
     const connected = response.ok && result.connected;
+    const canConnect = response.ok && result.canConnect;
     ui.instagramDot.classList.toggle("is-connected", connected);
     ui.instagramTitle.textContent = connected ? "Instagram conectado" : "Falta conectar Meta";
     ui.instagramCopy.textContent = connected ? `Cuenta preparada: ${result.username || "Arvel Customs"}.` : "Agregaremos el token y el ID de Instagram en Vercel en el próximo paso.";
     ui.instagramSync.disabled = !connected;
+    if (!connected && canConnect) {
+      ui.instagramCopy.textContent = "La aplicación de Meta está lista. Autorizá la cuenta para continuar.";
+      ui.instagramSync.textContent = "Conectar Instagram";
+      ui.instagramSync.disabled = false;
+      ui.instagramSync.dataset.action = "connect";
+    } else {
+      ui.instagramSync.textContent = connected ? "Sincronizar ahora" : "Conectar Instagram";
+      ui.instagramSync.dataset.action = connected ? "sync" : "connect";
+    }
   } catch {
     ui.instagramTitle.textContent = "Falta conectar Meta";
     ui.instagramCopy.textContent = "El panel está preparado; todavía falta activar el servicio en Vercel.";
@@ -561,6 +571,10 @@ ui.settingsForm.addEventListener("submit", async (event) => {
   }
 });
 ui.instagramSync.addEventListener("click", async () => {
+  if (ui.instagramSync.dataset.action === "connect") {
+    window.location.assign("/api/instagram-connect");
+    return;
+  }
   ui.instagramSync.disabled = true;
   ui.instagramSyncState.textContent = "Sincronizando…";
   try {
