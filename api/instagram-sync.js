@@ -38,6 +38,14 @@ module.exports = async function handler(req, res) {
       imported: 0,
       updated: 0,
       detected: Array.isArray(result.data) ? result.data.length : 0,
+      posts: Array.isArray(result.data) ? result.data.map((post) => ({
+        id: String(post.id || ""),
+        caption: String(post.caption || ""),
+        mediaType: String(post.media_type || ""),
+        image: String(post.thumbnail_url || post.media_url || ""),
+        permalink: String(post.permalink || ""),
+        timestamp: String(post.timestamp || "")
+      })) : [],
       message: "Conexión verificada. El feed se leyó correctamente."
     });
   } catch (error) {
