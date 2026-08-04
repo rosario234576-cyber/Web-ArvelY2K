@@ -45,6 +45,9 @@ function cleanText(value, maxLength = 120) {
 }
 
 function getInstallmentFeeRate() {
+  // Para 3 cuotas, esta variable debe contener el costo TOTAL que absorbe la
+  // venta (comisiÃ³n de cobro + costo por financiar). Mercado Pago aplica esos
+  // cargos despuÃ©s del pago; no publica una cotizaciÃ³n previa por API.
   const value = Number(process.env.MP_3_INSTALLMENTS_FEE_RATE || 0);
   return Number.isFinite(value) && value >= 0 && value < 0.9 ? value : 0;
 }
