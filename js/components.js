@@ -319,8 +319,12 @@
     const productId = encodeURIComponent(productKey);
     const productName = escapeHtml(product.name);
     const shortDescription = escapeHtml(product.shortDescription);
-    const sizes = escapeHtml(product.sizes.join("/"));
-    const condition = escapeHtml(product.condition);
+    const transferPrice = Number(product.transferPrice || product.price || 0);
+    const installmentCount = Number(product.installmentCount || 3);
+    const installmentPrice = installmentCount > 0
+      ? Math.ceil(Number(product.price || 0) / installmentCount)
+      : 0;
+    const unavailable = product.soldOut || product.stock <= 0;
 
     return `
       <article class="product-card" data-product-id="${productId}" data-reveal>
@@ -352,23 +356,25 @@
           <h3 class="product-card__name">
             <a href="producto.html?id=${productId}">${productName}</a>
           </h3>
-          <p class="product-card__meta">Talle ${sizes} · ${condition}</p>
           <p class="product-card__price">${price}</p>
+          <p class="product-card__transfer">${formatPrice(transferPrice)} con transferencia o dep&oacute;sito</p>
+          <p class="product-card__installments">${installmentCount} cuotas sin inter&eacute;s de ${formatPrice(installmentPrice)}</p>
           <div class="product-card__actions">
             <button
-              class="button product-card__cart"
-              type="button"
-              data-card-add="${productId}"
-              ${product.soldOut || product.stock <= 0 ? "disabled" : ""}
-            >${product.soldOut || product.stock <= 0 ? "Sin stock" : "Agregar al carrito"}</button>
-            <button
-              class="button button--pink product-card__buy"
+              class="product-card__buy-link"
               type="button"
               data-card-buy="${productId}"
-              ${product.soldOut || product.stock <= 0 ? "disabled" : ""}
-            >Comprar · transferencia</button>
+              ${unavailable ? "disabled" : ""}
+            >${unavailable ? "Sin stock" : "Comprar"}</button>
+            <button
+              class="product-card__cart"
+              type="button"
+              data-card-add="${productId}"
+              aria-label="Agregar ${productName} al carrito"
+              title="Agregar al carrito"
+              ${unavailable ? "disabled" : ""}
+            ><img src="assets/icons/carrito-de-compras.png" alt="" width="20" height="20"></button>
           </div>
-          <p class="product-card__payment">Pago únicamente por transferencia bancaria</p>
         </div>
       </article>
     `;
