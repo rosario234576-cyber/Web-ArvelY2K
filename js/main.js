@@ -504,6 +504,13 @@
     initPageEntrance();
     initScrollProgress();
     renderFeaturedProducts();
+    if (window.ARVEL_PRODUCTS_READY && typeof window.ARVEL_PRODUCTS_READY.then === "function") {
+      window.ARVEL_PRODUCTS_READY.then((catalog) => {
+        if (!Array.isArray(catalog)) return;
+        window.ARVEL_PRODUCTS = catalog;
+        renderFeaturedProducts();
+      });
+    }
     updateGlobalCounters();
     initPromoBar();
     initMobileNavigation();

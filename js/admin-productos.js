@@ -148,7 +148,8 @@ function renderInstagramFeed() {
         <small>${post.timestamp ? new Date(post.timestamp).toLocaleDateString("es-AR") : "Sin fecha"}${analysis.price ? ` · $ ${analysis.price.toLocaleString("es-AR")}` : " · precio pendiente"}</small>
         <div class="admin-management-actions">
           ${post.permalink ? `<a href="${escapeHtml(post.permalink)}" target="_blank" rel="noopener">Ver publicación</a>` : ""}
-          ${analysis.isProduct && !analysis.duplicate ? `<button type="button" data-import-instagram="${escapeHtml(post.id)}">Crear borrador</button>` : ""}
+          ${analysis.isProduct && !analysis.duplicate ? `<button type="button" data-import-instagram="${escapeHtml(post.id)}" data-import-status="draft">Crear borrador</button>` : ""}
+          ${analysis.isProduct && !analysis.duplicate && !analysis.sold ? `<button type="button" data-import-instagram="${escapeHtml(post.id)}" data-import-status="published">Publicar en tienda</button>` : ""}
           ${analysis.duplicate ? `<button type="button" data-edit-product="${escapeHtml(analysis.duplicate.documentId)}">Editar vinculado</button>` : ""}
         </div>
       </div>
@@ -156,30 +157,36 @@ function renderInstagramFeed() {
   }).join("") : "<p>No se encontraron publicaciones.</p>";
 }
 
-async function importInstagramDraft(mediaId) {
+async function importInstagramProduct(mediaId, requestedStatus = "draft") {
   const post = instagramFeedPosts.find((item) => item.id === mediaId);
   if (!post) return;
   const analysis = instagramPostAnalysis(post);
   if (analysis.duplicate) return;
+  const status = requestedStatus === "published" ? "published" : "draft";
+  if (status === "published" && analysis.sold) throw new Error("Una publicación marcada como vendida no puede publicarse con stock.");
+  if (status === "published" && !analysis.price) throw new Error("No detectamos el precio. Creá un borrador y completalo antes de publicarlo.");
+  if (status === "published" && !post.image) throw new Error("La publicación no tiene una imagen disponible para la tienda.");
   const documentId = `instagram-${slugify(analysis.name) || "producto"}-${String(post.id).slice(-8)}`;
   const sku = `IG-${String(post.id).slice(-10)}`.toUpperCase();
   const stock = analysis.sold ? 0 : 1;
   await setDoc(doc(db, "products", documentId), {
     id: Date.now(), name: analysis.name, slug: slugify(analysis.name), sku,
     category: analysis.category, collection: "Instagram", price: analysis.price,
-    oldPrice: null, condition: "Seleccionada", status: "draft",
+    oldPrice: null, condition: "Seleccionada", status,
     shortDescription: analysis.caption.slice(0, 180) || "Producto importado desde Instagram.",
     description: analysis.caption, material: "A completar", care: "A completar",
     measurements: { bust: "A completar", waist: "A completar", hip: "A completar", length: "A completar" },
     sizes: ["Único"], colors: ["A completar"], stockByVariant: { "Único|A completar": stock },
-    stock, soldOut: analysis.sold, archived: false, discount: 0, featured: false, uniquePiece: false,
+    stock, soldOut: analysis.sold, archived: false, discount: 0, featured: status === "published", uniquePiece: true,
     tags: ["instagram", analysis.sold ? "vendido" : "revisar"], source: "instagram",
     instagramMediaId: post.id, instagramPermalink: post.permalink, instagramTimestamp: post.timestamp || "",
     images: post.image ? [post.image] : [], createdAt: serverTimestamp(), updatedAt: serverTimestamp()
   }, { merge: false });
   await loadProducts();
   renderInstagramFeed();
-  ui.instagramSyncState.textContent = `Borrador creado: ${analysis.name}`;
+  ui.instagramSyncState.textContent = status === "published"
+    ? `Producto publicado en la tienda: ${analysis.name}`
+    : `Borrador creado: ${analysis.name}`;
 }
 
 function setState(message, type = "") {
@@ -676,9 +683,9 @@ ui.instagramFeed?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-import-instagram]");
   if (!button) return;
   button.disabled = true;
-  importInstagramDraft(button.dataset.importInstagram).catch((error) => {
+  importInstagramProduct(button.dataset.importInstagram, button.dataset.importStatus).catch((error) => {
     button.disabled = false;
-    ui.instagramSyncState.textContent = error.message || "No pudimos crear el borrador.";
+    ui.instagramSyncState.textContent = error.message || "No pudimos crear el producto.";
   });
 });
 
