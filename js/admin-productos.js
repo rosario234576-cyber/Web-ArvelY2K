@@ -69,6 +69,8 @@ const ui = {
   instagramDot: document.querySelector("#instagram-dot"),
   instagramTitle: document.querySelector("#instagram-connection-title"),
   instagramCopy: document.querySelector("#instagram-connection-copy"),
+  mercadoPagoState: document.querySelector("#mercadopago-connection-state"),
+  mercadoPagoCopy: document.querySelector("#mercadopago-connection-copy"),
   settingsForm: document.querySelector("#automation-settings-form"),
   settingsState: document.querySelector("#settings-state"),
   markerPreview: document.querySelector("#instagram-marker-preview"),
@@ -81,6 +83,29 @@ let selectedImages = [];
 let previewObjectUrls = [];
 let activeDocumentId = "";
 let instagramFeedPosts = [];
+
+async function checkMercadoPagoConnection() {
+  if (!ui.mercadoPagoState || !ui.mercadoPagoCopy) return;
+  try {
+    const response = await fetch(
+      "https://web-arvel-y2-k.vercel.app/api/mercadopago-health",
+      { cache: "no-store" }
+    );
+    const result = await response.json();
+    if (!response.ok || !result.connected) throw new Error(result.reason || "not_connected");
+    ui.mercadoPagoState.textContent = result.mode === "production"
+      ? "Producción conectada"
+      : "Prueba conectada";
+    ui.mercadoPagoState.classList.remove("admin-pill--pending");
+    ui.mercadoPagoCopy.textContent = result.mode === "production"
+      ? "El checkout puede crear pagos reales. Falta finalizar el descuento automático de stock desde el webhook."
+      : "El checkout puede crear pagos de prueba. Cambiá a credenciales productivas antes de cobrar ventas reales.";
+  } catch (_error) {
+    ui.mercadoPagoState.textContent = "Conexión pendiente";
+    ui.mercadoPagoState.classList.add("admin-pill--pending");
+    ui.mercadoPagoCopy.textContent = "Revisá MP_ACCESS_TOKEN en Vercel y volvé a desplegar el proyecto.";
+  }
+}
 
 function slugify(value) {
   return String(value)
@@ -758,7 +783,12 @@ async function initialize(user) {
   }
   ui.content.hidden = false;
   resetForm();
-  await Promise.all([loadProducts(), loadSettings(), checkInstagramConnection()]);
+  await Promise.all([
+    loadProducts(),
+    loadSettings(),
+    checkInstagramConnection(),
+    checkMercadoPagoConnection()
+  ]);
 }
 
 if (!firebaseConfigured) {
