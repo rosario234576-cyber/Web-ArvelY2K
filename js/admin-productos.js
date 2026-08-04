@@ -582,7 +582,9 @@ ui.instagramSync.addEventListener("click", async () => {
     const response = await fetch("/api/instagram-sync", { method: "POST", headers: { Authorization: `Bearer ${token}` } });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || "No pudimos sincronizar.");
-    ui.instagramSyncState.textContent = `${result.imported || 0} importados · ${result.updated || 0} actualizados`;
+    ui.instagramSyncState.textContent = result.detected != null
+      ? `${result.detected} publicaciones leídas correctamente`
+      : `${result.imported || 0} importados · ${result.updated || 0} actualizados`;
     await loadProducts();
   } catch (error) {
     ui.instagramSyncState.textContent = error.message;
