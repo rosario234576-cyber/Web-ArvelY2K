@@ -25,6 +25,7 @@
     total: document.querySelector("#checkout-total"),
     deliveryGroup: document.querySelector("#delivery-group"),
     paymentGroup: document.querySelector("#payment-group"),
+    mercadopagoInstallments: document.querySelector("#mercadopago-installments"),
     cashChoice: document.querySelector("#cash-choice"),
     cashInput: document.querySelector('input[value="efectivo"]'),
     postalCode: document.querySelector("#postal-code"),
@@ -127,7 +128,40 @@
     const selected = elements.form.elements.payment?.value;
     if (!selected) return null;
     const input = elements.form.querySelector(`input[name="payment"][value="${selected}"]`);
-    return { value: selected, label: input.dataset.label };
+    const installments = selected === "mercadopago"
+      ? (elements.form.elements.installments?.value || "1")
+      : null;
+    return { value: selected, label: input.dataset.label, installments };
+  }
+
+  function updateInstallmentsPrices() {
+    const subtotal = getSubtotal();
+    const delivery = getDelivery();
+    const shipping = delivery?.cost || 0;
+    const total = subtotal + shipping;
+
+    const prices = {
+      1: total,
+      2: Math.round((total / 2) * 100) / 100,
+      3: Math.round((total / 3) * 100) / 100
+    };
+
+    for (const [cuotas, price] of Object.entries(prices)) {
+      const priceElement = document.querySelector(`#installments-${cuotas}-price`);
+      if (priceElement) {
+        priceElement.textContent = `${window.Arvel.formatPrice(price)} c/u`;
+      }
+    }
+  }
+
+  function updateInstallmentsVisibility() {
+    const paymentMethod = elements.form.elements.payment?.value;
+    if (elements.mercadopagoInstallments) {
+      elements.mercadopagoInstallments.hidden = paymentMethod !== "mercadopago";
+      if (paymentMethod === "mercadopago") {
+        updateInstallmentsPrices();
+      }
+    }
   }
 
   function renderItems() {
@@ -591,6 +625,7 @@
               agencyId: order.delivery.agencyId || ""
             },
             address: order.address,
+            installments: order.payment.installments ? Number(order.payment.installments) : 1,
             items: order.items.map((item) => ({
               documentId: item.product.documentId || item.documentId || "",
               variant_id: item.variant_id || item.variantId || `${item.product.documentId || item.documentId || item.product.id}::${item.size}::${item.color}`,
@@ -610,8 +645,10 @@
       }
       location.href = result.checkoutUrl;
     } catch (error) {
-      elements.globalError.textContent =
-        error.message || "No pudimos conectar con Mercado Pago. Intentá nuevamente.";
+      const networkFailure = error instanceof TypeError && /fetch|network|load/i.test(error.message || "");
+      elements.globalError.textContent = networkFailure
+        ? "No pudimos comunicarnos con Mercado Pago. Actualizá la página e intentá nuevamente. Si continúa, el servicio de pagos necesita un nuevo despliegue."
+        : error.message || "No pudimos conectar con Mercado Pago. Intentá nuevamente.";
       submit.disabled = false;
       submit.textContent = originalLabel;
     }
@@ -637,10 +674,18 @@
         updateDniAvailability();
         updatePaymentAvailability();
         updateTotals();
+        updateInstallmentsVisibility();
       }
       if (event.target.name === "meetingPoint") {
         updateMeetingAvailability();
         updateTotals();
+        updateInstallmentsVisibility();
+      }
+      if (event.target.name === "payment") {
+        updateInstallmentsVisibility();
+      }
+      if (event.target.name === "installments") {
+        updateCheckoutProgress(event.target.closest(".checkout-block")?.id || null);
       }
       if (event.target.name === "province") {
         updateCorreoAgencyAvailability();
@@ -688,6 +733,7 @@
     updateDniAvailability();
     updatePaymentAvailability();
     updateTotals();
+    updateInstallmentsVisibility();
     bindEvents();
   }
 })();

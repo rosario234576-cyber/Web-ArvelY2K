@@ -1,6 +1,6 @@
 window.ARVEL_CHECKOUT_AUTH_READY = (async function () {
   try {
-    const [{ initializeApp, getApps }, { getAuth, onAuthStateChanged }, configModule] =
+    const [{ initializeApp, getApps }, { getAuth, onAuthStateChanged, signInAnonymously }, configModule] =
       await Promise.all([
         import("https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js"),
         import("https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js"),
@@ -15,7 +15,8 @@ window.ARVEL_CHECKOUT_AUTH_READY = (async function () {
     const app = getApps().find((candidate) => candidate.name === "[DEFAULT]")
       || initializeApp(configModule.firebaseConfig);
     const auth = getAuth(app);
-    const user = await new Promise((resolve, reject) => {
+
+    let user = await new Promise((resolve, reject) => {
       const unsubscribe = onAuthStateChanged(
         auth,
         (currentUser) => {
@@ -26,9 +27,16 @@ window.ARVEL_CHECKOUT_AUTH_READY = (async function () {
       );
     });
 
+    // Si no hay usuario autenticado, permitir registro anónimo
     if (!user) {
-      location.replace("login.html?next=checkout.html");
-      return false;
+      try {
+        const anonResult = await signInAnonymously(auth);
+        user = anonResult.user;
+      } catch (anonError) {
+        console.error("No pudimos crear una sesión anónima", anonError);
+        location.replace("login.html?next=checkout.html");
+        return false;
+      }
     }
 
     window.ARVEL_CHECKOUT_USER = user;
