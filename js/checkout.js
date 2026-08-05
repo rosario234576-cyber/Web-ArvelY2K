@@ -135,10 +135,11 @@
       const installmentValue = elements.form.elements.installments?.value || "1";
       if (installmentValue === "dinero") {
         paymentType = "mercadopago_money";
-        installments = null;
+        installments = 0;
       } else {
-        paymentType = "mercadopago_card";
-        installments = installmentValue;
+        const cuotas = Number(installmentValue);
+        paymentType = `mercadopago_card_${cuotas}`;
+        installments = cuotas;
       }
     }
 
