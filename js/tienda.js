@@ -14,7 +14,6 @@
     search: document.querySelector("#shop-search"),
     filtersForm: document.querySelector("#filters-form"),
     categoryHeader: document.querySelector("#header-category-select"),
-    size: document.querySelector("#filter-size"),
     price: document.querySelector("#filter-price"),
     priceOutput: document.querySelector("#filter-price-output"),
     available: document.querySelector("#filter-available"),
@@ -50,14 +49,12 @@
   function populateFilters() {
     const categories = uniqueValues("category").filter((cat) => cat && cat.toLowerCase() !== "sin categorizar");
     fillSelect(elements.categoryHeader, categories);
-    fillSelect(elements.size, uniqueValues("sizes"));
   }
 
   function getState() {
     return {
       query: elements.search.value.trim(),
       category: elements.categoryHeader ? elements.categoryHeader.value : "",
-      size: elements.size.value,
       maxPrice: Number(elements.price.value),
       available: elements.available.checked,
       sale: elements.sale.checked,
@@ -102,7 +99,6 @@
       return (
         (!query || searchable.includes(query)) &&
         (!state.category || product.category === state.category) &&
-        (!state.size || product.sizes.includes(state.size)) &&
         product.price <= state.maxPrice &&
         (!state.available || (!product.soldOut && product.stock > 0)) &&
         (!state.sale || product.discount > 0) &&
@@ -133,7 +129,6 @@
     const params = new URLSearchParams();
     if (state.query) params.set("buscar", state.query);
     if (state.category) params.set("categoria", state.category);
-    if (state.size) params.set("talle", state.size);
     if (state.maxPrice < Number(elements.price.max)) params.set("precio", state.maxPrice);
     if (state.available) params.set("disponibles", "1");
     if (state.sale) params.set("ofertas", "1");
@@ -152,7 +147,6 @@
     const filters = [
       state.query && { key: "query", label: `"${state.query}"` },
       state.category && { key: "category", label: state.category },
-      state.size && { key: "size", label: `Talle ${state.size}` },
       state.maxPrice < Number(elements.price.max) && {
         key: "maxPrice",
         label: `Hasta ${window.Arvel.formatPrice(state.maxPrice)}`
@@ -182,8 +176,7 @@
   function removeFilter(key) {
     const controls = {
       query: elements.search,
-      category: elements.categoryHeader,
-      size: elements.size
+      category: elements.categoryHeader
     };
 
     if (controls[key]) controls[key].value = "";
@@ -227,7 +220,6 @@
     const params = new URLSearchParams(window.location.search);
     setValueFromParams(elements.search, params, "buscar");
     if (elements.categoryHeader) setValueFromParams(elements.categoryHeader, params, "categoria");
-    setValueFromParams(elements.size, params, "talle");
     setValueFromParams(elements.price, params, "precio");
     setValueFromParams(elements.sort, params, "orden");
     elements.available.checked = params.get("disponibles") === "1";
