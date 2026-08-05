@@ -80,14 +80,21 @@
   }
 
   function renderPrice() {
+    const originalPrice = Number(product.price || 0);
+    const transferPrice = Number(product.transferPrice || product.price || 0);
+    const discount = Number(product.discount || 0);
     const oldPrice = product.oldPrice
       ? `<del>${window.Arvel.formatPrice(product.oldPrice)}</del>`
+      : discount > 0
+      ? `<del>${window.Arvel.formatPrice(originalPrice)}</del>`
       : "";
-    const transferPrice = Number(product.transferPrice || product.price || 0);
+    const discountBadge = discount > 0 ? `<span class="product-info__discount">-${discount}%</span>` : "";
     elements.price.innerHTML = `
-      <span class="product-info__price-main">${oldPrice}<strong>${window.Arvel.formatPrice(transferPrice)}</strong></span>
-      <span class="product-info__price-option">Precio por transferencia o depÃ³sito</span>
-      <span class="product-info__price-option" data-mercadopago-financing hidden>Mercado Pago calcula el total y las cuotas al comprar</span>
+      <div class="product-info__price-section">
+        <span class="product-info__price-label">TRANSFERENCIA O DEPÓSITO</span>
+        <span class="product-info__price-main">${oldPrice}<strong>${window.Arvel.formatPrice(transferPrice)}</strong>${discountBadge}</span>
+        <span class="product-info__price-option" data-mercadopago-financing hidden>Mercado Pago calcula el total y las cuotas al comprar</span>
+      </div>
     `;
     if (window.ARVEL_MERCADOPAGO_READY === true) {
       elements.price.querySelector("[data-mercadopago-financing]").hidden = false;

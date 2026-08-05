@@ -324,6 +324,8 @@
     const productName = escapeHtml(product.name);
     const shortDescription = escapeHtml(product.shortDescription);
     const transferPrice = Number(product.transferPrice || product.price || 0);
+    const originalPrice = Number(product.price || 0);
+    const discount = Number(product.discount || 0);
     const mercadoPagoReady = window.ARVEL_MERCADOPAGO_READY === true;
     const unavailable = product.soldOut || product.stock <= 0;
 
@@ -357,8 +359,12 @@
           <h3 class="product-card__name">
             <a href="producto.html?id=${productId}">${productName}</a>
           </h3>
-          <p class="product-card__price">${formatPrice(transferPrice)}</p>
-          <p class="product-card__transfer">Precio por transferencia o depÃ³sito</p>
+          <div class="product-card__price-section">
+            <p class="product-card__price-label">TRANSFERENCIA O DEPÓSITO</p>
+            ${discount > 0 ? `<p class="product-card__price-original">${formatPrice(originalPrice)}</p>` : ""}
+            <p class="product-card__price-main">${formatPrice(transferPrice)}</p>
+            ${discount > 0 ? `<p class="product-card__discount-badge">-${discount}%</p>` : ""}
+          </div>
           <p class="product-card__installments" data-mercadopago-financing ${mercadoPagoReady ? "" : "hidden"}>Mercado Pago calcula el total y las cuotas al comprar</p>
           <div class="product-card__actions">
             <button
