@@ -4,18 +4,16 @@
   const catalog = window.ARVEL_PRODUCTS_READY
     ? await window.ARVEL_PRODUCTS_READY
     : window.ARVEL_PRODUCTS;
-  console.log("Catálogo recibido:", Array.isArray(catalog) ? catalog.length : "no es array");
   const products = Array.isArray(catalog)
     ? catalog.filter((product) => !product.archived && (!product.status || product.status === "published"))
     : [];
-  console.log("Productos filtrados (no archived y published):", products.length);
   const favoritesOnly = new URLSearchParams(window.location.search).get("favoritos") === "1";
 
   const elements = {
     searchForm: document.querySelector("#shop-search-form"),
     search: document.querySelector("#shop-search"),
     filtersForm: document.querySelector("#filters-form"),
-    categoryHeader: document.querySelector("#header-category-select") || { value: "" },
+    categoryHeader: document.querySelector("#header-category-select"),
     size: document.querySelector("#filter-size"),
     price: document.querySelector("#filter-price"),
     priceOutput: document.querySelector("#filter-price-output"),
@@ -50,17 +48,15 @@
   }
 
   function populateFilters() {
-    if (elements.categoryHeader && elements.categoryHeader.options !== undefined) {
-      const categories = uniqueValues("category").filter((cat) => cat && cat.toLowerCase() !== "sin categorizar");
-      fillSelect(elements.categoryHeader, categories);
-    }
+    const categories = uniqueValues("category").filter((cat) => cat && cat.toLowerCase() !== "sin categorizar");
+    fillSelect(elements.categoryHeader, categories);
     fillSelect(elements.size, uniqueValues("sizes"));
   }
 
   function getState() {
     return {
       query: elements.search.value.trim(),
-      category: (elements.categoryHeader && elements.categoryHeader.value) || "",
+      category: elements.categoryHeader ? elements.categoryHeader.value : "",
       size: elements.size.value,
       maxPrice: Number(elements.price.value),
       available: elements.available.checked,
@@ -72,7 +68,7 @@
   function normalize(value) {
     return String(value)
       .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[̀-ͯ]/g, "")
       .toLowerCase();
   }
 
@@ -106,10 +102,7 @@
       return (
         (!query || searchable.includes(query)) &&
         (!state.category || product.category === state.category) &&
-        (!state.collection || product.collection === state.collection) &&
         (!state.size || product.sizes.includes(state.size)) &&
-        (!state.color || product.colors.includes(state.color)) &&
-        (!state.condition || product.condition === state.condition) &&
         product.price <= state.maxPrice &&
         (!state.available || (!product.soldOut && product.stock > 0)) &&
         (!state.sale || product.discount > 0) &&
@@ -157,16 +150,16 @@
 
   function renderActiveFilters(state) {
     const filters = [
-      state.query && { key: “query”, label: `”${state.query}”` },
-      state.category && { key: “category”, label: state.category },
-      state.size && { key: “size”, label: `Talle ${state.size}` },
+      state.query && { key: "query", label: `"${state.query}"` },
+      state.category && { key: "category", label: state.category },
+      state.size && { key: "size", label: `Talle ${state.size}` },
       state.maxPrice < Number(elements.price.max) && {
-        key: “maxPrice”,
+        key: "maxPrice",
         label: `Hasta ${window.Arvel.formatPrice(state.maxPrice)}`
       },
-      state.available && { key: “available”, label: “Disponibles” },
-      state.sale && { key: “sale”, label: “Oferta” },
-      favoritesOnly && { key: “favorites”, label: “Mis favoritos” }
+      state.available && { key: "available", label: "Disponibles" },
+      state.sale && { key: "sale", label: "Oferta" },
+      favoritesOnly && { key: "favorites", label: "Mis favoritos" }
     ].filter(Boolean);
 
     elements.activeFilters.innerHTML = filters
@@ -189,7 +182,7 @@
   function removeFilter(key) {
     const controls = {
       query: elements.search,
-      category: (elements.categoryHeader && elements.categoryHeader.value !== undefined) ? elements.categoryHeader : null,
+      category: elements.categoryHeader,
       size: elements.size
     };
 
@@ -233,9 +226,7 @@
   function restoreFromUrl() {
     const params = new URLSearchParams(window.location.search);
     setValueFromParams(elements.search, params, "buscar");
-    if (elements.categoryHeader && elements.categoryHeader.value !== undefined) {
-      setValueFromParams(elements.categoryHeader, params, "categoria");
-    }
+    if (elements.categoryHeader) setValueFromParams(elements.categoryHeader, params, "categoria");
     setValueFromParams(elements.size, params, "talle");
     setValueFromParams(elements.price, params, "precio");
     setValueFromParams(elements.sort, params, "orden");
@@ -248,6 +239,7 @@
     elements.searchForm.reset();
     elements.sort.value = "recent";
     elements.price.value = elements.price.max;
+    if (elements.categoryHeader) elements.categoryHeader.value = "";
     render();
   }
 
@@ -273,9 +265,7 @@
       render();
     });
     elements.search.addEventListener("input", render);
-    if (elements.categoryHeader && elements.categoryHeader.addEventListener) {
-      elements.categoryHeader.addEventListener("change", render);
-    }
+    if (elements.categoryHeader) elements.categoryHeader.addEventListener("change", render);
     elements.filtersForm.addEventListener("change", render);
     elements.filtersForm.addEventListener("submit", (event) => {
       event.preventDefault();
