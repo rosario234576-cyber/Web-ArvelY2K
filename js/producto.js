@@ -89,11 +89,24 @@
       ? `<del>${window.Arvel.formatPrice(originalPrice)}</del>`
       : "";
     const discountBadge = discount > 0 ? `<span class="product-info__discount">-${discount}%</span>` : "";
+
+    // Calcular precio en 3 cuotas con Mercado Pago
+    const mercadoPagoPrice = window.Arvel?.calculateMercadoPagoPrice
+      ? window.Arvel.calculateMercadoPagoPrice(transferPrice)
+      : transferPrice;
+    const pricePerInstallment = Math.round((mercadoPagoPrice / 3) * 100) / 100;
+    const installmentText = window.ARVEL_MERCADOPAGO_READY === true
+      ? `<span class="product-info__price-installment">💳 3 cuotas de ${window.Arvel.formatPrice(pricePerInstallment)} con tarjeta</span>`
+      : "";
+
     elements.price.innerHTML = `
       <div class="product-info__price-section">
         <span class="product-info__price-label">TRANSFERENCIA O DEPÓSITO</span>
         <span class="product-info__price-main">${oldPrice}<strong>${window.Arvel.formatPrice(transferPrice)}</strong>${discountBadge}</span>
-        <span class="product-info__price-option" data-mercadopago-financing hidden>Mercado Pago calcula el total y las cuotas al comprar</span>
+        <span class="product-info__price-option" data-mercadopago-financing hidden>
+          Mercado Pago: ${window.Arvel.formatPrice(mercadoPagoPrice)}
+          ${installmentText}
+        </span>
       </div>
     `;
     if (window.ARVEL_MERCADOPAGO_READY === true) {
