@@ -227,7 +227,7 @@ module.exports = async function handler(req, res) {
     );
     // Para calcular envío, usar el precio base sin comisión
     const baseSubtotal = items.reduce((total, item) => {
-      const basePrice = Math.round(item.unit_price / (1 + paymentConfig.commission));
+      const basePrice = Math.round(item.unit_price * (1 - paymentConfig.commission));
       return total + basePrice * item.quantity;
     }, 0);
     const shippingCost = calculateShipping(delivery, baseSubtotal);
