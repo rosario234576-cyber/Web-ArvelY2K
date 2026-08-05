@@ -46,6 +46,7 @@
       <div id="admin-content" hidden>
         <nav class="admin-tabs" aria-label="Secciones del panel">
           <button class="is-active" type="button" data-admin-view="summary">Resumen</button>
+          <button type="button" data-admin-view="metrics">Métricas</button>
           <button type="button" data-admin-view="products">Productos</button>
           <button type="button" data-admin-view="instagram">Instagram</button>
           <button type="button" data-admin-view="duplicates">Duplicados</button>
@@ -76,6 +77,45 @@
             <article class="admin-card">
               <span class="eyebrow">Atención</span><h2>Revisión del catálogo</h2>
               <div id="admin-alerts"><p>No hay alertas por el momento.</p></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="admin-view" data-admin-panel="metrics" hidden>
+          <div class="admin-page-heading">
+            <div><span class="eyebrow">Análisis</span><h1>Métricas del sitio</h1></div>
+            <button class="button button--secondary" type="button" id="metrics-refresh">🔄 Actualizar</button>
+          </div>
+
+          <div class="admin-metrics-grid">
+            <article class="admin-metric-card">
+              <h3>Visitantes por dispositivo</h3>
+              <canvas id="chart-devices"></canvas>
+              <div id="devices-stats" class="metrics-stats"></div>
+            </article>
+
+            <article class="admin-metric-card">
+              <h3>Navegadores más usados</h3>
+              <canvas id="chart-browsers"></canvas>
+              <div id="browsers-stats" class="metrics-stats"></div>
+            </article>
+
+            <article class="admin-metric-card" style="grid-column: 1 / -1;">
+              <h3>Visitantes en los últimos 7 días</h3>
+              <canvas id="chart-timeline"></canvas>
+              <div id="timeline-stats" class="metrics-stats"></div>
+            </article>
+
+            <article class="admin-metric-card">
+              <h3>Sistemas operativos</h3>
+              <canvas id="chart-os"></canvas>
+              <div id="os-stats" class="metrics-stats"></div>
+            </article>
+
+            <article class="admin-metric-card">
+              <h3>Total de eventos</h3>
+              <div class="metrics-big-number" id="total-events">0</div>
+              <small>Desde el inicio de tracking</small>
             </article>
           </div>
         </section>
@@ -314,6 +354,7 @@
       </div>
     </main>
 
-    <script type="module" src="js/admin-productos.js?v=20260804-mercadopago-health"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+    <script type="module" src="js/admin-productos.js?v=20260805-metrics"></script>
   </body>
 </html>
