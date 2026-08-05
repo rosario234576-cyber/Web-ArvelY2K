@@ -220,11 +220,17 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    const subtotal = items.reduce(
+    // Calcular subtotal con y sin comisión
+    const subtotalWithCommission = items.reduce(
       (total, item) => total + item.unit_price * item.quantity,
       0
     );
-    const shippingCost = calculateShipping(delivery, subtotal);
+    // Para calcular envío, usar el precio base sin comisión
+    const baseSubtotal = items.reduce((total, item) => {
+      const basePrice = Math.round(item.unit_price / (1 + paymentConfig.commission));
+      return total + basePrice * item.quantity;
+    }, 0);
+    const shippingCost = calculateShipping(delivery, baseSubtotal);
     if (shippingCost === null) {
       return res.status(400).json({ error: "La modalidad de entrega no es válida." });
     }
@@ -296,9 +302,9 @@ module.exports = async function handler(req, res) {
       items: items.map(({ documentId, title, quantity, unit_price, size, color, variantKey }) => ({
         documentId, title, quantity, unitPrice: unit_price, size, color, variantKey
       })),
-      subtotal,
+      subtotal: subtotalWithCommission,
       shippingCost,
-      total: subtotal + shippingCost,
+      total: subtotalWithCommission + shippingCost,
       currency: "ARS",
       paymentMethod: "mercadopago",
       paymentStatus: "pending",
