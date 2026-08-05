@@ -23,7 +23,7 @@
     <link rel="stylesheet" href="css/reset.css">
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/components.css?v=20260805-transfer-price-redesign">
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/styles.css?v=20260805-category-toolbar">
     <link rel="stylesheet" href="css/responsive.css?v=20260804-card-payment-layout">
   </head>
   <body>
@@ -41,27 +41,18 @@
             Prendas únicas, customizadas y seleccionadas. Revisá las medidas:
             cuando una pieza se va, no vuelve igual.
           </p>
-          <div class="shop-categories-menu">
-            <label for="header-category-select" class="visually-hidden">Filtrar por categoría</label>
-            <select class="select" id="header-category-select">
-              <option value="">Todas las categorías</option>
-            </select>
-          </div>
         </div>
       </header>
 
       <section class="shop-section" aria-labelledby="shop-results-title">
         <div class="container">
           <div class="shop-toolbar">
-            <button
-              class="button button--secondary shop-filter-toggle"
-              id="filter-toggle"
-              type="button"
-              aria-expanded="false"
-              aria-controls="filters-panel"
-            >
-              Filtros <span aria-hidden="true">＋</span>
-            </button>
+            <label class="shop-categories-menu">
+              <span>Categoría</span>
+              <select class="select" id="header-category-select">
+                <option value="">Todas las categorías</option>
+              </select>
+            </label>
 
             <form class="shop-search" id="shop-search-form" role="search">
               <label class="visually-hidden" for="shop-search">Buscar prendas</label>
@@ -87,6 +78,16 @@
                 <option value="price-desc">Mayor precio</option>
               </select>
             </label>
+
+            <button
+              class="button button--secondary shop-filter-toggle"
+              id="filter-toggle"
+              type="button"
+              aria-expanded="false"
+              aria-controls="filters-panel"
+            >
+              Filtros <span aria-hidden="true">＋</span>
+            </button>
           </div>
 
           <div class="shop-layout">
@@ -100,13 +101,6 @@
               </div>
 
               <form id="filters-form">
-                <div class="filter-group">
-                  <label for="filter-size">Talle</label>
-                  <select class="select" id="filter-size" name="talle">
-                    <option value="">Todos</option>
-                  </select>
-                </div>
-
                 <div class="filter-group">
                   <div class="filter-group__label">
                     <label for="filter-price">Precio máximo</label>
@@ -178,7 +172,7 @@
     <script src="js/firebase-products.js?v=20260805-clean"></script>
     <script src="js/components.js?v=20260805-transfer-price-redesign"></script>
     <script src="js/main.js?v=20260804-cart-variant-fix"></script>
-    <script src="js/tienda.js?v=20260805-clean"></script>
+    <script src="js/tienda.js?v=20260805-category-toolbar"></script>
     <script src="js/chatbot.js"></script>
     <script src="js/favoritos.js?v=20260803-account1"></script>
     <script src="js/analytics.js"></script>
