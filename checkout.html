@@ -22,9 +22,9 @@
     </script>
     <link rel="stylesheet" href="css/reset.css">
     <link rel="stylesheet" href="css/variables.css">
-    <link rel="stylesheet" href="css/components.css?v=20260805-mp-installments-info">
+    <link rel="stylesheet" href="css/components.css?v=20260805-mp-comisiones-mercadopago">
     <link rel="stylesheet" href="css/styles.css?v=20260803-shipping-manual1">
-    <link rel="stylesheet" href="css/responsive.css?v=20260805-mp-installments-info">
+    <link rel="stylesheet" href="css/responsive.css?v=20260805-mp-comisiones-mercadopago">
   </head>
   <body>
     <a class="skip-link" href="#contenido-principal">Saltar al contenido</a>
@@ -293,21 +293,29 @@
                 <div id="mercadopago-installments" hidden>
                   <div style="background-color: rgb(255 240 245); padding: var(--space-3); border-radius: 4px; margin-top: var(--space-3); margin-bottom: var(--space-3);">
                     <p style="margin: 0; color: var(--color-text); font-size: 0.9rem; font-weight: 500;">
-                      💳 <strong>Opciones de cuotas disponibles solo con tarjeta de crédito</strong>
+                      💳 <strong>Seleccioná tu forma de pago</strong>
                     </p>
                     <p style="margin: var(--space-1) 0 0 0; color: var(--color-text-muted); font-size: 0.85rem;">
-                      Si pagás con dinero disponible en Mercado Pago, se acreditará de inmediato sin cuotas.
+                      Los precios incluyen la comisión de Mercado Pago.
                     </p>
                   </div>
                   <fieldset class="checkout-block" style="margin-top: var(--space-3);">
                     <legend style="font-size: var(--text-sm); font-weight: 600;">Opciones de pago</legend>
-                    <div class="checkout-fields" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--space-3);">
+                    <div class="checkout-fields" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--space-3);">
+                      <label style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2); border: 1px solid rgb(0 0 0 / 10%); border-radius: 4px; cursor: pointer;">
+                        <input type="radio" name="installments" value="dinero" data-label="Dinero en Mercado Pago" required style="margin: 0;">
+                        <span>
+                          <strong>Dinero en Mercado Pago</strong>
+                          <small id="installments-dinero-price" style="display: block; margin-top: 0.2rem;"></small>
+                          <small style="color: var(--color-text-muted); font-size: 0.75rem;">Acreditación inmediata</small>
+                        </span>
+                      </label>
                       <label style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2); border: 1px solid rgb(0 0 0 / 10%); border-radius: 4px; cursor: pointer;">
                         <input type="radio" name="installments" value="1" data-label="1 cuota" checked required style="margin: 0;">
                         <span>
                           <strong>1 Cuota</strong>
                           <small id="installments-1-price" style="display: block; margin-top: 0.2rem;"></small>
-                          <small style="color: var(--color-text-muted); font-size: 0.75rem;">Pago sin interés</small>
+                          <small style="color: var(--color-text-muted); font-size: 0.75rem;">Tarjeta de crédito</small>
                         </span>
                       </label>
                       <label style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2); border: 1px solid rgb(0 0 0 / 10%); border-radius: 4px; cursor: pointer;">
@@ -315,7 +323,7 @@
                         <span>
                           <strong>2 Cuotas</strong>
                           <small id="installments-2-price" style="display: block; margin-top: 0.2rem;"></small>
-                          <small style="color: var(--color-text-muted); font-size: 0.75rem;">Con tarjeta</small>
+                          <small style="color: var(--color-text-muted); font-size: 0.75rem;">Tarjeta de crédito</small>
                         </span>
                       </label>
                       <label style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2); border: 1px solid rgb(0 0 0 / 10%); border-radius: 4px; cursor: pointer;">
@@ -323,7 +331,7 @@
                         <span>
                           <strong>3 Cuotas</strong>
                           <small id="installments-3-price" style="display: block; margin-top: 0.2rem;"></small>
-                          <small style="color: var(--color-text-muted); font-size: 0.75rem;">Con tarjeta</small>
+                          <small style="color: var(--color-text-muted); font-size: 0.75rem;">Tarjeta de crédito</small>
                         </span>
                       </label>
                     </div>
@@ -425,7 +433,7 @@
     <div id="global-overlays"></div>
     <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
 
-    <script src="js/checkout-auth-guard.js?v=20260805-mp-installments-info"></script>
+    <script src="js/checkout-auth-guard.js?v=20260805-mp-comisiones-mercadopago"></script>
     <script src="js/data/productos.js"></script>
     <script src="js/firebase-products.js?v=20260804-fast-catalog"></script>
     <script src="js/components.js?v=20260804-mp-conditional"></script>
@@ -433,7 +441,7 @@
     <script src="js/transfer-config.js?v=20260803-payment2"></script>
     <script src="js/payment-config.js?v=20260804-mp-delivery-fix"></script>
     <script src="js/shipping.js?v=20260803-ca1"></script>
-    <script src="js/checkout.js?v=20260805-mp-installments-info"></script>
+    <script src="js/checkout.js?v=20260805-mp-comisiones-mercadopago"></script>
     <script src="js/chatbot.js"></script>
     <script src="js/favoritos.js"></script>
   </body>
