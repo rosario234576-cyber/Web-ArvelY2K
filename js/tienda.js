@@ -13,11 +13,8 @@
     searchForm: document.querySelector("#shop-search-form"),
     search: document.querySelector("#shop-search"),
     filtersForm: document.querySelector("#filters-form"),
-    category: document.querySelector("#filter-category"),
-    collection: document.querySelector("#filter-collection"),
+    categoryHeader: document.querySelector("#header-category-select"),
     size: document.querySelector("#filter-size"),
-    color: document.querySelector("#filter-color"),
-    condition: document.querySelector("#filter-condition"),
     price: document.querySelector("#filter-price"),
     priceOutput: document.querySelector("#filter-price-output"),
     available: document.querySelector("#filter-available"),
@@ -51,21 +48,16 @@
   }
 
   function populateFilters() {
-    fillSelect(elements.category, uniqueValues("category"));
-    fillSelect(elements.collection, uniqueValues("collection"));
+    const categories = uniqueValues("category").filter((cat) => cat && cat.toLowerCase() !== "sin categorizar");
+    fillSelect(elements.categoryHeader, categories);
     fillSelect(elements.size, uniqueValues("sizes"));
-    fillSelect(elements.color, uniqueValues("colors"));
-    fillSelect(elements.condition, uniqueValues("condition"));
   }
 
   function getState() {
     return {
       query: elements.search.value.trim(),
-      category: elements.category.value,
-      collection: elements.collection.value,
+      category: elements.categoryHeader.value,
       size: elements.size.value,
-      color: elements.color.value,
-      condition: elements.condition.value,
       maxPrice: Number(elements.price.value),
       available: elements.available.checked,
       sale: elements.sale.checked,
@@ -144,10 +136,7 @@
     const params = new URLSearchParams();
     if (state.query) params.set("buscar", state.query);
     if (state.category) params.set("categoria", state.category);
-    if (state.collection) params.set("coleccion", state.collection);
     if (state.size) params.set("talle", state.size);
-    if (state.color) params.set("color", state.color);
-    if (state.condition) params.set("condicion", state.condition);
     if (state.maxPrice < Number(elements.price.max)) params.set("precio", state.maxPrice);
     if (state.available) params.set("disponibles", "1");
     if (state.sale) params.set("ofertas", "1");
@@ -164,19 +153,16 @@
 
   function renderActiveFilters(state) {
     const filters = [
-      state.query && { key: "query", label: `“${state.query}”` },
-      state.category && { key: "category", label: state.category },
-      state.collection && { key: "collection", label: state.collection },
-      state.size && { key: "size", label: `Talle ${state.size}` },
-      state.color && { key: "color", label: state.color },
-      state.condition && { key: "condition", label: state.condition },
+      state.query && { key: “query”, label: `”${state.query}”` },
+      state.category && { key: “category”, label: state.category },
+      state.size && { key: “size”, label: `Talle ${state.size}` },
       state.maxPrice < Number(elements.price.max) && {
-        key: "maxPrice",
+        key: “maxPrice”,
         label: `Hasta ${window.Arvel.formatPrice(state.maxPrice)}`
       },
-      state.available && { key: "available", label: "Disponibles" },
-      state.sale && { key: "sale", label: "Oferta" },
-      favoritesOnly && { key: "favorites", label: "Mis favoritos" }
+      state.available && { key: “available”, label: “Disponibles” },
+      state.sale && { key: “sale”, label: “Oferta” },
+      favoritesOnly && { key: “favorites”, label: “Mis favoritos” }
     ].filter(Boolean);
 
     elements.activeFilters.innerHTML = filters
@@ -199,11 +185,8 @@
   function removeFilter(key) {
     const controls = {
       query: elements.search,
-      category: elements.category,
-      collection: elements.collection,
-      size: elements.size,
-      color: elements.color,
-      condition: elements.condition
+      category: elements.categoryHeader,
+      size: elements.size
     };
 
     if (controls[key]) controls[key].value = "";
@@ -246,11 +229,8 @@
   function restoreFromUrl() {
     const params = new URLSearchParams(window.location.search);
     setValueFromParams(elements.search, params, "buscar");
-    setValueFromParams(elements.category, params, "categoria");
-    setValueFromParams(elements.collection, params, "coleccion");
+    setValueFromParams(elements.categoryHeader, params, "categoria");
     setValueFromParams(elements.size, params, "talle");
-    setValueFromParams(elements.color, params, "color");
-    setValueFromParams(elements.condition, params, "condicion");
     setValueFromParams(elements.price, params, "precio");
     setValueFromParams(elements.sort, params, "orden");
     elements.available.checked = params.get("disponibles") === "1";
@@ -287,6 +267,7 @@
       render();
     });
     elements.search.addEventListener("input", render);
+    elements.categoryHeader.addEventListener("change", render);
     elements.filtersForm.addEventListener("change", render);
     elements.filtersForm.addEventListener("submit", (event) => {
       event.preventDefault();
