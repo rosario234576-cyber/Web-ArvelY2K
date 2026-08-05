@@ -164,7 +164,18 @@ module.exports = async function handler(req, res) {
     const requestedItems = Array.isArray(body?.items) ? body.items : [];
     const delivery = body?.delivery || {};
     const address = body?.address || {};
-    const installments = Math.max(1, Math.min(3, Math.floor(Number(body?.installments) || 1)));
+
+    // Configuración de comisiones por método de pago
+    const paymentTypeConfig = {
+      mercadopago_money: { installments: 0, commission: 0.0629 },      // Dinero en MP: 6.29%
+      mercadopago_card_1: { installments: 1, commission: 0.0629 },    // 1 cuota tarjeta: 6.29%
+      mercadopago_card_2: { installments: 2, commission: 0.0779 },    // 2 cuotas tarjeta: 7.79%
+      mercadopago_card_3: { installments: 3, commission: 0.1049 }     // 3 cuotas tarjeta: 10.49%
+    };
+
+    const paymentType = cleanText(body?.paymentType || "mercadopago_card_1", 30);
+    const paymentConfig = paymentTypeConfig[paymentType] || paymentTypeConfig.mercadopago_card_1;
+    const installments = paymentConfig.installments;
 
     if (!validOrderNumber(orderNumber)) {
       return res.status(400).json({ error: "Número de pedido inválido." });
@@ -190,8 +201,9 @@ module.exports = async function handler(req, res) {
 
       const stock = Number(product.stockByVariant?.[`${size}|${color}`] || 0);
       const transferPrice = Math.round(Number(product.transferPrice || product.price) || 0);
-      const price = calculateMercadoPagoPrice(transferPrice);
-      if (stock < quantity || price <= 0) {
+      // Aplicar comisión del método de pago seleccionado
+      const priceWithCommission = Math.ceil((transferPrice / (1 - paymentConfig.commission)) / 100) * 100;
+      if (stock < quantity || priceWithCommission <= 0) {
         return res.status(409).json({ error: `No hay stock disponible de ${product.name}.` });
       }
 
@@ -204,7 +216,7 @@ module.exports = async function handler(req, res) {
         title: cleanText(`${product.name} · ${size} · ${color}`, 120),
         quantity,
         currency_id: "ARS",
-        unit_price: price
+        unit_price: priceWithCommission
       });
     }
 
@@ -240,9 +252,7 @@ module.exports = async function handler(req, res) {
       },
       auto_return: "approved",
       payment_methods: {
-        excluded_payment_methods: [
-          // Excluir métodos que no se aceptan
-        ],
+        excluded_payment_methods: [],
         excluded_payment_types: [],
         default_payment_method_id: null,
         installments: installments,
@@ -258,7 +268,8 @@ module.exports = async function handler(req, res) {
       metadata: {
         order_number: orderNumber,
         installments: installments,
-        payment_type: "credit_card_with_installments"
+        payment_type: paymentType,
+        commission_rate: paymentConfig.commission
       }
     };
 
