@@ -331,9 +331,17 @@
   }
 
   function renderMeasurements() {
-    const labels = { bust: "Busto", waist: "Cintura", hip: "Cadera", length: "Largo" };
+    const labels = {
+      bust: "Busto",
+      waist: "Cintura",
+      hip: "Cadera",
+      length: "Largo",
+      axillaToAxilla: "Axila a Axila",
+      sleeveLength: "Largo de Manga"
+    };
     elements.measurements.innerHTML = Object.entries(product.measurements)
-      .map(([key, value]) => `<div><dt>${labels[key]}</dt><dd>${value}</dd></div>`)
+      .filter(([, value]) => value) // Solo mostrar si tiene valor
+      .map(([key, value]) => `<div><dt>${labels[key] || key}</dt><dd>${value}</dd></div>`)
       .join("");
   }
 

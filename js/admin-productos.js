@@ -200,7 +200,7 @@ async function importInstagramProduct(mediaId, requestedStatus = "draft") {
     oldPrice: null, condition: "Seleccionada", status,
     shortDescription: analysis.caption.slice(0, 180) || "Producto importado desde Instagram.",
     description: analysis.caption, material: "A completar", care: "A completar",
-    measurements: { bust: "A completar", waist: "A completar", hip: "A completar", length: "A completar" },
+    measurements: { bust: "A completar", waist: "A completar", hip: "A completar", length: "A completar", axillaToAxilla: "", sleeveLength: "" },
     sizes: ["Único"], colors: ["Según publicación"],
     stockByVariant: { "Único|Según publicación": stock },
     stock, soldOut: analysis.sold, archived: false, discount: 0, featured: status === "published", uniquePiece: true,
@@ -260,20 +260,77 @@ function renderImages() {
   previewObjectUrls.forEach((url) => URL.revokeObjectURL(url));
   previewObjectUrls = selectedImages.map((file) => URL.createObjectURL(file));
   const savedMarkup = existingImages.map((url, index) => `
-    <figure>
+    <figure draggable="true" data-saved-image-index="${index}" class="image-preview-item">
       <img src="${escapeHtml(url)}" alt="">
       <span>Guardada</span>
       <button type="button" data-saved-image-index="${index}" aria-label="Quitar foto">×</button>
     </figure>
   `).join("");
   const pendingMarkup = selectedImages.map((file, index) => `
-    <figure>
+    <figure draggable="true" data-pending-image-index="${index}" class="image-preview-item">
       <img src="${escapeHtml(previewObjectUrls[index])}" alt="">
       <span>Pendiente</span>
       <button type="button" data-pending-image-index="${index}" aria-label="Quitar foto">×</button>
     </figure>
   `).join("");
   ui.preview.innerHTML = savedMarkup + pendingMarkup;
+  setupDragAndDrop();
+}
+
+function setupDragAndDrop() {
+  const items = ui.preview.querySelectorAll(".image-preview-item");
+  let draggedItem = null;
+
+  items.forEach((item) => {
+    item.addEventListener("dragstart", (e) => {
+      draggedItem = item;
+      item.style.opacity = "0.5";
+      e.dataTransfer.effectAllowed = "move";
+    });
+
+    item.addEventListener("dragend", () => {
+      item.style.opacity = "1";
+      draggedItem = null;
+    });
+
+    item.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      if (item !== draggedItem && draggedItem) {
+        item.parentNode.insertBefore(draggedItem, item);
+      }
+    });
+  });
+
+  ui.preview.addEventListener("drop", (e) => {
+    e.preventDefault();
+    if (draggedItem) {
+      syncImagesAfterDrag();
+    }
+  });
+}
+
+function syncImagesAfterDrag() {
+  const figures = ui.preview.querySelectorAll("figure");
+  const newSavedImages = [];
+  const newSelectedImages = [];
+
+  figures.forEach((fig) => {
+    const savedIndex = fig.getAttribute("data-saved-image-index");
+    const pendingIndex = fig.getAttribute("data-pending-image-index");
+
+    if (savedIndex !== null) {
+      newSavedImages.push(existingImages[parseInt(savedIndex)]);
+    } else if (pendingIndex !== null) {
+      newSelectedImages.push(selectedImages[parseInt(pendingIndex)]);
+    }
+  });
+
+  existingImages = newSavedImages;
+  selectedImages = newSelectedImages;
+  ui.imageUrls.value = existingImages.join("\n");
+  previewObjectUrls.forEach((url) => URL.revokeObjectURL(url));
+  previewObjectUrls = selectedImages.map((file) => URL.createObjectURL(file));
 }
 
 function validateSelectedImages(files) {
@@ -366,6 +423,8 @@ function fillForm(product) {
     waist: product.measurements?.waist,
     hip: product.measurements?.hip,
     length: product.measurements?.length,
+    axillaToAxilla: product.measurements?.axillaToAxilla,
+    sleeveLength: product.measurements?.sleeveLength,
     tags: (product.tags || []).join(", "),
     source: product.source || "manual",
     instagramMediaId: product.instagramMediaId || "",
@@ -443,7 +502,9 @@ function buildProduct(statusOverride) {
       bust: String(data.get("bust") || "No aplica").trim(),
       waist: String(data.get("waist") || "No aplica").trim(),
       hip: String(data.get("hip") || "No aplica").trim(),
-      length: String(data.get("length") || "No aplica").trim()
+      length: String(data.get("length") || "No aplica").trim(),
+      axillaToAxilla: String(data.get("axillaToAxilla") || "").trim(),
+      sleeveLength: String(data.get("sleeveLength") || "").trim()
     },
     sizes: [...new Set(variants.map((item) => item.size))],
     colors: [...new Set(variants.map((item) => item.color))],
@@ -539,10 +600,21 @@ function renderControlCenter() {
   `).join("") : '<tr><td colspan="5">Todavía no hay productos.</td></tr>';
 }
 
-function openView(name) {
+async function openView(name) {
   ui.panels.forEach((panel) => { panel.hidden = panel.dataset.adminPanel !== name; });
   ui.tabs.querySelectorAll("[data-admin-view]").forEach((button) => button.classList.toggle("is-active", button.dataset.adminView === name));
   window.scrollTo({ top: 0, behavior: "smooth" });
+
+  // Cargar métricas cuando se abre esa pestaña
+  if (name === "metrics") {
+    try {
+      const { initMetrics } = await import("./admin-metrics.js");
+      await initMetrics();
+    } catch (error) {
+      console.error("Error cargando métricas:", error);
+      document.getElementById("total-events").textContent = "Error";
+    }
+  }
 }
 
 async function changeStockState(documentId, action) {
