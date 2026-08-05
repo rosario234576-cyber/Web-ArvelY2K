@@ -471,6 +471,19 @@
   color: #fff;
 }
 
+.image-preview-item {
+  cursor: grab;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.image-preview-item:active {
+  cursor: grabbing;
+}
+
+.image-preview-item:hover {
+  transform: scale(1.05);
+}
+
 .admin-checks {
   display: flex;
   flex-wrap: wrap;
