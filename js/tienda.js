@@ -295,5 +295,9 @@
   bindEvents();
   render();
 
+  document.addEventListener("arvel:products-updated", () => {
+    populateFilters();
+    render();
+  });
   document.addEventListener("arvel:favorites-changed", render);
 })();
