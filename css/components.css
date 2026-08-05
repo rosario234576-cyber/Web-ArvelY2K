@@ -233,6 +233,49 @@
   white-space: nowrap;
 }
 
+.product-card__price-section {
+  position: relative;
+  margin-bottom: var(--space-2);
+}
+
+.product-card__price-label {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.product-card__price-original {
+  margin: 0.3rem 0 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: 400;
+  text-decoration: line-through;
+}
+
+.product-card__price-main {
+  margin: 0.5rem 0 0 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.product-card__discount-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 0;
+  padding: 0.3rem 0.6rem;
+  background-color: var(--color-pink);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 3px;
+}
+
 .product-card__old-price {
   margin-right: var(--space-1);
   color: var(--color-text-muted);
@@ -278,6 +321,39 @@
 
 .product-info__price-option[data-mercadopago-financing] {
   color: var(--color-pink-dark);
+}
+
+.product-info__price-section {
+  position: relative;
+}
+
+.product-info__price-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.product-info__price-main {
+  position: relative;
+  font-size: 1.8rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.product-info__discount {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0.4rem 0.8rem;
+  background-color: var(--color-pink);
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border-radius: 4px;
 }
 
 .product-card__cart {
