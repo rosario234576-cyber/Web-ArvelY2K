@@ -128,10 +128,21 @@
     const selected = elements.form.elements.payment?.value;
     if (!selected) return null;
     const input = elements.form.querySelector(`input[name="payment"][value="${selected}"]`);
-    const installments = selected === "mercadopago"
-      ? (elements.form.elements.installments?.value || "1")
-      : null;
-    return { value: selected, label: input.dataset.label, installments };
+    let installments = null;
+    let paymentType = selected;
+
+    if (selected === "mercadopago") {
+      const installmentValue = elements.form.elements.installments?.value || "1";
+      if (installmentValue === "dinero") {
+        paymentType = "mercadopago_money";
+        installments = null;
+      } else {
+        paymentType = "mercadopago_card";
+        installments = installmentValue;
+      }
+    }
+
+    return { value: selected, label: input.dataset.label, installments, paymentType };
   }
 
   function updateInstallmentsPrices() {
@@ -140,16 +151,38 @@
     const shipping = delivery?.cost || 0;
     const total = subtotal + shipping;
 
-    const prices = {
-      1: total,
-      2: Math.round((total / 2) * 100) / 100,
-      3: Math.round((total / 3) * 100) / 100
+    // Comisiones de Mercado Pago según método de pago
+    const commissions = {
+      dinero: 0.0629,    // Dinero en Mercado Pago: 6.29%
+      1: 0.0629,         // 1 cuota (tarjeta): 6.29%
+      2: 0.0779,         // 2 cuotas (tarjeta): 7.79%
+      3: 0.1049          // 3 cuotas (tarjeta): 10.49%
     };
 
+    const prices = {};
+    for (const [method, commission] of Object.entries(commissions)) {
+      const priceWithCommission = total / (1 - commission);
+      if (method === "dinero") {
+        prices.dinero = Math.round(priceWithCommission * 100) / 100;
+      } else {
+        const cuotas = Number(method);
+        prices[cuotas] = Math.round((priceWithCommission / cuotas) * 100) / 100;
+      }
+    }
+
+    // Actualizar dinero en Mercado Pago
+    const dineroElement = document.querySelector("#installments-dinero-price");
+    if (dineroElement) {
+      dineroElement.textContent = window.Arvel.formatPrice(prices.dinero);
+    }
+
+    // Actualizar cuotas con tarjeta
     for (const [cuotas, price] of Object.entries(prices)) {
-      const priceElement = document.querySelector(`#installments-${cuotas}-price`);
-      if (priceElement) {
-        priceElement.textContent = `${window.Arvel.formatPrice(price)} c/u`;
+      if (cuotas !== "dinero") {
+        const priceElement = document.querySelector(`#installments-${cuotas}-price`);
+        if (priceElement) {
+          priceElement.textContent = `${window.Arvel.formatPrice(price)} c/u`;
+        }
       }
     }
   }
@@ -625,7 +658,8 @@
               agencyId: order.delivery.agencyId || ""
             },
             address: order.address,
-            installments: order.payment.installments ? Number(order.payment.installments) : 1,
+            installments: order.payment.installments ? Number(order.payment.installments) : 0,
+            paymentType: order.payment.paymentType,
             items: order.items.map((item) => ({
               documentId: item.product.documentId || item.documentId || "",
               variant_id: item.variant_id || item.variantId || `${item.product.documentId || item.documentId || item.product.id}::${item.size}::${item.color}`,
