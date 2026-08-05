@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/components.css?v=20260804-card-payment-layout">
     <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/admin-productos.css?v=20260803-instagram-feed1">
+    <link rel="stylesheet" href="css/admin-productos.css?v=20260805-drag-drop-images">
     <link rel="stylesheet" href="css/responsive.css?v=20260804-card-payment-layout">
   </head>
   <body class="admin-body">
@@ -156,7 +156,17 @@
                   <input class="input" name="sku" required placeholder="ARV-AI-TOP-001">
                 </label>
                 <label>Categoría *
-                  <input class="input" name="category" list="product-categories" required>
+                  <select class="select" name="category" required>
+                    <option value="">Seleccionar categoría...</option>
+                    <option value="Accesorios">Accesorios</option>
+                    <option value="Buzos">Buzos</option>
+                    <option value="Camisas">Camisas</option>
+                    <option value="Camperas">Camperas</option>
+                    <option value="Faldas">Faldas</option>
+                    <option value="Pantalones">Pantalones</option>
+                    <option value="Remeras">Remeras</option>
+                    <option value="Short">Short</option>
+                  </select>
                 </label>
                 <label>Colección
                   <input class="input" name="collection" placeholder="After Internet">
@@ -182,11 +192,6 @@
                   </select>
                 </label>
               </div>
-              <datalist id="product-categories">
-                <option value="Tops"><option value="Faldas"><option value="Pantalones">
-                <option value="Vestidos"><option value="Abrigos"><option value="Accesorios">
-                <option value="Mini customs">
-              </datalist>
             </fieldset>
 
             <fieldset class="admin-fieldset">
@@ -214,6 +219,8 @@
                 <label>Cintura <input class="input" name="waist" placeholder="68–78 cm"></label>
                 <label>Cadera <input class="input" name="hip" placeholder="No aplica"></label>
                 <label>Largo <input class="input" name="length" placeholder="42 cm"></label>
+                <label>Axila a Axila <input class="input" name="axillaToAxilla" placeholder="42 cm"></label>
+                <label>Largo de Manga <input class="input" name="sleeveLength" placeholder="50 cm"></label>
               </div>
             </fieldset>
 
@@ -355,6 +362,6 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
-    <script type="module" src="js/admin-productos.js?v=20260805-metrics"></script>
+    <script type="module" src="js/admin-productos.js?v=20260805-drag-drop-images"></script>
   </body>
 </html>
