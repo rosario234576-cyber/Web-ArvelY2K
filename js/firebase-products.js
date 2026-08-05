@@ -30,6 +30,7 @@
       const snapshot = await getDocs(
         query(collection(db, "products"), where("status", "==", "published"))
       );
+      console.log("Firebase productos encontrados:", snapshot.docs.length);
       const remote = snapshot.docs.map((item) => {
         const data = item.data();
         const sizes = Array.isArray(data.sizes) && data.sizes.length ? data.sizes : ["Único"];
@@ -66,13 +67,18 @@
           updatedAt: data.updatedAt?.toDate?.().toISOString() || data.updatedAt || ""
         };
       });
-      if (!remote.length) return immediateCatalog;
+      console.log("Productos remoto después de mapeo:", remote.length);
+      if (!remote.length) {
+        console.warn("Sin productos de Firebase, usando catálogo local");
+        return immediateCatalog;
+      }
       try {
         localStorage.setItem(CACHE_KEY, JSON.stringify(remote));
       } catch {
         // El catálogo sigue funcionando aunque el navegador no permita guardar caché.
       }
       window.ARVEL_PRODUCTS = Object.freeze(remote);
+      console.log("Productos cargados de Firebase:", remote.length);
       document.dispatchEvent(new CustomEvent("arvel:products-updated", { detail: { products: remote } }));
       return remote;
     } catch (error) {

@@ -4,16 +4,18 @@
   const catalog = window.ARVEL_PRODUCTS_READY
     ? await window.ARVEL_PRODUCTS_READY
     : window.ARVEL_PRODUCTS;
+  console.log("Catálogo recibido:", Array.isArray(catalog) ? catalog.length : "no es array");
   const products = Array.isArray(catalog)
     ? catalog.filter((product) => !product.archived && (!product.status || product.status === "published"))
     : [];
+  console.log("Productos filtrados (no archived y published):", products.length);
   const favoritesOnly = new URLSearchParams(window.location.search).get("favoritos") === "1";
 
   const elements = {
     searchForm: document.querySelector("#shop-search-form"),
     search: document.querySelector("#shop-search"),
     filtersForm: document.querySelector("#filters-form"),
-    categoryHeader: document.querySelector("#header-category-select"),
+    categoryHeader: document.querySelector("#header-category-select") || { value: "" },
     size: document.querySelector("#filter-size"),
     price: document.querySelector("#filter-price"),
     priceOutput: document.querySelector("#filter-price-output"),
@@ -48,15 +50,17 @@
   }
 
   function populateFilters() {
-    const categories = uniqueValues("category").filter((cat) => cat && cat.toLowerCase() !== "sin categorizar");
-    fillSelect(elements.categoryHeader, categories);
+    if (elements.categoryHeader && elements.categoryHeader.options !== undefined) {
+      const categories = uniqueValues("category").filter((cat) => cat && cat.toLowerCase() !== "sin categorizar");
+      fillSelect(elements.categoryHeader, categories);
+    }
     fillSelect(elements.size, uniqueValues("sizes"));
   }
 
   function getState() {
     return {
       query: elements.search.value.trim(),
-      category: elements.categoryHeader.value,
+      category: (elements.categoryHeader && elements.categoryHeader.value) || "",
       size: elements.size.value,
       maxPrice: Number(elements.price.value),
       available: elements.available.checked,
@@ -185,7 +189,7 @@
   function removeFilter(key) {
     const controls = {
       query: elements.search,
-      category: elements.categoryHeader,
+      category: (elements.categoryHeader && elements.categoryHeader.value !== undefined) ? elements.categoryHeader : null,
       size: elements.size
     };
 
@@ -229,7 +233,9 @@
   function restoreFromUrl() {
     const params = new URLSearchParams(window.location.search);
     setValueFromParams(elements.search, params, "buscar");
-    setValueFromParams(elements.categoryHeader, params, "categoria");
+    if (elements.categoryHeader && elements.categoryHeader.value !== undefined) {
+      setValueFromParams(elements.categoryHeader, params, "categoria");
+    }
     setValueFromParams(elements.size, params, "talle");
     setValueFromParams(elements.price, params, "precio");
     setValueFromParams(elements.sort, params, "orden");
@@ -267,7 +273,9 @@
       render();
     });
     elements.search.addEventListener("input", render);
-    elements.categoryHeader.addEventListener("change", render);
+    if (elements.categoryHeader && elements.categoryHeader.addEventListener) {
+      elements.categoryHeader.addEventListener("change", render);
+    }
     elements.filtersForm.addEventListener("change", render);
     elements.filtersForm.addEventListener("submit", (event) => {
       event.preventDefault();
