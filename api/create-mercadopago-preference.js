@@ -164,6 +164,7 @@ module.exports = async function handler(req, res) {
     const requestedItems = Array.isArray(body?.items) ? body.items : [];
     const delivery = body?.delivery || {};
     const address = body?.address || {};
+    const installments = Math.max(1, Math.min(3, Math.floor(Number(body?.installments) || 1)));
 
     if (!validOrderNumber(orderNumber)) {
       return res.status(400).json({ error: "Número de pedido inválido." });
@@ -239,10 +240,26 @@ module.exports = async function handler(req, res) {
       },
       auto_return: "approved",
       payment_methods: {
-        installments: 3
+        excluded_payment_methods: [
+          // Excluir métodos que no se aceptan
+        ],
+        excluded_payment_types: [],
+        default_payment_method_id: null,
+        installments: installments,
+        default_installments: installments
       },
+      charges: [
+        {
+          type: "handling",
+          percentage: 0
+        }
+      ],
       notification_url: `${apiBase}/api/mercadopago-webhook`,
-      metadata: { order_number: orderNumber }
+      metadata: {
+        order_number: orderNumber,
+        installments: installments,
+        payment_type: "credit_card_with_installments"
+      }
     };
 
     const db = getAdminDb();
