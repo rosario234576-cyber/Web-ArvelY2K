@@ -44,6 +44,7 @@ const ui = {
   newProduct: document.querySelector("#new-product"),
   addVariant: document.querySelector("#add-variant"),
   variants: document.querySelector("#variant-rows"),
+  priceInput: document.querySelector('input[name="price"]'),
   imageUrls: document.querySelector("#product-image-urls"),
   imageFiles: document.querySelector("#product-image-files"),
   uploadProgress: document.querySelector("#image-upload-progress"),
@@ -254,6 +255,22 @@ function readVariants() {
     .filter((variant) => variant.size && variant.color);
 }
 
+function updatePriceFieldState() {
+  const variants = readVariants();
+  const hasVariantPrices = variants.some((v) => v.price > 0);
+
+  if (ui.priceInput) {
+    ui.priceInput.disabled = hasVariantPrices;
+    if (hasVariantPrices) {
+      ui.priceInput.title = "Bloqueado: Los precios se manejan por variante";
+      ui.priceInput.style.opacity = "0.6";
+    } else {
+      ui.priceInput.title = "";
+      ui.priceInput.style.opacity = "1";
+    }
+  }
+}
+
 function renderImages() {
   existingImages = ui.imageUrls.value
     .split(/\r?\n/)
@@ -441,6 +458,7 @@ function fillForm(product) {
   ui.variants.innerHTML = "";
   const variants = productVariants(product);
   (variants.length ? variants : [{}]).forEach(addVariantRow);
+  updatePriceFieldState();
   existingImages = [...(product.images || [])];
   selectedImages = [];
   ui.imageFiles.value = "";
@@ -485,14 +503,24 @@ function buildProduct(statusOverride) {
   const stockByVariant = Object.fromEntries(
     variants.map((variant) => [`${variant.size}|${variant.color}`, variant.stock])
   );
+  const priceByVariant = Object.fromEntries(
+    variants.filter((variant) => variant.price > 0).map((variant) => [`${variant.size}|${variant.color}`, variant.price])
+  );
   const stock = variants.reduce((sum, variant) => sum + variant.stock, 0);
+
+  // Si no hay precio general pero hay precios en variantes, usar el precio mínimo
+  let finalPrice = Math.max(0, Number(data.get("price")) || 0);
+  if (finalPrice === 0 && Object.keys(priceByVariant).length > 0) {
+    finalPrice = Math.min(...Object.values(priceByVariant));
+  }
+
   return {
     name,
     slug: slugify(name),
     sku,
     category: String(data.get("category") || "").trim(),
     collection: String(data.get("collection") || "").trim(),
-    price: Math.max(0, Number(data.get("price")) || 0),
+    price: finalPrice,
     oldPrice: Number(data.get("oldPrice")) || null,
     condition: String(data.get("condition") || "Custom"),
     status,
@@ -511,6 +539,7 @@ function buildProduct(statusOverride) {
     sizes: [...new Set(variants.map((item) => item.size))],
     colors: [...new Set(variants.map((item) => item.color))],
     stockByVariant,
+    priceByVariant: Object.keys(priceByVariant).length ? priceByVariant : {},
     stock,
     soldOut: stock <= 0,
     archived: status === "hidden",
@@ -528,7 +557,8 @@ function validateProduct(product) {
   if (!product.name) return "Ingresá el nombre.";
   if (!product.sku) return "Ingresá el SKU.";
   if (!product.category) return "Elegí una categoría.";
-  if (product.price <= 0) return "Ingresá un precio válido.";
+  const hasVariantPrices = Object.keys(product.priceByVariant || {}).length > 0;
+  if (!hasVariantPrices && product.price <= 0) return "Ingresá un precio válido.";
   if (!product.shortDescription) return "Ingresá una descripción breve.";
   if (!product.sizes.length) return "Agregá al menos una combinación de talle y color.";
   const duplicate = products.find((item) => item.documentId !== activeDocumentId && (
@@ -789,7 +819,12 @@ ui.instagramFeed?.addEventListener("click", (event) => {
   });
 });
 
-ui.addVariant.addEventListener("click", () => addVariantRow());
+ui.addVariant.addEventListener("click", () => {
+  addVariantRow();
+  updatePriceFieldState();
+});
+ui.variants.addEventListener("change", updatePriceFieldState);
+ui.variants.addEventListener("input", updatePriceFieldState);
 ui.newProduct.addEventListener("click", resetForm);
 ui.search.addEventListener("input", renderList);
 ui.list.addEventListener("click", (event) => {

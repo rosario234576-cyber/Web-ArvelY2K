@@ -79,39 +79,44 @@
     elements.badges.innerHTML = badges.join("");
   }
 
-  function renderPrice() {
-    const originalPrice = Number(product.price || 0);
-    const transferPrice = Number(product.transferPrice || product.price || 0);
-    const discount = Number(product.discount || 0);
-    const oldPrice = product.oldPrice
+  function renderPrice(variantPrice = null) {
+    const isVariantPrice = variantPrice !== null;
+    const priceToUse = isVariantPrice ? variantPrice : product.price;
+    const originalPrice = Number(priceToUse || 0);
+    const transferPrice = Number(priceToUse || 0);
+    const discount = isVariantPrice ? 0 : Number(product.discount || 0);
+    const oldPrice = isVariantPrice
+      ? ""
+      : product.oldPrice
       ? `<del>${window.Arvel.formatPrice(product.oldPrice)}</del>`
       : discount > 0
       ? `<del>${window.Arvel.formatPrice(originalPrice)}</del>`
       : "";
-    const discountBadge = discount > 0 ? `<span class="product-info__discount">-${discount}%</span>` : "";
+    const discountBadge = isVariantPrice ? "" : (discount > 0 ? `<span class="product-info__discount">-${discount}%</span>` : "");
 
-    // Calcular precio en 3 cuotas con Mercado Pago
-    const mercadoPagoPrice = window.Arvel?.calculateMercadoPagoPrice
-      ? window.Arvel.calculateMercadoPagoPrice(transferPrice)
-      : transferPrice;
-    const pricePerInstallment = Math.round((mercadoPagoPrice / 3) * 100) / 100;
-    const installmentText = window.ARVEL_MERCADOPAGO_READY === true
-      ? `<span class="product-info__price-installment">💳 3 cuotas de ${window.Arvel.formatPrice(pricePerInstallment)} con tarjeta</span>`
-      : "";
+    // Calcular precio en 3 cuotas con Mercado Pago (solo si no es precio de variante)
+    let mercadoPagoSection = "";
+    if (!isVariantPrice && window.ARVEL_MERCADOPAGO_READY === true) {
+      const mercadoPagoPrice = window.Arvel?.calculateMercadoPagoPrice
+        ? window.Arvel.calculateMercadoPagoPrice(transferPrice)
+        : transferPrice;
+      const pricePerInstallment = Math.round((mercadoPagoPrice / 3) * 100) / 100;
+      const installmentText = `<span class="product-info__price-installment">💳 3 cuotas de ${window.Arvel.formatPrice(pricePerInstallment)} con tarjeta</span>`;
+      mercadoPagoSection = `
+        <span class="product-info__price-option" data-mercadopago-financing>
+          Mercado Pago: ${window.Arvel.formatPrice(mercadoPagoPrice)}
+          ${installmentText}
+        </span>
+      `;
+    }
 
     elements.price.innerHTML = `
       <div class="product-info__price-section">
         <span class="product-info__price-label">TRANSFERENCIA O DEPÓSITO</span>
         <span class="product-info__price-main">${oldPrice}<strong>${window.Arvel.formatPrice(transferPrice)}</strong>${discountBadge}</span>
-        <span class="product-info__price-option" data-mercadopago-financing hidden>
-          Mercado Pago: ${window.Arvel.formatPrice(mercadoPagoPrice)}
-          ${installmentText}
-        </span>
+        ${mercadoPagoSection}
       </div>
     `;
-    if (window.ARVEL_MERCADOPAGO_READY === true) {
-      elements.price.querySelector("[data-mercadopago-financing]").hidden = false;
-    }
   }
 
   function renderGallery() {
@@ -214,11 +219,22 @@
     return Object.keys(product.stockByVariant).length ? 0 : product.stock;
   }
 
+  function getVariantPrice(size, color) {
+    const key = `${size}|${color}`;
+    if (product.priceByVariant && Object.hasOwn(product.priceByVariant, key)) {
+      return product.priceByVariant[key];
+    }
+    return product.price;
+  }
+
   function updateStockStatus() {
     const selection = getSelection();
     const stock = selection.size && selection.color
       ? getVariantStock(selection.size, selection.color)
       : product.stock;
+    const variantPrice = selection.size && selection.color
+      ? getVariantPrice(selection.size, selection.color)
+      : null;
     const unavailable = product.soldOut || stock <= 0;
 
     elements.quantity.max = String(Math.max(1, stock));
@@ -231,6 +247,8 @@
     elements.stockStatus.classList.toggle("is-low", stock === 1 && !unavailable);
     elements.addButton.disabled = unavailable;
     elements.buyButton.disabled = unavailable;
+
+    if (variantPrice) renderPrice(variantPrice);
   }
 
   function validateSelection() {

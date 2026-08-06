@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="Conocé medidas, variantes y detalles de esta pieza de Arvel Customs."
+    >
+    <meta name="theme-color" content="#FAFAF8">
+    <meta property="og:type" content="product">
+    <meta property="og:locale" content="es_AR">
+    <meta property="og:title" content="Pieza | Arvel Customs">
+    <meta
+      property="og:description"
+      content="Piezas Y2K únicas, customizadas y seleccionadas en Argentina."
+    >
+    <link rel="icon" type="image/png" href="assets/logo/IsoBlanco.png?v=20260804-brand">
+    <title>Pieza | Arvel Custom Y2K</title>
+    <script>
+      document.documentElement.classList.add("js");
+    </script>
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/components.css?v=20260805-mp-installments-preview">
+    <link rel="stylesheet" href="css/styles.css?v=20260804-image-zoom">
+    <link rel="stylesheet" href="css/responsive.css?v=20260804-card-payment-layout">
+  </head>
+  <body>
+    <a class="skip-link" href="#contenido-principal">Saltar al contenido</a>
+    <div id="site-header"></div>
+
+    <main id="contenido-principal">
+      <nav class="breadcrumbs container" aria-label="Migas de pan">
+        <a href="index.html">Inicio</a>
+        <span aria-hidden="true">/</span>
+        <a href="tienda.html">Shop</a>
+        <span aria-hidden="true">/</span>
+        <span id="breadcrumb-product" aria-current="page">Pieza</span>
+      </nav>
+
+      <div id="product-loading" class="container product-loading" aria-live="polite">
+        Cargando pieza...
+      </div>
+
+      <section class="product-detail container" id="product-detail" aria-labelledby="product-name" hidden>
+        <div class="product-gallery">
+          <div class="product-gallery__thumbnails" id="product-thumbnails" aria-label="Imágenes del producto"></div>
+          <button
+            class="product-gallery__main"
+            id="product-zoom-trigger"
+            type="button"
+            aria-label="Ampliar imagen"
+          >
+            <img id="product-main-image" src="" alt="" width="1080" height="1440">
+            <span class="product-gallery__zoom-hint">Ampliar ＋</span>
+          </button>
+          <button
+            class="product-gallery__nav product-gallery__nav--prev"
+            id="product-gallery-prev"
+            type="button"
+            aria-label="Ver imagen anterior"
+          >←</button>
+          <button
+            class="product-gallery__nav product-gallery__nav--next"
+            id="product-gallery-next"
+            type="button"
+            aria-label="Ver imagen siguiente"
+          >→</button>
+        </div>
+
+        <div class="product-info">
+          <div class="product-info__heading">
+            <div class="product-info__badges" id="product-badges"></div>
+            <p class="eyebrow" id="product-collection"></p>
+            <h1 id="product-name"></h1>
+            <p class="product-info__short" id="product-short-description"></p>
+            <p class="product-info__price" id="product-price"></p>
+          </div>
+
+          <div class="notice product-unique-notice" id="product-unique-notice">
+            <strong>Esta pieza no vuelve.</strong>
+            <span>Cada intervención es única y no realizamos copias exactas.</span>
+          </div>
+
+          <form class="product-form" id="product-form" novalidate>
+            <fieldset class="variant-fieldset">
+              <legend>Elegí un talle <span aria-hidden="true">*</span></legend>
+              <div class="variant-options" id="size-options"></div>
+            </fieldset>
+
+            <fieldset class="variant-fieldset">
+              <legend>Elegí un color <span aria-hidden="true">*</span></legend>
+              <div class="variant-options" id="color-options"></div>
+            </fieldset>
+
+            <div class="quantity-field">
+              <label for="product-quantity">Cantidad</label>
+              <div class="quantity-control">
+                <button type="button" data-quantity-action="decrease" aria-label="Reducir cantidad">−</button>
+                <input
+                  id="product-quantity"
+                  name="quantity"
+                  type="number"
+                  min="1"
+                  value="1"
+                  inputmode="numeric"
+                  aria-describedby="stock-status"
+                >
+                <button type="button" data-quantity-action="increase" aria-label="Aumentar cantidad">＋</button>
+              </div>
+              <p class="stock-status" id="stock-status"></p>
+            </div>
+
+            <p class="product-form__error" id="product-form-error" role="alert"></p>
+
+            <div class="product-form__actions">
+              <button class="button button--pink" id="add-to-cart" type="submit">
+                Agregar al carrito
+              </button>
+              <button class="button button--secondary" id="buy-now" type="button">
+                Comprar ahora
+              </button>
+              <button
+                class="product-favorite-button"
+                id="product-favorite"
+                type="button"
+                aria-pressed="false"
+              >
+                <img src="assets/icons/favorito.png" alt="" width="512" height="512">
+                <span>Guardar en favoritos</span>
+              </button>
+            </div>
+          </form>
+
+          <div class="product-assurances" aria-label="Información de compra">
+            <p><strong>↗</strong><span>Envíos a toda Argentina</span></p>
+            <p><strong>↗</strong><span>Transferencia bancaria</span></p>
+            <p><strong>⌖</strong><span>Entrega coordinada en CABA</span></p>
+          </div>
+
+          <section class="shipping-estimator" aria-labelledby="shipping-estimator-title">
+            <div>
+              <span class="eyebrow">Calculá antes de comprar</span>
+              <h2 id="shipping-estimator-title">Envío estimado</h2>
+            </div>
+            <form id="shipping-estimator-form" novalidate>
+              <label for="shipping-postal-code">Tu código postal</label>
+              <div class="shipping-estimator__controls">
+                <input
+                  class="input"
+                  id="shipping-postal-code"
+                  name="postalCode"
+                  type="text"
+                  maxlength="8"
+                  placeholder="Ej. 1425 o C1425ABC"
+                  required
+                >
+                <button class="button button--secondary" type="submit">Calcular</button>
+              </div>
+              <p class="field-help">
+                Valor orientativo para una prenda. El costo final se confirma manualmente.
+              </p>
+              <p class="shipping-estimator__result" id="shipping-estimator-result" aria-live="polite"></p>
+            </form>
+          </section>
+
+          <div class="accordion product-accordion" data-accordion>
+            <div class="accordion__item">
+              <h2>
+                <button class="accordion__trigger" type="button" aria-expanded="true" aria-controls="product-description-panel">
+                  Descripción y condición
+                </button>
+              </h2>
+              <div class="accordion__panel" id="product-description-panel">
+                <p id="product-description"></p>
+                <p><strong>Condición:</strong> <span id="product-condition"></span></p>
+              </div>
+            </div>
+            <div class="accordion__item">
+              <h2>
+                <button class="accordion__trigger" type="button" aria-expanded="true" aria-controls="product-measurements-panel">
+                  Medidas reales
+                </button>
+              </h2>
+              <div class="accordion__panel" id="product-measurements-panel">
+                <p class="field-help">Medidas tomadas con la prenda apoyada en plano.</p>
+                <dl class="measurements-list" id="product-measurements"></dl>
+              </div>
+            </div>
+            <div class="accordion__item">
+              <h2>
+                <button class="accordion__trigger" type="button" aria-expanded="false" aria-controls="product-care-panel">
+                  Material y cuidados
+                </button>
+              </h2>
+              <div class="accordion__panel" id="product-care-panel" hidden>
+                <p><strong>Material:</strong> <span id="product-material"></span></p>
+                <p><strong>Cuidados:</strong> <span id="product-care"></span></p>
+              </div>
+            </div>
+            <div class="accordion__item">
+              <h2>
+                <button class="accordion__trigger" type="button" aria-expanded="false" aria-controls="product-policy-panel">
+                  Envíos, pagos y cambios
+                </button>
+              </h2>
+              <div class="accordion__panel" id="product-policy-panel" hidden>
+                <p>Enviamos a todo el país y coordinamos entregas en CABA. Consultá las políticas antes de confirmar tu pedido.</p>
+                <div class="cluster">
+                  <a class="text-link" href="envios.html">Envíos</a>
+                  <a class="text-link" href="cambios.html">Cambios</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <a
+            class="button button--secondary product-whatsapp"
+            id="product-whatsapp"
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Consultar esta pieza por WhatsApp
+          </a>
+        </div>
+      </section>
+
+      <section class="section product-suggestions" id="related-section" aria-labelledby="related-title" hidden>
+        <div class="container">
+          <div class="section__header">
+            <div>
+              <span class="eyebrow">También puede gustarte</span>
+              <h2 class="display-title" id="related-title">Piezas relacionadas</h2>
+            </div>
+          </div>
+          <div class="product-grid" id="related-products"></div>
+        </div>
+      </section>
+
+      <section class="section section--pink product-suggestions" id="recent-section" aria-labelledby="recent-title" hidden>
+        <div class="container">
+          <div class="section__header">
+            <div>
+              <span class="eyebrow">Tu recorrido</span>
+              <h2 class="display-title" id="recent-title">Vistos recientemente</h2>
+            </div>
+          </div>
+          <div class="product-grid" id="recent-products"></div>
+        </div>
+      </section>
+    </main>
+
+    <dialog class="image-zoom-dialog" id="image-zoom-dialog" aria-label="Imagen ampliada del producto">
+      <button class="image-zoom-dialog__close" type="button" aria-label="Cerrar imagen ampliada">×</button>
+      <img
+        id="zoomed-product-image"
+        src=""
+        alt=""
+        width="1080"
+        height="1440"
+        role="button"
+        tabindex="0"
+        aria-label="Tocar para ampliar o reducir la imagen"
+        aria-pressed="false"
+      >
+    </dialog>
+
+    <div id="site-footer"></div>
+    <div id="global-overlays"></div>
+    <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+    <script src="js/data/productos.js"></script>
+    <script src="js/firebase-products.js?v=20260804-fast-catalog"></script>
+    <script src="js/components.js?v=20260805-transfer-price-redesign"></script>
+    <script src="js/main.js?v=20260804-cart-variant-fix"></script>
+    <script src="js/payment-config.js"></script>
+    <script src="js/shipping.js?v=20260803-ca1"></script>
+    <script src="js/producto.js?v=20260805-price-colors"></script>
+    <script src="js/chatbot.js?v=20260806-categories-keywords"></script>
+    <script src="js/favoritos.js"></script>
+    <script src="js/analytics.js"></script>
+  </body>
+</html>
