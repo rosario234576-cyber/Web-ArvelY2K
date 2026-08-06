@@ -507,13 +507,20 @@ function buildProduct(statusOverride) {
     variants.filter((variant) => variant.price > 0).map((variant) => [`${variant.size}|${variant.color}`, variant.price])
   );
   const stock = variants.reduce((sum, variant) => sum + variant.stock, 0);
+
+  // Si no hay precio general pero hay precios en variantes, usar el precio mínimo
+  let finalPrice = Math.max(0, Number(data.get("price")) || 0);
+  if (finalPrice === 0 && Object.keys(priceByVariant).length > 0) {
+    finalPrice = Math.min(...Object.values(priceByVariant));
+  }
+
   return {
     name,
     slug: slugify(name),
     sku,
     category: String(data.get("category") || "").trim(),
     collection: String(data.get("collection") || "").trim(),
-    price: Math.max(0, Number(data.get("price")) || 0),
+    price: finalPrice,
     oldPrice: Number(data.get("oldPrice")) || null,
     condition: String(data.get("condition") || "Custom"),
     status,

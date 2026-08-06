@@ -324,10 +324,10 @@
     const productName = escapeHtml(product.name);
     const shortDescription = escapeHtml(product.shortDescription);
 
-    // Si no hay precio general pero hay precios por variante, usar el precio de la primera variante
+    // Si no hay precio general pero hay precios por variante, usar el precio MÍNIMO
     let mainPrice = Number(product.price || 0);
     if (mainPrice === 0 && product.priceByVariant && Object.keys(product.priceByVariant).length > 0) {
-      mainPrice = Object.values(product.priceByVariant)[0];
+      mainPrice = Math.min(...Object.values(product.priceByVariant));
     }
 
     const transferPrice = Number(product.transferPrice || mainPrice || 0);
