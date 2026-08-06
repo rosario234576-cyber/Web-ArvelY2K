@@ -527,6 +527,10 @@
         return;
       }
 
+      // Obtener precio de variante si existe, sino usar precio general
+      const variantPriceKey = `${size}|${color}`;
+      const variantPrice = product.priceByVariant?.[variantPriceKey] || Number(product.price) || 0;
+
       if (existing) existing.quantity = Number(existing.quantity || 1) + 1;
       else {
         cart.push({
@@ -537,7 +541,7 @@
           size,
           color,
           quantity: 1,
-          price: Number(product.price) || 0,
+          price: variantPrice,
           name: String(product.name || "Pieza Arvel"),
           image: String(product.images?.[0] || ""),
           stock

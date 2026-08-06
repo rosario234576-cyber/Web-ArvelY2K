@@ -28,7 +28,7 @@
     },
     {
       keywords: ["pago", "transferencia", "mercado pago", "efectivo", "tarjeta", "cuotas", "descuento"],
-      answer: "Podés elegir transferencia o Mercado Pago. El efectivo se coordina únicamente para entregas presenciales habilitadas. Nunca envíes números de tarjeta ni códigos de seguridad por este chat o WhatsApp."
+      answer: "Por el momento el pago es únicamente por transferencia bancaria. Completá el checkout y el alias aparecerá después de tocar Comprar."
     },
     {
       keywords: ["cambio", "devolver", "devolucion", "problema", "falla", "reclamo"],
@@ -53,6 +53,50 @@
     {
       keywords: ["drop", "lanzamiento", "proximo", "novedad", "comunidad"],
       answer: "Los drops y accesos anticipados se anuncian en la home, Instagram y la comunidad de WhatsApp. Las piezas limitadas pueden no reponerse."
+    },
+    {
+      keywords: ["remera", "remeras", "top", "tops"],
+      answer: "En Remeras encontrás básicos personalizados y diseños únicos. Podés filtrar por talle y color en la tienda. Cada pieza tiene medidas exactas en su ficha para que elijas bien."
+    },
+    {
+      keywords: ["falda", "faldas", "pollera", "polleras"],
+      answer: "Nuestras Faldas son piezas Y2K únicas. Muchas son customizadas o seleccionadas con criterio. Revisá el talle comparando las medidas de tu falda favorita apoyada en plano."
+    },
+    {
+      keywords: ["pantalon", "pantalones", "jean", "jeans", "denim"],
+      answer: "Los Pantalones incluyen jeans customizados, denim vintage y diseños propios. Recordá que las etiquetas varían entre marcas; comparate siempre con una prenda tuya."
+    },
+    {
+      keywords: ["campera", "camperas", "abrigo", "abrigos", "buzos", "buzo"],
+      answer: "Camperas, Buzos y Abrigos son piezas de abrigo únicas y personalizadas. El talle es importante; usá el cotizador de envío o buscá con \"Ayudame con el talle\" si dudás."
+    },
+    {
+      keywords: ["accesorio", "accesorios", "bolso", "mochila", "cinturon", "collar"],
+      answer: "En Accesorios hay piezas complementarias: mochilas, bolsos, y más. Son seleccionadas por Arvel o customizadas. Cada detalle está en la ficha del producto."
+    },
+    {
+      keywords: ["corta", "short", "shorts", "pantalon corto"],
+      answer: "Los Shorts son prendas de verano únicas y personalizadas. Revisá siempre el largo y la cintura en la ficha antes de comprar."
+    },
+    {
+      keywords: ["camisa", "camisas"],
+      answer: "Las Camisas son piezas seleccionadas y customizadas. Encontrá tu estilo en la tienda; cada una tiene medidas exactas y descripción de material."
+    },
+    {
+      keywords: ["precio", "costo", "valor", "caro", "barato"],
+      answer: "Cada pieza tiene un precio justo según su complejidad y materialidad. Si es custom, el presupuesto se confirma después de revisar el proyecto."
+    },
+    {
+      keywords: ["colores", "color", "blanco", "negro", "rosa", "azul", "verde", "rojo", "gris"],
+      answer: "Cada prenda muestra sus colores disponibles en la ficha. Si buscás un color específico, escribi "busco algo rosa" o el que prefieras."
+    },
+    {
+      keywords: ["unica", "pieza unica", "unicas", "piezas unicas", "limitada", "limitadas"],
+      answer: "Muchas prendas son únicas o limitadas en cantidad. Si una te gusta, te recomendamos no esperar demasiado; pueden no reponerse."
+    },
+    {
+      keywords: ["ofertas", "oferta", "descuento", "rebaja"],
+      answer: "Las ofertas aparecen marcadas en cada prenda. Revisá la tienda para ver cuáles tienen descuento. Los descuentos son por tiempo limitado."
     }
   ];
 
