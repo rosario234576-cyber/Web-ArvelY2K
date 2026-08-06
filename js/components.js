@@ -323,8 +323,15 @@
     const productId = encodeURIComponent(productKey);
     const productName = escapeHtml(product.name);
     const shortDescription = escapeHtml(product.shortDescription);
-    const transferPrice = Number(product.transferPrice || product.price || 0);
-    const originalPrice = Number(product.price || 0);
+
+    // Si no hay precio general pero hay precios por variante, usar el precio de la primera variante
+    let mainPrice = Number(product.price || 0);
+    if (mainPrice === 0 && product.priceByVariant && Object.keys(product.priceByVariant).length > 0) {
+      mainPrice = Object.values(product.priceByVariant)[0];
+    }
+
+    const transferPrice = Number(product.transferPrice || mainPrice || 0);
+    const originalPrice = mainPrice;
     const discount = Number(product.discount || 0);
     const mercadoPagoReady = window.ARVEL_MERCADOPAGO_READY === true;
     const unavailable = product.soldOut || product.stock <= 0;
