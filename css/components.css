@@ -268,7 +268,7 @@
   font-size: 1.6rem;
   font-weight: 900;
   line-height: 1;
-  color: var(--color-pink);
+  color: var(--color-text);
 }
 
 .product-card__discount-badge {
@@ -276,14 +276,17 @@
   top: auto;
   right: auto;
   margin: 0;
-  padding: 0.4rem 0.8rem;
+  padding: 0.5rem 0.7rem;
   background-color: var(--color-pink);
   color: white;
-  font-size: 0.85rem;
-  font-weight: 800;
-  border-radius: 4px;
-  min-width: 3rem;
+  font-size: 0.9rem;
+  font-weight: 900;
+  border-radius: 3px;
+  min-width: 3.2rem;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .product-card__old-price {
@@ -356,20 +359,23 @@
 }
 
 .product-info__price-main del {
-  color: var(--color-pink);
-  margin-right: 0.5rem;
+  color: #999;
+  margin-right: 0.8rem;
+  font-weight: 600;
 }
 
 .product-info__discount {
   position: absolute;
   top: 0;
   right: 0;
-  padding: 0.4rem 0.8rem;
+  padding: 0.5rem 0.8rem;
   background-color: var(--color-pink);
   color: white;
-  font-size: 0.85rem;
-  font-weight: 700;
-  border-radius: 4px;
+  font-size: 0.95rem;
+  font-weight: 900;
+  border-radius: 3px;
+  min-width: 3.5rem;
+  text-align: center;
 }
 
 .product-info__price-installment {
