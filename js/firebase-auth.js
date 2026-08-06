@@ -26,8 +26,8 @@ const authPage = document.querySelector("[data-auth-page]")?.dataset.authPage ||
 let auth = null;
 let db = null;
 const SESSION_ACTIVITY_KEY = "arvel-session-last-activity";
-const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
-const SESSION_WARNING_MS = 2 * 60 * 1000;
+const SESSION_TIMEOUT_MS = 24 * 60 * 60 * 1000;
+const SESSION_WARNING_MS = 30 * 60 * 1000;
 let sessionTimer = 0;
 let sessionWarningShown = false;
 
