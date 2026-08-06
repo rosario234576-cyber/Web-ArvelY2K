@@ -361,9 +361,13 @@
           </h3>
           <div class="product-card__price-section">
             <p class="product-card__price-label">TRANSFERENCIA O DEPÓSITO</p>
-            ${discount > 0 ? `<p class="product-card__price-original">${formatPrice(originalPrice)}</p>` : ""}
+            ${discount > 0 ? `
+              <div class="product-card__price-with-discount">
+                <p class="product-card__price-original">${formatPrice(originalPrice)}</p>
+                <p class="product-card__discount-badge">-${discount}%</p>
+              </div>
+            ` : ""}
             <p class="product-card__price-main">${formatPrice(transferPrice)}</p>
-            ${discount > 0 ? `<p class="product-card__discount-badge">-${discount}%</p>` : ""}
           </div>
           <p class="product-card__installments" data-mercadopago-financing ${mercadoPagoReady ? "" : "hidden"}>Mercado Pago calcula el total y las cuotas al comprar</p>
           <div class="product-card__actions">

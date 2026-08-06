@@ -44,6 +44,7 @@ const ui = {
   newProduct: document.querySelector("#new-product"),
   addVariant: document.querySelector("#add-variant"),
   variants: document.querySelector("#variant-rows"),
+  priceInput: document.querySelector('input[name="price"]'),
   imageUrls: document.querySelector("#product-image-urls"),
   imageFiles: document.querySelector("#product-image-files"),
   uploadProgress: document.querySelector("#image-upload-progress"),
@@ -254,6 +255,22 @@ function readVariants() {
     .filter((variant) => variant.size && variant.color);
 }
 
+function updatePriceFieldState() {
+  const variants = readVariants();
+  const hasVariantPrices = variants.some((v) => v.price > 0);
+
+  if (ui.priceInput) {
+    ui.priceInput.disabled = hasVariantPrices;
+    if (hasVariantPrices) {
+      ui.priceInput.title = "Bloqueado: Los precios se manejan por variante";
+      ui.priceInput.style.opacity = "0.6";
+    } else {
+      ui.priceInput.title = "";
+      ui.priceInput.style.opacity = "1";
+    }
+  }
+}
+
 function renderImages() {
   existingImages = ui.imageUrls.value
     .split(/\r?\n/)
@@ -441,6 +458,7 @@ function fillForm(product) {
   ui.variants.innerHTML = "";
   const variants = productVariants(product);
   (variants.length ? variants : [{}]).forEach(addVariantRow);
+  updatePriceFieldState();
   existingImages = [...(product.images || [])];
   selectedImages = [];
   ui.imageFiles.value = "";
@@ -793,7 +811,12 @@ ui.instagramFeed?.addEventListener("click", (event) => {
   });
 });
 
-ui.addVariant.addEventListener("click", () => addVariantRow());
+ui.addVariant.addEventListener("click", () => {
+  addVariantRow();
+  updatePriceFieldState();
+});
+ui.variants.addEventListener("change", updatePriceFieldState);
+ui.variants.addEventListener("input", updatePriceFieldState);
 ui.newProduct.addEventListener("click", resetForm);
 ui.search.addEventListener("input", renderList);
 ui.list.addEventListener("click", (event) => {
