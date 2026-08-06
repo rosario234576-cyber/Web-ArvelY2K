@@ -863,6 +863,79 @@ async function initialize(user) {
   ]);
 }
 
+async function checkCategories() {
+  const resultsDiv = document.querySelector("#category-check-results");
+  const fixButton = document.querySelector("#fix-categories");
+
+  resultsDiv.innerHTML = "<p>Verificando categorías...</p>";
+
+  try {
+    const snapshot = await getDocs(collection(db, "products"));
+    const validCategories = ["Accesorios", "Buzos", "Camisas", "Camperas", "Faldas", "Pantalones", "Remeras", "Short"];
+    const problemProducts = [];
+
+    snapshot.docs.forEach((doc) => {
+      const data = doc.data();
+      const category = data.category || "";
+      if (!category || !validCategories.includes(category)) {
+        problemProducts.push({ id: doc.id, name: data.name || "Sin nombre", category });
+      }
+    });
+
+    if (problemProducts.length === 0) {
+      resultsDiv.innerHTML = "<p style='color: green;'>✓ Todas las categorías están correctas.</p>";
+      fixButton.disabled = true;
+    } else {
+      const list = problemProducts.map(p => `<li>${escapeHtml(p.name)} (${p.category || "VACÍA"})</li>`).join("");
+      resultsDiv.innerHTML = `<p style='color: orange;'>⚠ ${problemProducts.length} productos con categoría inválida:</p><ul>${list}</ul>`;
+      fixButton.disabled = false;
+      fixButton.dataset.problemProducts = JSON.stringify(problemProducts);
+    }
+  } catch (error) {
+    resultsDiv.innerHTML = `<p style='color: red;'>Error: ${escapeHtml(error.message)}</p>`;
+  }
+}
+
+async function fixCategories() {
+  const fixButton = document.querySelector("#fix-categories");
+  const resultsDiv = document.querySelector("#category-check-results");
+  const problemProducts = JSON.parse(fixButton.dataset.problemProducts || "[]");
+
+  if (!problemProducts.length) return;
+  if (!confirm(`¿Reparar ${problemProducts.length} productos?`)) return;
+
+  resultsDiv.innerHTML = "<p>Reparando...</p>";
+  let fixed = 0;
+
+  try {
+    for (const problem of problemProducts) {
+      const docRef = doc(db, "products", problem.id);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        // Try to determine category from name
+        const name = (data.name || "").toLowerCase();
+        let category = "Accesorios";
+
+        if (name.includes("buzo")) category = "Buzos";
+        else if (name.includes("camisa")) category = "Camisas";
+        else if (name.includes("campera") || name.includes("abrigo") || name.includes("jacket")) category = "Camperas";
+        else if (name.includes("falda")) category = "Faldas";
+        else if (name.includes("pantalon")) category = "Pantalones";
+        else if (name.includes("remera") || name.includes("remera") || name.includes("shirt")) category = "Remeras";
+        else if (name.includes("short")) category = "Short";
+
+        await setDoc(docRef, { category }, { merge: true });
+        fixed++;
+      }
+    }
+    resultsDiv.innerHTML = `<p style='color: green;'>✓ Se repararon ${fixed} productos.</p>`;
+    fixButton.disabled = true;
+  } catch (error) {
+    resultsDiv.innerHTML = `<p style='color: red;'>Error: ${escapeHtml(error.message)}</p>`;
+  }
+}
+
 if (!firebaseConfigured) {
   ui.loading.hidden = true;
   ui.denied.hidden = false;
@@ -876,4 +949,7 @@ if (!firebaseConfigured) {
         error.message || "No pudimos abrir el panel.";
     });
   });
+
+  document.querySelector("#check-categories")?.addEventListener("click", checkCategories);
+  document.querySelector("#fix-categories")?.addEventListener("click", fixCategories);
 }
