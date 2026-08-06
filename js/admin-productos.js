@@ -233,7 +233,8 @@ function addVariantRow(variant = {}) {
   row.innerHTML = `
     <input class="input" name="variantSize" placeholder="Talle" aria-label="Talle" value="${escapeHtml(variant.size || "")}">
     <input class="input" name="variantColor" placeholder="Color" aria-label="Color" value="${escapeHtml(variant.color || "")}">
-    <input class="input" name="variantStock" type="number" min="0" step="1" placeholder="Stock" aria-label="Stock" value="${Number(variant.stock ?? 1)}">
+    <input class="input" name="variantStock" type="number" min="0" step="1" placeholder="Cantidad" aria-label="Cantidad" value="${Number(variant.stock ?? 1)}">
+    <input class="input" name="variantPrice" type="number" min="0" step="1" placeholder="Precio" aria-label="Precio" value="${Number(variant.price ?? 0)}">
     <button type="button" aria-label="Eliminar variante">×</button>
   `;
   row.querySelector("button").addEventListener("click", () => {
@@ -247,7 +248,8 @@ function readVariants() {
     .map((row) => ({
       size: row.querySelector('[name="variantSize"]').value.trim(),
       color: row.querySelector('[name="variantColor"]').value.trim(),
-      stock: Math.max(0, Number(row.querySelector('[name="variantStock"]').value) || 0)
+      stock: Math.max(0, Number(row.querySelector('[name="variantStock"]').value) || 0),
+      price: Math.max(0, Number(row.querySelector('[name="variantPrice"]').value) || 0)
     }))
     .filter((variant) => variant.size && variant.color);
 }
