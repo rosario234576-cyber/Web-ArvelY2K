@@ -485,6 +485,9 @@ function buildProduct(statusOverride) {
   const stockByVariant = Object.fromEntries(
     variants.map((variant) => [`${variant.size}|${variant.color}`, variant.stock])
   );
+  const priceByVariant = Object.fromEntries(
+    variants.filter((variant) => variant.price > 0).map((variant) => [`${variant.size}|${variant.color}`, variant.price])
+  );
   const stock = variants.reduce((sum, variant) => sum + variant.stock, 0);
   return {
     name,
@@ -511,6 +514,7 @@ function buildProduct(statusOverride) {
     sizes: [...new Set(variants.map((item) => item.size))],
     colors: [...new Set(variants.map((item) => item.color))],
     stockByVariant,
+    priceByVariant: Object.keys(priceByVariant).length ? priceByVariant : {},
     stock,
     soldOut: stock <= 0,
     archived: status === "hidden",
