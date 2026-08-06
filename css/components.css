@@ -248,32 +248,42 @@
   line-height: 1.2;
 }
 
+.product-card__price-with-discount {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
 .product-card__price-original {
-  margin: 0.3rem 0 0 0;
+  margin: 0;
   color: var(--color-text-muted);
-  font-size: var(--text-sm);
-  font-weight: 400;
+  font-size: 1rem;
+  font-weight: 600;
   text-decoration: line-through;
 }
 
 .product-card__price-main {
-  margin: 0.5rem 0 0 0;
-  font-size: 1.4rem;
-  font-weight: 800;
-  line-height: 1.2;
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--color-pink);
 }
 
 .product-card__discount-badge {
-  position: absolute;
-  top: 0;
-  right: 0;
+  position: relative;
+  top: auto;
+  right: auto;
   margin: 0;
-  padding: 0.3rem 0.6rem;
+  padding: 0.4rem 0.8rem;
   background-color: var(--color-pink);
   color: white;
-  font-size: 0.7rem;
-  font-weight: 700;
-  border-radius: 3px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  border-radius: 4px;
+  min-width: 3rem;
+  text-align: center;
 }
 
 .product-card__old-price {
