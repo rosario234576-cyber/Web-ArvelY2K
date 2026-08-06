@@ -550,7 +550,8 @@ function validateProduct(product) {
   if (!product.name) return "Ingresá el nombre.";
   if (!product.sku) return "Ingresá el SKU.";
   if (!product.category) return "Elegí una categoría.";
-  if (product.price <= 0) return "Ingresá un precio válido.";
+  const hasVariantPrices = Object.keys(product.priceByVariant || {}).length > 0;
+  if (!hasVariantPrices && product.price <= 0) return "Ingresá un precio válido.";
   if (!product.shortDescription) return "Ingresá una descripción breve.";
   if (!product.sizes.length) return "Agregá al menos una combinación de talle y color.";
   const duplicate = products.find((item) => item.documentId !== activeDocumentId && (
