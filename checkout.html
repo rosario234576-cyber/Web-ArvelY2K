@@ -22,9 +22,9 @@
     </script>
     <link rel="stylesheet" href="css/reset.css">
     <link rel="stylesheet" href="css/variables.css">
-    <link rel="stylesheet" href="css/components.css?v=20260805-mp-comisiones-mercadopago">
+    <link rel="stylesheet" href="css/components.css?v=20260806-transfer-only">
     <link rel="stylesheet" href="css/styles.css?v=20260803-shipping-manual1">
-    <link rel="stylesheet" href="css/responsive.css?v=20260805-mp-comisiones-mercadopago">
+    <link rel="stylesheet" href="css/responsive.css?v=20260806-transfer-only">
   </head>
   <body>
     <a class="skip-link" href="#contenido-principal">Saltar al contenido</a>
@@ -282,60 +282,9 @@
                 <legend>04 · Método de pago *</legend>
                 <div class="checkout-choices">
                   <label class="checkout-choice">
-                    <input type="radio" name="payment" value="transferencia" data-label="Transferencia bancaria" checked required>
-                    <span><strong>Transferencia bancaria</strong><small>Pagá por transferencia. Al confirmar verás el alias y podrás enviar el comprobante por WhatsApp.</small></span>
+                    <input type="radio" name="payment" value="transferencia" data-label="Transferencia o Depósito" checked required>
+                    <span><strong>Transferencia bancaria o Depósito</strong><small>Pagá por transferencia o depósito. Al confirmar verás el alias y podrás enviar el comprobante por WhatsApp. ↗</small></span>
                   </label>
-                  <label class="checkout-choice" id="mercadopago-payment-option">
-                    <input type="radio" name="payment" value="mercadopago" data-label="Mercado Pago" required>
-                    <span><strong>Mercado Pago</strong><small>Pagá de forma segura con tarjeta de crédito (hasta 3 cuotas), dinero disponible o transferencia bancaria. Mercado Pago mostrará el costo final antes de confirmar.</small></span>
-                  </label>
-                </div>
-                <div id="mercadopago-installments" hidden>
-                  <div style="background-color: rgb(255 240 245); padding: var(--space-3); border-radius: 4px; margin-top: var(--space-3); margin-bottom: var(--space-3);">
-                    <p style="margin: 0; color: var(--color-text); font-size: 0.9rem; font-weight: 500;">
-                      💳 <strong>Seleccioná tu forma de pago</strong>
-                    </p>
-                    <p style="margin: var(--space-1) 0 0 0; color: var(--color-text-muted); font-size: 0.85rem;">
-                      Los precios incluyen la comisión de Mercado Pago.
-                    </p>
-                  </div>
-                  <fieldset class="checkout-block" style="margin-top: var(--space-3);">
-                    <legend style="font-size: var(--text-sm); font-weight: 600;">Opciones de pago</legend>
-                    <div class="checkout-fields" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--space-3);">
-                      <label style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2); border: 1px solid rgb(0 0 0 / 10%); border-radius: 4px; cursor: pointer;">
-                        <input type="radio" name="installments" value="dinero" data-label="Dinero en Mercado Pago" required style="margin: 0;">
-                        <span>
-                          <strong>Dinero en Mercado Pago</strong>
-                          <small id="installments-dinero-price" style="display: block; margin-top: 0.2rem;"></small>
-                          <small style="color: var(--color-text-muted); font-size: 0.75rem;">Acreditación inmediata</small>
-                        </span>
-                      </label>
-                      <label style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2); border: 1px solid rgb(0 0 0 / 10%); border-radius: 4px; cursor: pointer;">
-                        <input type="radio" name="installments" value="1" data-label="1 cuota" checked required style="margin: 0;">
-                        <span>
-                          <strong>1 Cuota</strong>
-                          <small id="installments-1-price" style="display: block; margin-top: 0.2rem;"></small>
-                          <small style="color: var(--color-text-muted); font-size: 0.75rem;">Tarjeta de crédito</small>
-                        </span>
-                      </label>
-                      <label style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2); border: 1px solid rgb(0 0 0 / 10%); border-radius: 4px; cursor: pointer;">
-                        <input type="radio" name="installments" value="2" data-label="2 cuotas" required style="margin: 0;">
-                        <span>
-                          <strong>2 Cuotas</strong>
-                          <small id="installments-2-price" style="display: block; margin-top: 0.2rem;"></small>
-                          <small style="color: var(--color-text-muted); font-size: 0.75rem;">Tarjeta de crédito</small>
-                        </span>
-                      </label>
-                      <label style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2); border: 1px solid rgb(0 0 0 / 10%); border-radius: 4px; cursor: pointer;">
-                        <input type="radio" name="installments" value="3" data-label="3 cuotas" required style="margin: 0;">
-                        <span>
-                          <strong>3 Cuotas</strong>
-                          <small id="installments-3-price" style="display: block; margin-top: 0.2rem;"></small>
-                          <small style="color: var(--color-text-muted); font-size: 0.75rem;">Tarjeta de crédito</small>
-                        </span>
-                      </label>
-                    </div>
-                  </fieldset>
                 </div>
                 <p class="field-error" id="payment-error"></p>
               </fieldset>
