@@ -357,11 +357,22 @@
             <button class="button button--pink" type="submit">Guardar configuración</button>
             <span id="settings-state" role="status"></span>
           </form>
+
+          <div class="admin-card" style="margin-top: var(--space-6);">
+            <span class="eyebrow">Herramientas</span>
+            <h2>Verificar y reparar categorías</h2>
+            <p>Revisa si hay productos con categoría vacía o inválida.</p>
+            <div id="category-check-results" style="margin: var(--space-4) 0;"></div>
+            <div style="display: flex; gap: var(--space-3);">
+              <button class="button button--secondary" id="check-categories" type="button">Verificar categorías</button>
+              <button class="button button--pink" id="fix-categories" type="button" disabled>Reparar todas</button>
+            </div>
+          </div>
         </section>
       </div>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
-    <script type="module" src="js/admin-productos.js?v=20260805-drag-drop-images"></script>
+    <script type="module" src="js/admin-productos.js?v=20260805-category-checker"></script>
   </body>
 </html>
