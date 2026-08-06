@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex,nofollow">
+    <meta name="theme-color" content="#2f1e2a">
+    <link rel="icon" type="image/png" href="assets/logo/IsoBlanco.png?v=20260804-brand">
+    <title>Administrar productos | Arvel Custom Y2K</title>
+    <script>document.documentElement.classList.add("js");</script>
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/components.css?v=20260804-card-payment-layout">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/admin-productos.css?v=20260805-variant-price">
+    <link rel="stylesheet" href="css/responsive.css?v=20260804-card-payment-layout">
+  </head>
+  <body class="admin-body">
+    <a class="skip-link" href="#admin-main">Saltar al formulario</a>
+    <header class="admin-header">
+      <a href="index.html" aria-label="Volver a Arvel Customs">
+        <img src="assets/logo/LogoBlanco.png" alt="Arvel Customs" width="1080" height="1080">
+      </a>
+      <div>
+        <span class="eyebrow">Panel privado</span>
+        <strong>Productos</strong>
+      </div>
+      <button class="button button--secondary admin-logout" id="admin-logout" type="button">Salir</button>
+    </header>
+
+    <main class="admin-main" id="admin-main">
+      <section class="admin-access" id="admin-loading">
+        <span class="admin-spinner" aria-hidden="true"></span>
+        <p>Verificando acceso…</p>
+      </section>
+
+      <section class="admin-access" id="admin-denied" hidden>
+        <h1>Este usuario todavía no es administrador</h1>
+        <p>Iniciá sesión con la cuenta administrativa y agregá este UID en la colección <code>admins</code> de Firestore.</p>
+        <label>UID de esta cuenta
+          <input class="input" id="admin-current-uid" readonly>
+        </label>
+        <a class="button button--pink" href="login.html?next=admin-productos.html">Cambiar de cuenta</a>
+      </section>
+
+      <div id="admin-content" hidden>
+        <nav class="admin-tabs" aria-label="Secciones del panel">
+          <button class="is-active" type="button" data-admin-view="summary">Resumen</button>
+          <button type="button" data-admin-view="metrics">Métricas</button>
+          <button type="button" data-admin-view="products">Productos</button>
+          <button type="button" data-admin-view="instagram">Instagram</button>
+          <button type="button" data-admin-view="duplicates">Duplicados</button>
+          <button type="button" data-admin-view="inventory">Inventario</button>
+          <button type="button" data-admin-view="sales">Ventas</button>
+          <button type="button" data-admin-view="settings">Configuración</button>
+        </nav>
+
+        <section class="admin-view" data-admin-panel="summary">
+          <div class="admin-page-heading">
+            <div><span class="eyebrow">Centro de control</span><h1>Todo Arvel, en un lugar</h1></div>
+            <button class="button button--pink" type="button" data-open-products>+ Cargar producto</button>
+          </div>
+          <div class="admin-stats">
+            <article><span>Productos</span><strong id="stat-products">0</strong><small>Total registrado</small></article>
+            <article><span>Publicados</span><strong id="stat-published">0</strong><small>Visibles en la tienda</small></article>
+            <article><span>Vendidos</span><strong id="stat-sold">0</strong><small>Sin stock</small></article>
+            <article><span>Stock bajo</span><strong id="stat-low-stock">0</strong><small>Una unidad disponible</small></article>
+            <article><span>Borradores</span><strong id="stat-drafts">0</strong><small>Pendientes de publicar</small></article>
+            <article><span>Duplicados</span><strong id="stat-duplicates">0</strong><small>Requieren revisión</small></article>
+          </div>
+          <div class="admin-dashboard-grid">
+            <article class="admin-card admin-card--dark">
+              <span class="eyebrow">Instagram</span><h2>Sincronización preparada</h2>
+              <p id="instagram-summary">GitHub actualizará el feed de Instagram de forma automática y segura.</p>
+              <button class="button button--pink" type="button" data-open-view="instagram">Ver conexión</button>
+            </article>
+            <article class="admin-card">
+              <span class="eyebrow">Atención</span><h2>Revisión del catálogo</h2>
+              <div id="admin-alerts"><p>No hay alertas por el momento.</p></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="admin-view" data-admin-panel="metrics" hidden>
+          <div class="admin-page-heading">
+            <div><span class="eyebrow">Análisis</span><h1>Métricas del sitio</h1></div>
+            <button class="button button--secondary" type="button" id="metrics-refresh">🔄 Actualizar</button>
+          </div>
+
+          <div class="admin-metrics-grid">
+            <article class="admin-metric-card">
+              <h3>Visitantes por dispositivo</h3>
+              <canvas id="chart-devices"></canvas>
+              <div id="devices-stats" class="metrics-stats"></div>
+            </article>
+
+            <article class="admin-metric-card">
+              <h3>Navegadores más usados</h3>
+              <canvas id="chart-browsers"></canvas>
+              <div id="browsers-stats" class="metrics-stats"></div>
+            </article>
+
+            <article class="admin-metric-card" style="grid-column: 1 / -1;">
+              <h3>Visitantes en los últimos 7 días</h3>
+              <canvas id="chart-timeline"></canvas>
+              <div id="timeline-stats" class="metrics-stats"></div>
+            </article>
+
+            <article class="admin-metric-card">
+              <h3>Sistemas operativos</h3>
+              <canvas id="chart-os"></canvas>
+              <div id="os-stats" class="metrics-stats"></div>
+            </article>
+
+            <article class="admin-metric-card">
+              <h3>Total de eventos</h3>
+              <div class="metrics-big-number" id="total-events">0</div>
+              <small>Desde el inicio de tracking</small>
+            </article>
+          </div>
+        </section>
+
+        <div class="admin-view admin-shell" data-admin-panel="products" hidden>
+        <aside class="admin-catalog">
+          <div class="admin-catalog__heading">
+            <div>
+              <span class="eyebrow">Catálogo</span>
+              <h1>Productos</h1>
+            </div>
+            <button class="button button--pink" id="new-product" type="button">+ Nuevo</button>
+          </div>
+          <label class="visually-hidden" for="admin-search">Buscar productos</label>
+          <input class="input" id="admin-search" type="search" placeholder="Buscar por nombre o SKU">
+          <div class="admin-product-list" id="admin-product-list" aria-live="polite"></div>
+        </aside>
+
+        <section class="admin-editor">
+          <div class="admin-editor__heading">
+            <div>
+              <span class="eyebrow" id="editor-mode">Nuevo producto</span>
+              <h2 id="editor-title">Cargar una pieza</h2>
+            </div>
+            <span class="admin-save-state" id="admin-save-state" role="status" aria-live="polite"></span>
+          </div>
+
+          <form id="product-admin-form" novalidate>
+            <input id="product-document-id" name="documentId" type="hidden">
+
+            <fieldset class="admin-fieldset">
+              <legend>Información principal</legend>
+              <div class="admin-form-grid">
+                <label>Nombre *
+                  <input class="input" name="name" required>
+                </label>
+                <label>SKU *
+                  <input class="input" name="sku" required placeholder="ARV-AI-TOP-001">
+                </label>
+                <label>Categoría *
+                  <select class="select" name="category" required>
+                    <option value="">Seleccionar categoría...</option>
+                    <option value="Accesorios">Accesorios</option>
+                    <option value="Buzos">Buzos</option>
+                    <option value="Camisas">Camisas</option>
+                    <option value="Camperas">Camperas</option>
+                    <option value="Faldas">Faldas</option>
+                    <option value="Pantalones">Pantalones</option>
+                    <option value="Remeras">Remeras</option>
+                    <option value="Short">Short</option>
+                  </select>
+                </label>
+                <label>Colección
+                  <input class="input" name="collection" placeholder="After Internet">
+                </label>
+                <label>Precio por transferencia / depÃ³sito *
+                  <input class="input" name="price" type="number" min="0" step="1" required>
+                </label>
+                <label>Precio anterior
+                  <input class="input" name="oldPrice" type="number" min="0" step="1">
+                </label>
+                <label>Condición
+                  <select class="select" name="condition">
+                    <option>Custom</option>
+                    <option>Nueva</option>
+                    <option>Segunda mano</option>
+                  </select>
+                </label>
+                <label>Estado
+                  <select class="select" name="status">
+                    <option value="draft">Borrador</option>
+                    <option value="published">Publicado</option>
+                    <option value="hidden">Oculto</option>
+                  </select>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="admin-fieldset">
+              <legend>Descripción</legend>
+              <label>Descripción breve *
+                <textarea class="textarea" name="shortDescription" rows="2" required></textarea>
+              </label>
+              <label>Descripción completa
+                <textarea class="textarea" name="description" rows="5"></textarea>
+              </label>
+              <div class="admin-form-grid">
+                <label>Material
+                  <textarea class="textarea" name="material" rows="3"></textarea>
+                </label>
+                <label>Cuidados
+                  <textarea class="textarea" name="care" rows="3"></textarea>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="admin-fieldset">
+              <legend>Medidas reales</legend>
+              <div class="admin-form-grid admin-form-grid--4">
+                <label>Busto <input class="input" name="bust" placeholder="82–92 cm"></label>
+                <label>Cintura <input class="input" name="waist" placeholder="68–78 cm"></label>
+                <label>Cadera <input class="input" name="hip" placeholder="No aplica"></label>
+                <label>Largo <input class="input" name="length" placeholder="42 cm"></label>
+                <label>Axila a Axila <input class="input" name="axillaToAxilla" placeholder="42 cm"></label>
+                <label>Largo de Manga <input class="input" name="sleeveLength" placeholder="50 cm"></label>
+              </div>
+            </fieldset>
+
+            <fieldset class="admin-fieldset">
+              <div class="admin-fieldset__heading">
+                <legend>Variantes y stock *</legend>
+                <button class="button button--secondary" id="add-variant" type="button">+ Talle / color</button>
+              </div>
+              <div class="admin-variants" id="variant-rows"></div>
+              <p class="field-help">Agregá una fila por cada combinación disponible. El stock total se calcula automáticamente.</p>
+            </fieldset>
+
+            <fieldset class="admin-fieldset">
+              <legend>Fotografías</legend>
+              <label class="admin-image-uploader" for="product-image-files">
+                <span>Seleccionar fotografías</span>
+                <strong>Elegí una o varias imágenes desde tu dispositivo</strong>
+                <small>JPG, PNG o WEBP · máximo 8 MB por imagen</small>
+                <input id="product-image-files" type="file" accept="image/jpeg,image/png,image/webp" multiple>
+              </label>
+              <div class="admin-upload-progress" id="image-upload-progress" hidden>
+                <div><span id="image-upload-label">Subiendo fotografías…</span><strong id="image-upload-percent">0%</strong></div>
+                <progress id="image-upload-bar" max="100" value="0"></progress>
+              </div>
+              <div class="admin-image-preview" id="image-preview"></div>
+              <details class="admin-image-links">
+                <summary>Agregar una imagen mediante enlace</summary>
+                <label>Una ruta o enlace por línea
+                  <textarea class="textarea" id="product-image-urls" name="imageUrls" rows="4"></textarea>
+                </label>
+                <button class="button button--secondary admin-preview-images" id="preview-image-urls" type="button">Agregar enlaces</button>
+              </details>
+              <p class="field-help">
+                La primera fotografía será la portada. Las imágenes se guardarán en Firebase Storage usando tu sesión de administradora. Un borrador puede guardarse sin fotos.
+              </p>
+            </fieldset>
+
+            <fieldset class="admin-fieldset">
+              <legend>Organización</legend>
+              <label>Etiquetas
+                <input class="input" name="tags" placeholder="denim, y2k, pieza única">
+              </label>
+              <div class="admin-checks">
+                <label><input name="featured" type="checkbox"> Destacar en la tienda</label>
+                <label><input name="uniquePiece" type="checkbox"> Pieza única</label>
+              </div>
+              <div class="admin-form-grid admin-source-fields">
+                <label>Origen
+                  <select class="select" name="source">
+                    <option value="manual">Carga manual</option>
+                    <option value="instagram">Instagram</option>
+                  </select>
+                </label>
+                <label>ID de publicación de Instagram
+                  <input class="input" name="instagramMediaId" autocomplete="off">
+                </label>
+                <label class="admin-form-wide">Enlace de la publicación
+                  <input class="input" name="instagramPermalink" type="url" placeholder="https://www.instagram.com/p/…">
+                </label>
+              </div>
+            </fieldset>
+
+            <p class="admin-form-error" id="admin-form-error" role="alert"></p>
+            <div class="admin-form-actions">
+              <button class="button button--pink" type="submit">Guardar producto</button>
+              <button class="button button--secondary" id="save-draft" type="button">Guardar borrador</button>
+              <button class="button button--secondary" id="duplicate-current" type="button" hidden>Duplicar</button>
+            </div>
+          </form>
+        </section>
+        </div>
+
+        <section class="admin-view" data-admin-panel="instagram" hidden>
+          <div class="admin-page-heading"><div><span class="eyebrow">Automatización</span><h1>Instagram → tienda</h1></div></div>
+          <div class="admin-dashboard-grid">
+            <article class="admin-card admin-card--dark">
+              <span class="admin-connection-dot" id="instagram-dot"></span>
+              <h2 id="instagram-connection-title">Comprobando conexión</h2>
+              <p id="instagram-connection-copy">La conexión se realiza de forma segura mediante GitHub Actions.</p>
+              <button class="button button--pink" id="instagram-sync" type="button">Sincronizar ahora</button>
+              <small id="instagram-sync-state" role="status"></small>
+            </article>
+            <article class="admin-card">
+              <span class="eyebrow">Regla principal</span><h2>Solo productos</h2>
+              <p>Las publicaciones con el marcador configurado se importarán. Anuncios, sorteos e información general quedarán afuera.</p>
+              <p><strong>Marcador actual:</strong> <code id="instagram-marker-preview">#productoarvel</code></p>
+            </article>
+          </div>
+          <article class="admin-card admin-card--flush">
+            <div class="admin-section-heading"><div><span class="eyebrow">Feed reciente</span><h2>Publicaciones detectadas</h2></div><span id="instagram-feed-count">0</span></div>
+            <p class="admin-intro">Revisá la detección antes de crear el producto. Siempre se guardará como borrador.</p>
+            <div class="admin-instagram-feed" id="instagram-feed-preview"><p>Cargando la última sincronización de GitHub…</p></div>
+          </article>
+          <article class="admin-card admin-card--flush">
+            <div class="admin-section-heading"><div><span class="eyebrow">Importados</span><h2>Productos vinculados al feed</h2></div><span id="instagram-product-count">0</span></div>
+            <div class="admin-management-list" id="instagram-products"></div>
+          </article>
+        </section>
+
+        <section class="admin-view" data-admin-panel="duplicates" hidden>
+          <div class="admin-page-heading"><div><span class="eyebrow">Control de calidad</span><h1>Posibles duplicados</h1></div></div>
+          <p class="admin-intro">Comparamos SKU, ID y enlace de Instagram. Si hay una coincidencia, no se crea automáticamente otro producto.</p>
+          <div class="admin-management-list" id="duplicate-products"></div>
+        </section>
+
+        <section class="admin-view" data-admin-panel="inventory" hidden>
+          <div class="admin-page-heading"><div><span class="eyebrow">Stock</span><h1>Inventario</h1></div></div>
+          <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Producto</th><th>SKU</th><th>Stock</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="inventory-products"></tbody></table></div>
+        </section>
+
+        <section class="admin-view" data-admin-panel="sales" hidden>
+          <div class="admin-page-heading"><div><span class="eyebrow">Pedidos</span><h1>Ventas</h1></div></div>
+          <div class="admin-dashboard-grid">
+            <article class="admin-card"><h2>Mercado Pago</h2><p id="mercadopago-connection-copy">Comprobando el acceso seguro configurado en Vercel.</p><span class="admin-pill admin-pill--pending" id="mercadopago-connection-state">Comprobando</span></article>
+            <article class="admin-card"><h2>Transferencias</h2><p>Confirmá manualmente el comprobante antes de marcar el pedido como pagado y descontar el stock.</p><span class="admin-pill">Control manual</span></article>
+          </div>
+          <article class="admin-card admin-empty-state"><strong>Todavía no hay pedidos sincronizados</strong><p>Esta sección se completará al conectar el backend de pedidos.</p></article>
+        </section>
+
+        <section class="admin-view" data-admin-panel="settings" hidden>
+          <div class="admin-page-heading"><div><span class="eyebrow">Reglas automáticas</span><h1>Configuración</h1></div></div>
+          <form class="admin-card admin-settings-form" id="automation-settings-form">
+            <label>Marcador para reconocer productos
+              <input class="input" name="productMarker" value="#productoarvel">
+            </label>
+            <label>Palabras que indican vendido
+              <input class="input" name="soldWords" value="vendida, vendido, agotada, agotado">
+            </label>
+            <label>Categorías permitidas
+              <textarea class="textarea" name="categories" rows="3">Tops, Faldas, Pantalones, Vestidos, Abrigos, Accesorios, Mini customs</textarea>
+            </label>
+            <label class="admin-switch"><input name="autoPublish" type="checkbox"><span></span>Publicar automáticamente solo coincidencias completas</label>
+            <p class="field-help">Las publicaciones incompletas o dudosas siempre quedarán como borrador.</p>
+            <button class="button button--pink" type="submit">Guardar configuración</button>
+            <span id="settings-state" role="status"></span>
+          </form>
+
+          <div class="admin-card" style="margin-top: var(--space-6);">
+            <span class="eyebrow">Herramientas</span>
+            <h2>Verificar y reparar categorías</h2>
+            <p>Revisa si hay productos con categoría vacía o inválida.</p>
+            <div id="category-check-results" style="margin: var(--space-4) 0;"></div>
+            <div style="display: flex; gap: var(--space-3);">
+              <button class="button button--secondary" id="check-categories" type="button">Verificar categorías</button>
+              <button class="button button--pink" id="fix-categories" type="button" disabled>Reparar todas</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+    <script type="module" src="js/admin-productos.js?v=20260805-variant-price"></script>
+  </body>
+</html>
