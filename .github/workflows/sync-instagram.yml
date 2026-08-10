@@ -5,33 +5,59 @@ on:
   schedule:
     - cron: "17 */3 * * *"
 
+concurrency:
+  group: sync-instagram-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
 jobs:
   sync:
     runs-on: ubuntu-latest
-
     steps:
       - name: Descargar repositorio
         uses: actions/checkout@v4
-
       - name: Usar Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
-
       - name: Leer publicaciones de Instagram
         env:
           FACEBOOK_PAGE_ACCESS_TOKEN: ${{ secrets.FACEBOOK_PAGE_ACCESS_TOKEN }}
+          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
           INSTAGRAM_USER_ID: ${{ secrets.INSTAGRAM_USER_ID }}
           INSTAGRAM_USERNAME: ${{ vars.INSTAGRAM_USERNAME }}
+          INSTAGRAM_APP_ID: ${{ secrets.INSTAGRAM_APP_ID }}
+          INSTAGRAM_APP_SECRET: ${{ secrets.INSTAGRAM_APP_SECRET }}
+          META_APP_ID: ${{ secrets.META_APP_ID }}
+          META_APP_SECRET: ${{ secrets.META_APP_SECRET }}
+          META_GRAPH_VERSION: ${{ vars.META_GRAPH_VERSION }}
+          INSTAGRAM_SYNC_LIMIT: ${{ vars.INSTAGRAM_SYNC_LIMIT }}
         run: node scripts/sync-instagram.mjs
-
+      - name: Persistir token renovado de Instagram Login
+        if: always() && hashFiles('.instagram-access-token') != ''
+        env:
+          GH_TOKEN: ${{ secrets.INSTAGRAM_SECRET_UPDATE_TOKEN }}
+        run: |
+          if [ -n "$GH_TOKEN" ]; then
+            gh secret set INSTAGRAM_ACCESS_TOKEN < .instagram-access-token
+            echo "El token renovado quedó guardado en GitHub Secrets."
+          else
+            echo "::warning::El token fue renovado para esta ejecución, pero falta INSTAGRAM_SECRET_UPDATE_TOKEN para persistirlo."
+          fi
+          rm -f .instagram-access-token
       - name: Publicar feed actualizado
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/instagram-feed.json
-          git diff --cached --quiet || git commit -m "chore: actualizar feed de Instagram"
-          git push
+          git add data/instagram-feed.json data/instagram-sync-status.json
+          if [ -d assets/images/instagram/feed ]; then
+            git add assets/images/instagram/feed
+          fi
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: actualizar feed de Instagram"
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
