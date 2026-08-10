@@ -84,6 +84,7 @@ let selectedImages = [];
 let previewObjectUrls = [];
 let activeDocumentId = "";
 let instagramFeedPosts = [];
+let instagramSyncStatus = null;
 
 async function checkMercadoPagoConnection() {
   if (!ui.mercadoPagoState || !ui.mercadoPagoCopy) return;
@@ -672,27 +673,93 @@ async function changeStockState(documentId, action) {
 }
 
 async function checkInstagramConnection() {
-  try {
-    const response = await fetch(`data/instagram-feed.json?t=${Date.now()}`, { headers: { Accept: "application/json" } });
-    const result = await response.json();
-    const connected = response.ok && result.connected;
-    ui.instagramDot.classList.toggle("is-connected", connected);
-    ui.instagramTitle.textContent = connected ? "Instagram conectado con GitHub" : "Falta configurar GitHub Actions";
-    ui.instagramCopy.textContent = connected
-      ? `Última actualización: ${result.updatedAt ? new Date(result.updatedAt).toLocaleString("es-AR") : "sin fecha"} · @${result.username || "arvel.customsy2k"}.`
-      : "Agregá el token y el ID de Instagram en GitHub Secrets y ejecutá la acción Sincronizar Instagram.";
-    ui.instagramSync.textContent = "Cargar última sincronización";
-    ui.instagramSync.dataset.action = "sync";
-    ui.instagramSync.disabled = false;
-    instagramFeedPosts = Array.isArray(result.posts) ? result.posts : [];
-    renderInstagramFeed();
-  } catch {
-    ui.instagramTitle.textContent = "Falta publicar el archivo de Instagram";
-    ui.instagramCopy.textContent = "Ejecutá la acción Sincronizar Instagram desde GitHub y volvé a cargar esta página.";
-    ui.instagramSync.textContent = "Reintentar";
-    ui.instagramSync.dataset.action = "sync";
-    ui.instagramSync.disabled = false;
+  const [feedResult, statusResult] = await Promise.allSettled([
+    fetchInstagramJson("data/instagram-feed.json"),
+    fetchInstagramJson("data/instagram-sync-status.json")
+  ]);
+  const feed = feedResult.status === "fulfilled" ? feedResult.value : null;
+  const status = statusResult.status === "fulfilled" ? statusResult.value : {
+    state: feed?.connected ? "warning" : "error",
+    error: { message: feed?.connected ? "No se pudo leer el estado de la sincronización." : "Todavía no existe una sincronización válida." }
+  };
+  renderInstagramConnection(feed, status);
+}
+
+async function fetchInstagramJson(path) {
+  const response = await fetch(`${path}?t=${Date.now()}`, {
+    cache: "no-store",
+    headers: { Accept: "application/json" }
+  });
+  if (!response.ok) throw new Error(`No se pudo leer ${path} (HTTP ${response.status}).`);
+  return response.json();
+}
+
+function formatInstagramDate(value) {
+  if (!value) return "sin fecha";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "sin fecha" : date.toLocaleString("es-AR");
+}
+
+function renderInstagramConnection(feed, status) {
+  const hasCache = Boolean(feed?.connected && Array.isArray(feed.posts));
+  const state = status?.state || (hasCache ? "ok" : "not_configured");
+  const reconnectRequired = state === "reconnect_required" || status?.error?.reconnectRequired;
+  const temporaryError = state === "error";
+  const warning = state === "warning";
+
+  ui.instagramDot.classList.toggle("is-connected", hasCache && !reconnectRequired && !temporaryError);
+  ui.instagramDot.classList.toggle("is-warning", warning || (hasCache && temporaryError));
+  ui.instagramDot.classList.toggle("is-error", reconnectRequired || (!hasCache && temporaryError));
+
+  if (reconnectRequired) ui.instagramTitle.textContent = "Instagram necesita reconexión";
+  else if (temporaryError && hasCache) ui.instagramTitle.textContent = "Instagram temporalmente sin respuesta";
+  else if (warning) ui.instagramTitle.textContent = "Instagram conectado · revisar token";
+  else if (hasCache) ui.instagramTitle.textContent = "Instagram conectado con GitHub";
+  else ui.instagramTitle.textContent = "Falta configurar GitHub Actions";
+
+  const lastSuccess = status?.lastSuccessAt || feed?.updatedAt;
+  const account = feed?.username ? ` · @${feed.username}` : "";
+  if (reconnectRequired) {
+    ui.instagramCopy.textContent = `${status?.error?.message || "La autorización venció o fue revocada."} Último contenido válido: ${formatInstagramDate(lastSuccess)}.`;
+  } else if (temporaryError) {
+    ui.instagramCopy.textContent = `${status?.error?.message || "Meta no respondió correctamente."} Se conserva la última sincronización de ${formatInstagramDate(lastSuccess)}${account}.`;
+  } else if (warning) {
+    ui.instagramCopy.textContent = `${status?.token?.warning || "La conexión requiere atención."} Última actualización: ${formatInstagramDate(lastSuccess)}${account}.`;
+  } else if (hasCache) {
+    ui.instagramCopy.textContent = `Última actualización: ${formatInstagramDate(lastSuccess)}${account}.`;
+  } else {
+    ui.instagramCopy.textContent = "Configurá los secretos de Instagram en GitHub y ejecutá el workflow Sincronizar Instagram.";
   }
+
+  ui.instagramSync.textContent = hasCache ? "Recargar estado" : "Reintentar lectura";
+  ui.instagramSync.disabled = false;
+  instagramFeedPosts = Array.isArray(feed?.posts) ? feed.posts : [];
+  instagramSyncStatus = status || null;
+  renderInstagramFeed();
+}
+
+function isTemporaryInstagramImage(url) {
+  return /(?:cdninstagram\.com|fbcdn\.net|graph\.facebook\.com|graph\.instagram\.com)/i.test(String(url || ""));
+}
+
+async function repairImportedInstagramImages() {
+  const postsById = new Map(instagramFeedPosts.map((post) => [String(post.id), post]));
+  const repairs = [];
+  for (const product of products) {
+    if (!product.instagramMediaId) continue;
+    const post = postsById.get(String(product.instagramMediaId));
+    const cachedImage = String(post?.image || "");
+    if (!cachedImage || isTemporaryInstagramImage(cachedImage)) continue;
+    const currentImages = Array.isArray(product.images) ? product.images.filter(Boolean) : [];
+    if (currentImages[0] === cachedImage) continue;
+    if (currentImages.length && !isTemporaryInstagramImage(currentImages[0])) continue;
+    const images = [cachedImage, ...currentImages.slice(1).filter((url) => url !== cachedImage && !isTemporaryInstagramImage(url))];
+    repairs.push(setDoc(doc(db, "products", product.documentId), { images, updatedAt: serverTimestamp() }, { merge: true }));
+  }
+  if (!repairs.length) return 0;
+  await Promise.all(repairs);
+  await loadProducts();
+  return repairs.length;
 }
 
 async function loadSettings() {
@@ -794,16 +861,15 @@ ui.settingsForm.addEventListener("submit", async (event) => {
 });
 ui.instagramSync.addEventListener("click", async () => {
   ui.instagramSync.disabled = true;
-  ui.instagramSyncState.textContent = "Cargando la última sincronización de GitHub…";
+  ui.instagramSyncState.textContent = "Consultando el último estado de GitHub…";
   try {
-    const response = await fetch(`data/instagram-feed.json?t=${Date.now()}`, { headers: { Accept: "application/json" } });
-    const result = await response.json();
-    if (!response.ok || !result.connected) throw new Error("GitHub todavía no generó una sincronización válida.");
-    instagramFeedPosts = Array.isArray(result.posts) ? result.posts : [];
-    ui.instagramSyncState.textContent = `${instagramFeedPosts.length} publicaciones · actualización ${result.updatedAt ? new Date(result.updatedAt).toLocaleString("es-AR") : "sin fecha"}`;
-    renderInstagramFeed();
+    await checkInstagramConnection();
+    const repaired = await repairImportedInstagramImages();
+    const suffix = repaired ? ` · ${repaired} producto${repaired === 1 ? "" : "s"} reparado${repaired === 1 ? "" : "s"}` : "";
+    ui.instagramSyncState.textContent = `${instagramFeedPosts.length} publicaciones · última sincronización ${formatInstagramDate(instagramSyncStatus?.lastSuccessAt)}${suffix}`;
   } catch (error) {
-    ui.instagramSyncState.textContent = error.message;
+    console.error("No se pudo recargar Instagram:", error);
+    ui.instagramSyncState.textContent = "No pudimos recargar el estado. El último contenido disponible continúa visible.";
   } finally {
     ui.instagramSync.disabled = false;
   }
@@ -892,12 +958,14 @@ async function initialize(user) {
   }
   ui.content.hidden = false;
   resetForm();
-  await Promise.all([
-    loadProducts(),
-    loadSettings(),
-    checkInstagramConnection(),
-    checkMercadoPagoConnection()
-  ]);
+  await loadProducts();
+  await Promise.all([loadSettings(), checkInstagramConnection(), checkMercadoPagoConnection()]);
+  try {
+    const repaired = await repairImportedInstagramImages();
+    if (repaired) ui.instagramSyncState.textContent = `${repaired} imagen${repaired === 1 ? "" : "es"} de productos importados reparada${repaired === 1 ? "" : "s"}.`;
+  } catch (error) {
+    console.error("No se pudieron reparar las imágenes importadas de Instagram:", error);
+  }
 }
 
 async function checkCategories() {
