@@ -92,6 +92,8 @@
   box-shadow: 0 0 0.9rem currentColor;
 }
 .admin-connection-dot.is-connected { background: #42d17b; }
+.admin-connection-dot.is-warning { background: #f2a900; }
+.admin-connection-dot.is-error { background: #ee5a67; }
 
 .admin-pill {
   display: inline-flex;
