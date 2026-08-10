@@ -1,10 +1,17 @@
 {
   "schemaVersion": 1,
-  "state": "not_configured",
-  "tokenMode": null,
-  "lastAttemptAt": null,
-  "lastSuccessAt": null,
-  "postCount": 0,
+  "state": "reconnect_required",
+  "tokenMode": "facebook-page",
+  "lastAttemptAt": "2026-08-10T23:53:37.265Z",
+  "lastSuccessAt": "2026-08-04T03:39:56.520Z",
+  "postCount": 50,
   "token": null,
-  "error": null
+  "error": {
+    "message": "La autorización de Instagram venció o fue revocada. El administrador debe volver a conectar la cuenta.",
+    "category": "authentication",
+    "httpStatus": 400,
+    "metaCode": 190,
+    "metaSubcode": 463,
+    "reconnectRequired": true
+  }
 }
