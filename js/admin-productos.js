@@ -24,7 +24,7 @@ import {
   ref,
   uploadBytesResumable
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-storage.js";
-import { firebaseConfig, firebaseConfigured } from "./firebase-config.js?v=20260731-5";
+import { firebaseConfig, firebaseConfigured } from "./firebase-config.js?v=20260811-auth-config";
 
 const app = firebaseConfigured
   ? (getApps().find((candidate) => candidate.name === "[DEFAULT]") || initializeApp(firebaseConfig))
@@ -96,11 +96,15 @@ let accessWatchdog = null;
 
 function showAccessError(message) {
   if (accessWatchdog) clearTimeout(accessWatchdog);
-  ui.loading.hidden = true;
-  ui.content.hidden = true;
-  ui.denied.hidden = false;
-  ui.denied.querySelector("h1").textContent = "No pudimos verificar el acceso";
-  ui.denied.querySelector("p").textContent = message;
+  if (ui.loading) ui.loading.hidden = true;
+  if (ui.content) ui.content.hidden = true;
+  if (ui.denied) {
+    ui.denied.hidden = false;
+    const title = ui.denied.querySelector("h1");
+    const copy = ui.denied.querySelector("p");
+    if (title) title.textContent = "No pudimos verificar el acceso";
+    if (copy) copy.textContent = message;
+  }
 }
 
 function withTimeout(task, milliseconds, message) {
@@ -110,6 +114,35 @@ function withTimeout(task, milliseconds, message) {
   });
   return Promise.race([task, timeout]).finally(() => window.clearTimeout(timeoutId));
 }
+
+// El acceso se valida antes de conectar los controles del panel. De esta forma
+// un control opcional que no exista en una versión del HTML no puede dejar al
+// administrador atrapado en la pantalla de carga.
+function startAccessValidation() {
+  if (!firebaseConfigured) {
+    if (ui.loading) ui.loading.hidden = true;
+    if (ui.denied) {
+      ui.denied.hidden = false;
+      const copy = ui.denied.querySelector("p");
+      if (copy) copy.textContent = "Falta completar la configuración pública de Firebase.";
+    }
+    return;
+  }
+
+  accessWatchdog = window.setTimeout(() => {
+    showAccessError("Firebase no respondió al verificar tu sesión. Actualizá la página e intentá nuevamente.");
+  }, 15000);
+
+  onAuthStateChanged(auth, (user) => {
+    if (accessWatchdog) clearTimeout(accessWatchdog);
+    initialize(user).catch((error) => {
+      console.error("No se pudo inicializar el panel administrador:", error);
+      showAccessError(error.message || "No pudimos abrir el panel. Actualizá la página e intentá nuevamente.");
+    });
+  });
+}
+
+startAccessValidation();
 
 async function checkMercadoPagoConnection() {
   if (!ui.mercadoPagoState || !ui.mercadoPagoCopy) return;
@@ -1008,7 +1041,7 @@ async function removeCurrentProduct() {
   }
 }
 
-ui.tabs.addEventListener("click", (event) => {
+ui.tabs?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-admin-view]");
   if (button) openView(button.dataset.adminView);
 });
@@ -1025,7 +1058,7 @@ document.addEventListener("click", (event) => {
     if (product) { openView("products"); fillForm(product); }
   }
 });
-ui.inventory.addEventListener("click", (event) => {
+ui.inventory?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-stock-action]");
   if (!button) return;
   button.disabled = true;
@@ -1034,7 +1067,7 @@ ui.inventory.addEventListener("click", (event) => {
     setState(error.message || "No pudimos actualizar el stock.", "error");
   });
 });
-ui.settingsForm.addEventListener("submit", async (event) => {
+ui.settingsForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
   const data = new FormData(ui.settingsForm);
   const settings = {
@@ -1053,7 +1086,7 @@ ui.settingsForm.addEventListener("submit", async (event) => {
     ui.settingsState.textContent = error.message || "No pudimos guardar la configuración.";
   }
 });
-ui.instagramSync.addEventListener("click", async () => {
+ui.instagramSync?.addEventListener("click", async () => {
   ui.instagramSync.disabled = true;
   ui.instagramSyncState.textContent = "Consultando el último estado de GitHub…";
   try {
@@ -1079,21 +1112,21 @@ ui.instagramFeed?.addEventListener("click", (event) => {
   });
 });
 
-ui.addVariant.addEventListener("click", () => {
+ui.addVariant?.addEventListener("click", () => {
   addVariantRow();
   updatePriceFieldState();
 });
-ui.variants.addEventListener("change", updatePriceFieldState);
-ui.variants.addEventListener("input", updatePriceFieldState);
-ui.newProduct.addEventListener("click", resetForm);
-ui.search.addEventListener("input", renderList);
-ui.list.addEventListener("click", (event) => {
+ui.variants?.addEventListener("change", updatePriceFieldState);
+ui.variants?.addEventListener("input", updatePriceFieldState);
+ui.newProduct?.addEventListener("click", resetForm);
+ui.search?.addEventListener("input", renderList);
+ui.list?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-product-id]");
   const product = products.find((item) => item.documentId === button?.dataset.productId);
   if (product) fillForm(product);
 });
-ui.previewImages.addEventListener("click", renderImages);
-ui.imageFiles.addEventListener("change", () => {
+ui.previewImages?.addEventListener("click", renderImages);
+ui.imageFiles?.addEventListener("change", () => {
   const files = [...ui.imageFiles.files];
   const error = validateSelectedImages(files);
   if (error) {
@@ -1106,7 +1139,7 @@ ui.imageFiles.addEventListener("change", () => {
   ui.imageFiles.value = "";
   renderImages();
 });
-ui.preview.addEventListener("click", (event) => {
+ui.preview?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-saved-image-index], [data-pending-image-index]");
   if (!button) return;
   if (button.dataset.savedImageIndex !== undefined) {
@@ -1121,12 +1154,12 @@ ui.preview.addEventListener("click", (event) => {
   }
   renderImages();
 });
-ui.form.addEventListener("submit", (event) => {
+ui.form?.addEventListener("submit", (event) => {
   event.preventDefault();
   saveProduct();
 });
-ui.saveDraft.addEventListener("click", () => saveProduct("draft"));
-ui.duplicate.addEventListener("click", () => {
+ui.saveDraft?.addEventListener("click", () => saveProduct("draft"));
+ui.duplicate?.addEventListener("click", () => {
   activeDocumentId = "";
   ui.form.elements.documentId.value = "";
   ui.form.elements.name.value = `${ui.form.elements.name.value} copia`;
@@ -1137,8 +1170,8 @@ ui.duplicate.addEventListener("click", () => {
   ui.form.querySelector('[type="submit"]').textContent = "Guardar copia";
   ui.editorMode.textContent = "Duplicando producto";
 });
-ui.removeProduct.addEventListener("click", removeCurrentProduct);
-ui.logout.addEventListener("click", async () => {
+ui.removeProduct?.addEventListener("click", removeCurrentProduct);
+ui.logout?.addEventListener("click", async () => {
   if (auth) await signOut(auth);
   location.href = "login.html";
 });
@@ -1246,23 +1279,7 @@ async function fixCategories() {
   }
 }
 
-if (!firebaseConfigured) {
-  ui.loading.hidden = true;
-  ui.denied.hidden = false;
-  ui.denied.querySelector("p").textContent = "Falta completar la configuración pública de Firebase.";
-} else {
-  accessWatchdog = window.setTimeout(() => {
-    showAccessError("Firebase no respondió al verificar tu sesión. Actualizá la página e intentá nuevamente.");
-  }, 15000);
-
-  onAuthStateChanged(auth, (user) => {
-    if (accessWatchdog) clearTimeout(accessWatchdog);
-    initialize(user).catch((error) => {
-      console.error("No se pudo inicializar el panel administrador:", error);
-      showAccessError(error.message || "No pudimos abrir el panel. Actualizá la página e intentá nuevamente.");
-    });
-  });
-
+if (firebaseConfigured) {
   document.querySelector("#check-categories")?.addEventListener("click", checkCategories);
   document.querySelector("#fix-categories")?.addEventListener("click", fixCategories);
 }
