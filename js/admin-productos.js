@@ -8,6 +8,7 @@ import {
   deleteDoc,
   doc,
   getDoc,
+  getDocFromServer,
   getDocs,
   getFirestore,
   orderBy,
@@ -91,6 +92,24 @@ let removedStoragePaths = [];
 let activeDocumentId = "";
 let instagramFeedPosts = [];
 let instagramSyncStatus = null;
+let accessWatchdog = null;
+
+function showAccessError(message) {
+  if (accessWatchdog) clearTimeout(accessWatchdog);
+  ui.loading.hidden = true;
+  ui.content.hidden = true;
+  ui.denied.hidden = false;
+  ui.denied.querySelector("h1").textContent = "No pudimos verificar el acceso";
+  ui.denied.querySelector("p").textContent = message;
+}
+
+function withTimeout(task, milliseconds, message) {
+  let timeoutId;
+  const timeout = new Promise((_, reject) => {
+    timeoutId = window.setTimeout(() => reject(new Error(message)), milliseconds);
+  });
+  return Promise.race([task, timeout]).finally(() => window.clearTimeout(timeoutId));
+}
 
 async function checkMercadoPagoConnection() {
   if (!ui.mercadoPagoState || !ui.mercadoPagoCopy) return;
@@ -1130,7 +1149,13 @@ async function initialize(user) {
     return;
   }
   ui.uid.value = user.uid;
-  const admin = await getDoc(doc(db, "admins", user.uid));
+  // La validación de permisos debe responder desde Firestore y no quedar
+  // esperando indefinidamente si hay una conexión interrumpida.
+  const admin = await withTimeout(
+    getDocFromServer(doc(db, "admins", user.uid)),
+    12000,
+    "La conexión con Firebase tardó demasiado. Revisá tu conexión y actualizá la página."
+  );
   ui.loading.hidden = true;
   if (!admin.exists()) {
     ui.denied.hidden = false;
@@ -1226,12 +1251,15 @@ if (!firebaseConfigured) {
   ui.denied.hidden = false;
   ui.denied.querySelector("p").textContent = "Falta completar la configuración pública de Firebase.";
 } else {
+  accessWatchdog = window.setTimeout(() => {
+    showAccessError("Firebase no respondió al verificar tu sesión. Actualizá la página e intentá nuevamente.");
+  }, 15000);
+
   onAuthStateChanged(auth, (user) => {
+    if (accessWatchdog) clearTimeout(accessWatchdog);
     initialize(user).catch((error) => {
-      ui.loading.hidden = true;
-      ui.denied.hidden = false;
-      ui.denied.querySelector("p").textContent =
-        error.message || "No pudimos abrir el panel.";
+      console.error("No se pudo inicializar el panel administrador:", error);
+      showAccessError(error.message || "No pudimos abrir el panel. Actualizá la página e intentá nuevamente.");
     });
   });
 
