@@ -298,6 +298,21 @@ module.exports = async function handler(req, res) {
         dni: cleanText(customer.dni, 20)
       },
       address,
+      shipping: {
+        type: cleanText(delivery.method, 40),
+        province: cleanText(address.province, 80),
+        city: cleanText(address.city, 100),
+        postalCode: cleanText(address.postalCode, 20),
+        street: cleanText(address.street, 120),
+        number: cleanText(address.streetNumber, 20),
+        floorApartment: cleanText(address.apartment, 80),
+        reference: cleanText(address.references, 500),
+        branch: {
+          name: cleanText(address.agencyName, 120),
+          address: cleanText(address.agencyAddress, 200)
+        },
+        meetingPoint: cleanText(delivery.meetingPoint || address.meetingPoint, 120)
+      },
       delivery,
       items: items.map(({ documentId, title, quantity, unit_price, size, color, variantKey }) => ({
         documentId, title, quantity, unitPrice: unit_price, size, color, variantKey
@@ -310,6 +325,36 @@ module.exports = async function handler(req, res) {
       paymentStatus: "pending",
       status: "pending_payment",
       stockCommitted: false,
+      createdAt: existingOrder.exists ? existingOrder.data().createdAt || now : now,
+      updatedAt: now
+    }, { merge: true });
+    // El resumen permite que la clienta consulte el pedido desde Mi cuenta
+    // incluso antes de que Mercado Pago confirme el pago por webhook.
+    await db.collection("users").doc(authUser.uid).collection("orders").doc(orderNumber).set({
+      orderNumber,
+      status: "pending_payment",
+      paymentStatus: "pending",
+      paymentMethod: "mercadopago",
+      customer: {
+        fullName: cleanText(customer.fullName, 160),
+        email: cleanText(customer.email || authUser.email, 160),
+        phone: cleanText(customer.phone, 40)
+      },
+      shipping: {
+        type: cleanText(delivery.method, 40),
+        province: cleanText(address.province, 80),
+        city: cleanText(address.city, 100),
+        postalCode: cleanText(address.postalCode, 20),
+        branch: {
+          name: cleanText(address.agencyName, 120),
+          address: cleanText(address.agencyAddress, 200)
+        }
+      },
+      items: items.map(({ documentId, title, quantity, unit_price, size, color, variantKey }) => ({
+        documentId, title, quantity, unitPrice: unit_price, size, color, variantKey
+      })),
+      total: subtotalWithCommission + shippingCost,
+      currency: "ARS",
       createdAt: existingOrder.exists ? existingOrder.data().createdAt || now : now,
       updatedAt: now
     }, { merge: true });
