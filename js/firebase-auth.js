@@ -26,10 +26,14 @@ const authPage = document.querySelector("[data-auth-page]")?.dataset.authPage ||
 let auth = null;
 let db = null;
 const SESSION_ACTIVITY_KEY = "arvel-session-last-activity";
-const SESSION_TIMEOUT_MS = 24 * 60 * 60 * 1000;
-const SESSION_WARNING_MS = 30 * 60 * 1000;
+// La sesión se cierra después de 2 horas reales sin actividad.
+// La marca queda en localStorage para poder comprobarla incluso si el
+// navegador estuvo cerrado durante varios días.
+const SESSION_TIMEOUT_MS = 2 * 60 * 60 * 1000;
+const SESSION_WARNING_MS = 2 * 60 * 1000;
 let sessionTimer = 0;
 let sessionWarningShown = false;
+let activityListenersBound = false;
 
 function rememberSessionActivity() {
   if (!auth?.currentUser) return;
@@ -44,19 +48,50 @@ function stopSessionTimeout() {
   localStorage.removeItem(SESSION_ACTIVITY_KEY);
 }
 
-function startSessionTimeout() {
+async function expireInactiveSession() {
+  if (!auth?.currentUser) return false;
+  const storedActivity = Number(localStorage.getItem(SESSION_ACTIVITY_KEY));
+  if (!storedActivity || Date.now() - storedActivity < SESSION_TIMEOUT_MS) return false;
+
+  stopSessionTimeout();
+  await signOut(auth);
+  const currentPage = location.pathname.split("/").pop() || "";
+  const next = /^(cuenta|checkout|admin-productos)\.html$/i.test(currentPage)
+    ? `?next=${encodeURIComponent(currentPage)}`
+    : "";
+  location.replace(`login.html${next}&session=expired`.replace("?&", "?"));
+  return true;
+}
+
+async function startSessionTimeout() {
   if (sessionTimer) return;
-  rememberSessionActivity();
+
+  // Es fundamental comprobar primero la actividad guardada. Si la sesión
+  // venció mientras la web estaba cerrada, no renovarla al cargar la página.
+  if (await expireInactiveSession()) return;
+  if (!localStorage.getItem(SESSION_ACTIVITY_KEY)) rememberSessionActivity();
 
   let lastRecordedActivity = 0;
-  ["pointerdown", "keydown", "touchstart", "scroll"].forEach((eventName) => {
-    window.addEventListener(eventName, () => {
-      const now = Date.now();
-      if (now - lastRecordedActivity < 15000) return;
-      lastRecordedActivity = now;
-      rememberSessionActivity();
-    }, { passive: true });
-  });
+  if (!activityListenersBound) {
+    activityListenersBound = true;
+    ["pointerdown", "keydown", "touchstart", "scroll"].forEach((eventName) => {
+      window.addEventListener(eventName, () => {
+        const now = Date.now();
+        if (now - lastRecordedActivity < 15000) return;
+        lastRecordedActivity = now;
+        rememberSessionActivity();
+      }, { passive: true });
+    });
+
+    // Los temporizadores pueden pausarse en celulares. Al volver a la app,
+    // comprobamos inmediatamente si la sesión ya expiró.
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) expireInactiveSession().catch(console.error);
+    });
+    window.addEventListener("focus", () => {
+      expireInactiveSession().catch(console.error);
+    });
+  }
 
   sessionTimer = window.setInterval(async () => {
     if (!auth?.currentUser) return;
@@ -64,12 +99,7 @@ function startSessionTimeout() {
     const remaining = SESSION_TIMEOUT_MS - (Date.now() - lastActivity);
 
     if (remaining <= 0) {
-      stopSessionTimeout();
-      await signOut(auth);
-      const next = /^(cuenta|checkout)\.html$/i.test(location.pathname.split("/").pop() || "")
-        ? `?next=${encodeURIComponent(location.pathname.split("/").pop())}`
-        : "";
-      location.replace(`login.html${next}&session=expired`.replace("?&", "?"));
+      await expireInactiveSession();
       return;
     }
 
@@ -367,7 +397,9 @@ async function initializeAuthentication() {
     renderAccount(user);
     updateAdminAccess(user);
 
-    if (user) startSessionTimeout();
+    if (user) startSessionTimeout().catch((error) => {
+      console.error("No pudimos controlar el vencimiento de la sesión", error);
+    });
     else stopSessionTimeout();
 
     if (authPage === "login" && user) {

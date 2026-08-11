@@ -3651,6 +3651,38 @@ body.is-locked {
   cursor: not-allowed;
 }
 
+.mercadopago-installments {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding: var(--space-4);
+  border: var(--border-thin);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+}
+
+.mercadopago-installments[hidden] {
+  display: none;
+}
+
+.mercadopago-installments > label {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-2) 0;
+  cursor: pointer;
+}
+
+.mercadopago-installments input {
+  accent-color: var(--color-pink);
+}
+
+.mercadopago-installments label small {
+  color: var(--color-text-muted);
+  font-weight: 700;
+}
+
 .meeting-point-selector {
   display: grid;
   gap: var(--space-2);

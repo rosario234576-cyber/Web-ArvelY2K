@@ -316,8 +316,9 @@
 
   function createProductCard(product) {
     const [badgeLabel, badgeClass] = getProductBadge(product);
+    const imageFallback = "assets/images/moodboard/arvel-editorial-hero.png";
     const image = escapeHtml(
-      product.images[0] || "assets/images/moodboard/arvel-editorial-hero.png"
+      product.images[0] || imageFallback
     );
     const productKey = String(product.documentId || product.id);
     const productId = encodeURIComponent(productKey);
@@ -346,6 +347,7 @@
               width="1080"
               height="1440"
               loading="lazy"
+              onerror="this.onerror=null;this.src='${imageFallback}';this.classList.add('is-image-fallback');"
             >
           </a>
           <div class="product-card__badges">
@@ -439,7 +441,7 @@
 
   renderGlobalComponents();
   if (!document.querySelector("[data-auth-page]")) {
-    import("./firebase-auth.js?v=20260804-session-timeout").catch(() => {
+    import("./firebase-auth.js?v=20260810-session-expiry-fix").catch(() => {
       // La web pública sigue funcionando aunque Firebase todavía no esté configurado.
     });
   }

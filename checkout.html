@@ -285,6 +285,18 @@
                     <input type="radio" name="payment" value="transferencia" data-label="Transferencia o Depósito" checked required>
                     <span><strong>Transferencia bancaria o Depósito</strong><small>Pagá por transferencia o depósito. Al confirmar verás el alias y podrás enviar el comprobante por WhatsApp. ↗</small></span>
                   </label>
+                  <label class="checkout-choice" id="mercadopago-payment-option" hidden>
+                    <input type="radio" name="payment" value="mercadopago" data-label="Mercado Pago">
+                    <span><strong>Mercado Pago</strong><small>Pagá con dinero disponible o tarjeta. Podrás elegir hasta 3 cuotas; el importe final se calcula antes de confirmar el pago.</small></span>
+                  </label>
+                </div>
+                <div class="mercadopago-installments" id="mercadopago-installments" hidden aria-live="polite">
+                  <strong>Elegí cómo querés pagar</strong>
+                  <label><input type="radio" name="installments" value="dinero" checked> Dinero disponible en Mercado Pago <small id="installments-dinero-price"></small></label>
+                  <label><input type="radio" name="installments" value="1"> Tarjeta en 1 pago <small id="installments-1-price"></small></label>
+                  <label><input type="radio" name="installments" value="2"> Tarjeta en 2 cuotas <small id="installments-2-price"></small></label>
+                  <label><input type="radio" name="installments" value="3"> Tarjeta en 3 cuotas <small id="installments-3-price"></small></label>
+                  <small class="field-help">El total con tarjeta incluye el costo informado por Mercado Pago para que Arvel reciba el valor publicado por transferencia. Mercado Pago confirma los medios disponibles antes del pago.</small>
                 </div>
                 <p class="field-error" id="payment-error"></p>
               </fieldset>
@@ -388,9 +400,9 @@
     <script src="js/components.js?v=20260804-mp-conditional"></script>
     <script src="js/main.js?v=20260804-cart-variant-fix"></script>
     <script src="js/transfer-config.js?v=20260803-payment2"></script>
-    <script src="js/payment-config.js?v=20260804-mp-delivery-fix"></script>
+    <script src="js/payment-config.js?v=20260810-mp-robusto"></script>
     <script src="js/shipping.js?v=20260803-ca1"></script>
-    <script src="js/checkout.js?v=20260805-mp-precios-sin-comision"></script>
+    <script src="js/checkout.js?v=20260810-mp-robusto"></script>
     <script src="js/chatbot.js"></script>
     <script src="js/favoritos.js"></script>
     <script src="js/analytics.js"></script>

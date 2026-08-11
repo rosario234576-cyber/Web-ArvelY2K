@@ -5,6 +5,7 @@ import {
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 import {
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -15,8 +16,10 @@ import {
   setDoc
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import {
+  deleteObject,
   getDownloadURL,
   getStorage,
+  listAll,
   ref,
   uploadBytesResumable
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-storage.js";
@@ -55,6 +58,7 @@ const ui = {
   preview: document.querySelector("#image-preview"),
   saveDraft: document.querySelector("#save-draft"),
   duplicate: document.querySelector("#duplicate-current"),
+  removeProduct: document.querySelector("#remove-current"),
   editorMode: document.querySelector("#editor-mode"),
   editorTitle: document.querySelector("#editor-title"),
   tabs: document.querySelector(".admin-tabs"),
@@ -80,10 +84,13 @@ const ui = {
 
 let products = [];
 let existingImages = [];
+let existingImageRefs = [];
 let selectedImages = [];
 let previewObjectUrls = [];
+let removedStoragePaths = [];
 let activeDocumentId = "";
 let instagramFeedPosts = [];
+let instagramSyncStatus = null;
 
 async function checkMercadoPagoConnection() {
   if (!ui.mercadoPagoState || !ui.mercadoPagoCopy) return;
@@ -195,7 +202,18 @@ async function importInstagramProduct(mediaId, requestedStatus = "draft") {
   const documentId = `instagram-${slugify(analysis.name) || "producto"}-${String(post.id).slice(-8)}`;
   const sku = `IG-${String(post.id).slice(-10)}`.toUpperCase();
   const stock = analysis.sold ? 0 : 1;
-  await setDoc(doc(db, "products", documentId), {
+  let importedImage = null;
+  try {
+    importedImage = await copyInstagramImageToStorage(post.image, documentId, post.id);
+  } catch (error) {
+    console.warn("No se pudo copiar la imagen de Instagram a Firebase Storage.", error);
+    if (status === "published") {
+      throw new Error("No pudimos guardar la foto en Storage. RevisÃ¡ Firebase Storage e intentÃ¡ publicar nuevamente.");
+    }
+  }
+
+  try {
+    await setDoc(doc(db, "products", documentId), {
     id: Date.now(), name: analysis.name, slug: slugify(analysis.name), sku,
     category: analysis.category, collection: "Instagram", price: analysis.price,
     oldPrice: null, condition: "Seleccionada", status,
@@ -207,8 +225,18 @@ async function importInstagramProduct(mediaId, requestedStatus = "draft") {
     stock, soldOut: analysis.sold, archived: false, discount: 0, featured: status === "published", uniquePiece: true,
     tags: ["instagram", analysis.sold ? "vendido" : "revisar"], source: "instagram",
     instagramMediaId: post.id, instagramPermalink: post.permalink, instagramTimestamp: post.timestamp || "",
-    images: post.image ? [post.image] : [], createdAt: serverTimestamp(), updatedAt: serverTimestamp()
-  }, { merge: false });
+    // Nunca persistimos una URL temporal de Instagram. Al importar se copia al
+    // bucket products/<id>/ para que siga existiendo al recargar o días después.
+    images: importedImage ? [importedImage.url] : [],
+    imageRefs: importedImage ? [importedImage] : [],
+    createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+    }, { merge: false });
+  } catch (error) {
+    if (importedImage?.path) {
+      await deleteObject(ref(storage, importedImage.path)).catch(() => {});
+    }
+    throw error;
+  }
   await loadProducts();
   renderInstagramFeed();
   ui.instagramSyncState.textContent = status === "published"
@@ -271,16 +299,63 @@ function updatePriceFieldState() {
   }
 }
 
-function renderImages() {
-  existingImages = ui.imageUrls.value
+function isTemporaryImageUrl(url) {
+  return /^(blob:|data:)/i.test(String(url || "").trim());
+}
+
+function normalizeImageReference(image) {
+  if (typeof image === "string") {
+    const url = image.trim();
+    return { url: isTemporaryImageUrl(url) ? "" : url, path: "", name: "" };
+  }
+  if (!image || typeof image !== "object") return { url: "", path: "", name: "" };
+  const url = String(image.url || image.downloadURL || "").trim();
+  return {
+    url: isTemporaryImageUrl(url) ? "" : url,
+    path: String(image.path || "").trim(),
+    name: String(image.name || "").trim()
+  };
+}
+
+function setExistingImageReferences(images) {
+  existingImageRefs = (Array.isArray(images) ? images : [])
+    .map(normalizeImageReference)
+    // Los productos antiguos pueden tener únicamente el path de Storage.
+    // No se descarta al editar: sigue siendo una referencia persistente.
+    .filter((image) => image.url || image.path);
+  existingImages = existingImageRefs.map((image) => image.url);
+  ui.imageUrls.value = existingImages.join("\n");
+}
+
+function syncImageReferencesFromTextarea() {
+  const enteredUrls = ui.imageUrls.value
     .split(/\r?\n/)
     .map((url) => url.trim())
     .filter(Boolean);
+  const ignoredTemporaryUrls = enteredUrls.filter(isTemporaryImageUrl);
+  const urls = enteredUrls.filter((url) => !isTemporaryImageUrl(url));
+  if (ignoredTemporaryUrls.length) {
+    ui.error.textContent = "Las URLs temporales no se pueden guardar. Para una foto nueva usá el selector de archivos.";
+    ui.imageUrls.value = urls.join("\n");
+  }
+  const refsByUrl = new Map(existingImageRefs.map((image) => [image.url, image]));
+  existingImageRefs = urls.map((url) => refsByUrl.get(url) || { url, path: "", name: "" });
+  existingImages = urls;
+}
+
+function productImageUrls(product) {
+  const refs = Array.isArray(product?.imageRefs) ? product.imageRefs : [];
+  const refUrls = refs.map(normalizeImageReference).map((image) => image.url).filter(Boolean);
+  return refUrls.length ? refUrls : (Array.isArray(product?.images) ? product.images.filter(Boolean) : []);
+}
+
+function renderImages() {
+  syncImageReferencesFromTextarea();
   previewObjectUrls.forEach((url) => URL.revokeObjectURL(url));
   previewObjectUrls = selectedImages.map((file) => URL.createObjectURL(file));
   const savedMarkup = existingImages.map((url, index) => `
     <figure draggable="true" data-saved-image-index="${index}" class="image-preview-item">
-      <img src="${escapeHtml(url)}" alt="">
+      <img src="${escapeHtml(url)}" alt="" onerror="this.onerror=null;this.src='assets/logo/IsoNegro.png';this.classList.add('is-image-fallback');">
       <span>Guardada</span>
       <button type="button" data-saved-image-index="${index}" aria-label="Quitar foto">×</button>
     </figure>
@@ -331,7 +406,7 @@ function setupDragAndDrop() {
 
 function syncImagesAfterDrag() {
   const figures = ui.preview.querySelectorAll("figure");
-  const newSavedImages = [];
+  const newSavedImageRefs = [];
   const newSelectedImages = [];
 
   figures.forEach((fig) => {
@@ -339,13 +414,14 @@ function syncImagesAfterDrag() {
     const pendingIndex = fig.getAttribute("data-pending-image-index");
 
     if (savedIndex !== null) {
-      newSavedImages.push(existingImages[parseInt(savedIndex)]);
+      newSavedImageRefs.push(existingImageRefs[parseInt(savedIndex)]);
     } else if (pendingIndex !== null) {
       newSelectedImages.push(selectedImages[parseInt(pendingIndex)]);
     }
   });
 
-  existingImages = newSavedImages;
+  existingImageRefs = newSavedImageRefs;
+  existingImages = existingImageRefs.map((image) => image.url);
   selectedImages = newSelectedImages;
   ui.imageUrls.value = existingImages.join("\n");
   previewObjectUrls.forEach((url) => URL.revokeObjectURL(url));
@@ -361,9 +437,39 @@ function validateSelectedImages(files) {
   return "";
 }
 
+function extensionForImage(contentType, sourceUrl = "") {
+  const byType = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp"
+  };
+  if (byType[contentType]) return byType[contentType];
+  const fromUrl = String(sourceUrl).split("?")[0].split(".").pop()?.toLowerCase();
+  return ["jpg", "jpeg", "png", "webp"].includes(fromUrl) ? fromUrl : "jpg";
+}
+
+async function copyInstagramImageToStorage(sourceUrl, documentId, mediaId) {
+  if (!storage || !sourceUrl) return null;
+  const response = await fetch(sourceUrl, { cache: "no-store" });
+  if (!response.ok) throw new Error(`La imagen de Instagram devolviÃ³ HTTP ${response.status}.`);
+  const blob = await response.blob();
+  const contentType = String(blob.type || response.headers.get("content-type") || "").split(";")[0].toLowerCase();
+  if (!contentType.startsWith("image/")) throw new Error("La publicaciÃ³n no contiene una imagen compatible.");
+  if (!blob.size || blob.size > 8 * 1024 * 1024) throw new Error("La imagen supera el mÃ¡ximo de 8 MB para Storage.");
+  const fileName = `instagram-${slugify(mediaId) || crypto.randomUUID()}.${extensionForImage(contentType, sourceUrl)}`;
+  const storageReference = ref(storage, `products/${documentId}/${fileName}`);
+  const task = uploadBytesResumable(storageReference, blob, { contentType });
+  await new Promise((resolve, reject) => task.on("state_changed", undefined, reject, resolve));
+  return {
+    path: storageReference.fullPath,
+    url: await getDownloadURL(storageReference),
+    name: fileName
+  };
+}
+
 function uploadFile(documentId, file, index, total) {
   const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
-  const fileName = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${extension}`;
+  const fileName = `image-${String(index + 1).padStart(2, "0")}-${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${extension}`;
   const storageReference = ref(storage, `products/${documentId}/${fileName}`);
   const task = uploadBytesResumable(storageReference, file, { contentType: file.type });
   return new Promise((resolve, reject) => {
@@ -373,7 +479,11 @@ function uploadFile(documentId, file, index, total) {
       ui.uploadBar.value = percent;
       ui.uploadPercent.textContent = `${percent}%`;
       ui.uploadLabel.textContent = `Subiendo ${index + 1} de ${total}: ${file.name}`;
-    }, reject, async () => resolve(await getDownloadURL(task.snapshot.ref)));
+    }, reject, async () => resolve({
+      path: task.snapshot.ref.fullPath,
+      url: await getDownloadURL(task.snapshot.ref),
+      name: file.name
+    }));
   });
 }
 
@@ -399,13 +509,16 @@ function resetForm() {
   ui.variants.innerHTML = "";
   addVariantRow();
   existingImages = [];
+  existingImageRefs = [];
   selectedImages = [];
+  removedStoragePaths = [];
   ui.imageFiles.value = "";
   ui.uploadProgress.hidden = true;
   ui.imageUrls.value = "";
   renderImages();
   ui.error.textContent = "";
   ui.duplicate.hidden = true;
+  ui.removeProduct.hidden = true;
   ui.saveDraft.hidden = false;
   ui.form.querySelector('[type="submit"]').textContent = "Guardar producto";
   ui.editorMode.textContent = "Nuevo producto";
@@ -459,12 +572,12 @@ function fillForm(product) {
   const variants = productVariants(product);
   (variants.length ? variants : [{}]).forEach(addVariantRow);
   updatePriceFieldState();
-  existingImages = [...(product.images || [])];
+  setExistingImageReferences(product.imageRefs?.length ? product.imageRefs : (product.images || []));
   selectedImages = [];
   ui.imageFiles.value = "";
-  ui.imageUrls.value = existingImages.join("\n");
   renderImages();
   ui.duplicate.hidden = false;
+  ui.removeProduct.hidden = false;
   ui.saveDraft.hidden = product.status === "published";
   ui.form.querySelector('[type="submit"]').textContent = "Guardar cambios";
   ui.editorMode.textContent = "Editando producto";
@@ -480,7 +593,7 @@ function renderList() {
   );
   ui.list.innerHTML = visible.length ? visible.map((product) => `
     <button class="admin-product-item" type="button" data-product-id="${escapeHtml(product.documentId)}">
-      <img src="${escapeHtml(product.images?.[0] || placeholder)}" alt="">
+      <img src="${escapeHtml(productImageUrls(product)[0] || placeholder)}" alt="">
       <span><strong>${escapeHtml(product.name)}</strong><small>${escapeHtml(product.sku)}</small></span>
       <span class="admin-status admin-status--${escapeHtml(product.status || "draft")}">${escapeHtml(product.status || "draft")}</span>
     </button>
@@ -592,7 +705,7 @@ function duplicateGroups() {
 
 function managementItem(product, actions = "") {
   return `<article class="admin-management-item">
-    <img src="${escapeHtml(product.images?.[0] || placeholder)}" alt="">
+    <img src="${escapeHtml(productImageUrls(product)[0] || placeholder)}" alt="">
     <div><strong>${escapeHtml(product.name)}</strong><small>${escapeHtml(product.sku || "Sin SKU")} · ${escapeHtml(product.status || "draft")}</small></div>
     <div class="admin-management-actions">${actions}</div>
   </article>`;
@@ -672,27 +785,97 @@ async function changeStockState(documentId, action) {
 }
 
 async function checkInstagramConnection() {
-  try {
-    const response = await fetch(`data/instagram-feed.json?t=${Date.now()}`, { headers: { Accept: "application/json" } });
-    const result = await response.json();
-    const connected = response.ok && result.connected;
-    ui.instagramDot.classList.toggle("is-connected", connected);
-    ui.instagramTitle.textContent = connected ? "Instagram conectado con GitHub" : "Falta configurar GitHub Actions";
-    ui.instagramCopy.textContent = connected
-      ? `Última actualización: ${result.updatedAt ? new Date(result.updatedAt).toLocaleString("es-AR") : "sin fecha"} · @${result.username || "arvel.customsy2k"}.`
-      : "Agregá el token y el ID de Instagram en GitHub Secrets y ejecutá la acción Sincronizar Instagram.";
-    ui.instagramSync.textContent = "Cargar última sincronización";
-    ui.instagramSync.dataset.action = "sync";
-    ui.instagramSync.disabled = false;
-    instagramFeedPosts = Array.isArray(result.posts) ? result.posts : [];
-    renderInstagramFeed();
-  } catch {
-    ui.instagramTitle.textContent = "Falta publicar el archivo de Instagram";
-    ui.instagramCopy.textContent = "Ejecutá la acción Sincronizar Instagram desde GitHub y volvé a cargar esta página.";
-    ui.instagramSync.textContent = "Reintentar";
-    ui.instagramSync.dataset.action = "sync";
-    ui.instagramSync.disabled = false;
+  const [feedResult, statusResult] = await Promise.allSettled([
+    fetchInstagramJson("data/instagram-feed.json"),
+    fetchInstagramJson("data/instagram-sync-status.json")
+  ]);
+  const feed = feedResult.status === "fulfilled" ? feedResult.value : null;
+  const status = statusResult.status === "fulfilled" ? statusResult.value : {
+    state: feed?.connected ? "warning" : "error",
+    error: { message: feed?.connected ? "No se pudo leer el estado de la sincronización." : "Todavía no existe una sincronización válida." }
+  };
+  renderInstagramConnection(feed, status);
+}
+
+async function fetchInstagramJson(path) {
+  const response = await fetch(`${path}?t=${Date.now()}`, {
+    cache: "no-store",
+    headers: { Accept: "application/json" }
+  });
+  if (!response.ok) throw new Error(`No se pudo leer ${path} (HTTP ${response.status}).`);
+  return response.json();
+}
+
+function formatInstagramDate(value) {
+  if (!value) return "sin fecha";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "sin fecha" : date.toLocaleString("es-AR");
+}
+
+function renderInstagramConnection(feed, status) {
+  const hasCache = Boolean(feed?.connected && Array.isArray(feed.posts));
+  const state = status?.state || (hasCache ? "ok" : "not_configured");
+  const reconnectRequired = state === "reconnect_required" || status?.error?.reconnectRequired;
+  const temporaryError = state === "error";
+  const warning = state === "warning";
+
+  ui.instagramDot.classList.toggle("is-connected", hasCache && !reconnectRequired && !temporaryError);
+  ui.instagramDot.classList.toggle("is-warning", warning || (hasCache && temporaryError));
+  ui.instagramDot.classList.toggle("is-error", reconnectRequired || (!hasCache && temporaryError));
+
+  if (reconnectRequired) ui.instagramTitle.textContent = "Instagram necesita reconexión";
+  else if (temporaryError && hasCache) ui.instagramTitle.textContent = "Instagram temporalmente sin respuesta";
+  else if (warning) ui.instagramTitle.textContent = "Instagram conectado · revisar token";
+  else if (hasCache) ui.instagramTitle.textContent = "Instagram conectado con GitHub";
+  else ui.instagramTitle.textContent = "Falta configurar GitHub Actions";
+
+  const lastSuccess = status?.lastSuccessAt || feed?.updatedAt;
+  const account = feed?.username ? ` · @${feed.username}` : "";
+  if (reconnectRequired) {
+    ui.instagramCopy.textContent = `${status?.error?.message || "La autorización venció o fue revocada."} Último contenido válido: ${formatInstagramDate(lastSuccess)}.`;
+  } else if (temporaryError) {
+    ui.instagramCopy.textContent = `${status?.error?.message || "Meta no respondió correctamente."} Se conserva la última sincronización de ${formatInstagramDate(lastSuccess)}${account}.`;
+  } else if (warning) {
+    ui.instagramCopy.textContent = `${status?.token?.warning || "La conexión requiere atención."} Última actualización: ${formatInstagramDate(lastSuccess)}${account}.`;
+  } else if (hasCache) {
+    ui.instagramCopy.textContent = `Última actualización: ${formatInstagramDate(lastSuccess)}${account}.`;
+  } else {
+    ui.instagramCopy.textContent = "Configurá los secretos de Instagram en GitHub y ejecutá el workflow Sincronizar Instagram.";
   }
+
+  ui.instagramSync.textContent = hasCache ? "Recargar estado" : "Reintentar lectura";
+  ui.instagramSync.disabled = false;
+  instagramFeedPosts = Array.isArray(feed?.posts) ? feed.posts : [];
+  instagramSyncStatus = status || null;
+  renderInstagramFeed();
+}
+
+function isTemporaryInstagramImage(url) {
+  return /(?:cdninstagram\.com|fbcdn\.net|graph\.facebook\.com|graph\.instagram\.com)/i.test(String(url || ""));
+}
+
+async function repairImportedInstagramImages() {
+  const postsById = new Map(instagramFeedPosts.map((post) => [String(post.id), post]));
+  const repairs = [];
+  for (const product of products) {
+    if (!product.instagramMediaId) continue;
+    const post = postsById.get(String(product.instagramMediaId));
+    const cachedImage = String(post?.image || "");
+    if (!cachedImage || isTemporaryInstagramImage(cachedImage)) continue;
+    const currentImages = productImageUrls(product);
+    if (currentImages[0] === cachedImage) continue;
+    if (currentImages.length && !isTemporaryInstagramImage(currentImages[0])) continue;
+    const images = [cachedImage, ...currentImages.slice(1).filter((url) => url !== cachedImage && !isTemporaryInstagramImage(url))];
+    repairs.push(setDoc(doc(db, "products", product.documentId), {
+      images,
+      imageRefs: images.map((url) => ({ url, path: "", name: "" })),
+      updatedAt: serverTimestamp()
+    }, { merge: true }));
+  }
+  if (!repairs.length) return 0;
+  await Promise.all(repairs);
+  await loadProducts();
+  return repairs.length;
 }
 
 async function loadSettings() {
@@ -717,6 +900,8 @@ async function saveProduct(statusOverride) {
     return;
   }
   setBusy(true);
+  let uploadedForThisSave = [];
+  let productPersisted = false;
   try {
     const currentId = activeDocumentId || ui.form.elements.documentId.value;
     const documentId = currentId || `${product.slug}-${crypto.randomUUID().slice(0, 8)}`;
@@ -724,24 +909,81 @@ async function saveProduct(statusOverride) {
     product.id = Number(currentProduct?.id) || Date.now();
     renderImages();
     const uploadedImages = await uploadSelectedImages(documentId);
+    uploadedForThisSave = uploadedImages;
     if (uploadedImages.length) {
-      existingImages = [...existingImages, ...uploadedImages];
+      existingImageRefs = [...existingImageRefs, ...uploadedImages];
+      existingImages = existingImageRefs.map((image) => image.url);
       ui.imageUrls.value = existingImages.join("\n");
       selectedImages = [];
       ui.imageFiles.value = "";
       renderImages();
     }
     product.images = [...existingImages];
+    product.imageRefs = existingImageRefs.map((image) => ({
+      url: image.url,
+      path: image.path || "",
+      name: image.name || ""
+    }));
     product.updatedAt = serverTimestamp();
     if (!currentId) product.createdAt = serverTimestamp();
     await setDoc(doc(db, "products", documentId), product, { merge: true });
+    productPersisted = true;
+    const ownPrefix = `products/${documentId}/`;
+    const pendingDeletes = removedStoragePaths
+      .filter((path) => path.startsWith(ownPrefix))
+      .map((path) => deleteObject(ref(storage, path)));
+    if (pendingDeletes.length) {
+      const results = await Promise.allSettled(pendingDeletes);
+      const failures = results.filter((result) => result.status === "rejected");
+      if (failures.length) console.warn("Algunas fotos antiguas no pudieron eliminarse de Storage.", failures);
+    }
+    removedStoragePaths = [];
     setState(product.status === "published" ? "Producto publicado" : "Producto guardado", "success");
     await loadProducts();
     const saved = products.find((item) => item.documentId === documentId);
     if (saved) fillForm(saved);
   } catch (error) {
+    if (!productPersisted && uploadedForThisSave.length) {
+      const cleanup = await Promise.allSettled(
+        uploadedForThisSave.map((image) => deleteObject(ref(storage, image.path)))
+      );
+      if (cleanup.some((result) => result.status === "rejected")) {
+        console.warn("No pudimos limpiar algunas fotos que no llegaron a guardarse en el producto.");
+      }
+    }
     ui.error.textContent = error.message || "No pudimos guardar el producto.";
     setState("Error al guardar", "error");
+  } finally {
+    setBusy(false);
+  }
+}
+
+async function removeCurrentProduct() {
+  const documentId = activeDocumentId || ui.form.elements.documentId.value;
+  if (!documentId) return;
+  const product = products.find((item) => item.documentId === documentId);
+  const confirmed = window.confirm(`¿Eliminar definitivamente ${product?.name || "este producto"} y sus fotografías? Esta acción no se puede deshacer.`);
+  if (!confirmed) return;
+
+  ui.error.textContent = "";
+  setBusy(true);
+  try {
+    // Las nuevas fotos se guardan siempre en esta carpeta. Se elimina la carpeta
+    // antes del documento para no dejar un producto sin imágenes si Storage falla.
+    const folder = ref(storage, `products/${documentId}`);
+    const listing = await listAll(folder);
+    const removals = await Promise.allSettled(listing.items.map((item) => deleteObject(item)));
+    const failures = removals.filter((result) => result.status === "rejected");
+    if (failures.length) throw new Error("No pudimos eliminar todas las fotografías del producto. Intentá nuevamente.");
+
+    await deleteDoc(doc(db, "products", documentId));
+    setState("Producto eliminado", "success");
+    resetForm();
+    await loadProducts();
+  } catch (error) {
+    console.error("removeCurrentProduct", error);
+    ui.error.textContent = error.message || "No pudimos eliminar el producto.";
+    setState("Error al eliminar", "error");
   } finally {
     setBusy(false);
   }
@@ -794,16 +1036,15 @@ ui.settingsForm.addEventListener("submit", async (event) => {
 });
 ui.instagramSync.addEventListener("click", async () => {
   ui.instagramSync.disabled = true;
-  ui.instagramSyncState.textContent = "Cargando la última sincronización de GitHub…";
+  ui.instagramSyncState.textContent = "Consultando el último estado de GitHub…";
   try {
-    const response = await fetch(`data/instagram-feed.json?t=${Date.now()}`, { headers: { Accept: "application/json" } });
-    const result = await response.json();
-    if (!response.ok || !result.connected) throw new Error("GitHub todavía no generó una sincronización válida.");
-    instagramFeedPosts = Array.isArray(result.posts) ? result.posts : [];
-    ui.instagramSyncState.textContent = `${instagramFeedPosts.length} publicaciones · actualización ${result.updatedAt ? new Date(result.updatedAt).toLocaleString("es-AR") : "sin fecha"}`;
-    renderInstagramFeed();
+    await checkInstagramConnection();
+    const repaired = await repairImportedInstagramImages();
+    const suffix = repaired ? ` · ${repaired} producto${repaired === 1 ? "" : "s"} reparado${repaired === 1 ? "" : "s"}` : "";
+    ui.instagramSyncState.textContent = `${instagramFeedPosts.length} publicaciones · última sincronización ${formatInstagramDate(instagramSyncStatus?.lastSuccessAt)}${suffix}`;
   } catch (error) {
-    ui.instagramSyncState.textContent = error.message;
+    console.error("No se pudo recargar Instagram:", error);
+    ui.instagramSyncState.textContent = "No pudimos recargar el estado. El último contenido disponible continúa visible.";
   } finally {
     ui.instagramSync.disabled = false;
   }
@@ -850,7 +1091,11 @@ ui.preview.addEventListener("click", (event) => {
   const button = event.target.closest("[data-saved-image-index], [data-pending-image-index]");
   if (!button) return;
   if (button.dataset.savedImageIndex !== undefined) {
-    existingImages.splice(Number(button.dataset.savedImageIndex), 1);
+    const index = Number(button.dataset.savedImageIndex);
+    const removed = existingImageRefs[index];
+    if (removed?.path) removedStoragePaths.push(removed.path);
+    existingImageRefs.splice(index, 1);
+    existingImages = existingImageRefs.map((image) => image.url);
     ui.imageUrls.value = existingImages.join("\n");
   } else {
     selectedImages.splice(Number(button.dataset.pendingImageIndex), 1);
@@ -873,6 +1118,7 @@ ui.duplicate.addEventListener("click", () => {
   ui.form.querySelector('[type="submit"]').textContent = "Guardar copia";
   ui.editorMode.textContent = "Duplicando producto";
 });
+ui.removeProduct.addEventListener("click", removeCurrentProduct);
 ui.logout.addEventListener("click", async () => {
   if (auth) await signOut(auth);
   location.href = "login.html";
@@ -892,12 +1138,14 @@ async function initialize(user) {
   }
   ui.content.hidden = false;
   resetForm();
-  await Promise.all([
-    loadProducts(),
-    loadSettings(),
-    checkInstagramConnection(),
-    checkMercadoPagoConnection()
-  ]);
+  await loadProducts();
+  await Promise.all([loadSettings(), checkInstagramConnection(), checkMercadoPagoConnection()]);
+  try {
+    const repaired = await repairImportedInstagramImages();
+    if (repaired) ui.instagramSyncState.textContent = `${repaired} imagen${repaired === 1 ? "" : "es"} de productos importados reparada${repaired === 1 ? "" : "s"}.`;
+  } catch (error) {
+    console.error("No se pudieron reparar las imágenes importadas de Instagram:", error);
+  }
 }
 
 async function checkCategories() {

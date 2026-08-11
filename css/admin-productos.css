@@ -92,6 +92,8 @@
   box-shadow: 0 0 0.9rem currentColor;
 }
 .admin-connection-dot.is-connected { background: #42d17b; }
+.admin-connection-dot.is-warning { background: #f2a900; }
+.admin-connection-dot.is-error { background: #ee5a67; }
 
 .admin-pill {
   display: inline-flex;
@@ -303,6 +305,16 @@
 .admin-status--published { background: #dff3e4; color: #17672d !important; }
 .admin-status--draft { background: #fff0c9; color: #725200 !important; }
 .admin-status--hidden { background: #eadfe6; color: #5c4052 !important; }
+
+.button--danger {
+  border-color: #a80d32;
+  color: #a80d32;
+}
+
+.button--danger:hover {
+  background: #a80d32;
+  color: #fff;
+}
 
 .admin-editor {
   padding: clamp(1.15rem, 3vw, 2.25rem);

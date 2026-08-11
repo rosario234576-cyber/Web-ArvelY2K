@@ -1,0 +1,7 @@
+{
+  "name": "arvel-custom-y2k",
+  "private": true,
+  "version": "1.0.0",
+  "engines": { "node": ">=20" },
+  "dependencies": { "firebase-admin": "^13.4.0" }
+}
