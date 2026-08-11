@@ -8,6 +8,7 @@ import {
   deleteDoc,
   doc,
   getDoc,
+  getDocFromServer,
   getDocs,
   getFirestore,
   orderBy,
@@ -91,6 +92,24 @@ let removedStoragePaths = [];
 let activeDocumentId = "";
 let instagramFeedPosts = [];
 let instagramSyncStatus = null;
+let accessWatchdog = null;
+
+function showAccessError(message) {
+  if (accessWatchdog) clearTimeout(accessWatchdog);
+  ui.loading.hidden = true;
+  ui.content.hidden = true;
+  ui.denied.hidden = false;
+  ui.denied.querySelector("h1").textContent = "No pudimos verificar el acceso";
+  ui.denied.querySelector("p").textContent = message;
+}
+
+function withTimeout(task, milliseconds, message) {
+  let timeoutId;
+  const timeout = new Promise((_, reject) => {
+    timeoutId = window.setTimeout(() => reject(new Error(message)), milliseconds);
+  });
+  return Promise.race([task, timeout]).finally(() => window.clearTimeout(timeoutId));
+}
 
 async function checkMercadoPagoConnection() {
   if (!ui.mercadoPagoState || !ui.mercadoPagoCopy) return;
@@ -202,7 +221,18 @@ async function importInstagramProduct(mediaId, requestedStatus = "draft") {
   const documentId = `instagram-${slugify(analysis.name) || "producto"}-${String(post.id).slice(-8)}`;
   const sku = `IG-${String(post.id).slice(-10)}`.toUpperCase();
   const stock = analysis.sold ? 0 : 1;
-  await setDoc(doc(db, "products", documentId), {
+  let importedImage = null;
+  try {
+    importedImage = await copyInstagramImageToStorage(post.image, documentId, post.id);
+  } catch (error) {
+    console.warn("No se pudo copiar la imagen de Instagram a Firebase Storage.", error);
+    if (status === "published") {
+      throw new Error("No pudimos guardar la foto en Storage. RevisÃ¡ Firebase Storage e intentÃ¡ publicar nuevamente.");
+    }
+  }
+
+  try {
+    await setDoc(doc(db, "products", documentId), {
     id: Date.now(), name: analysis.name, slug: slugify(analysis.name), sku,
     category: analysis.category, collection: "Instagram", price: analysis.price,
     oldPrice: null, condition: "Seleccionada", status,
@@ -214,10 +244,18 @@ async function importInstagramProduct(mediaId, requestedStatus = "draft") {
     stock, soldOut: analysis.sold, archived: false, discount: 0, featured: status === "published", uniquePiece: true,
     tags: ["instagram", analysis.sold ? "vendido" : "revisar"], source: "instagram",
     instagramMediaId: post.id, instagramPermalink: post.permalink, instagramTimestamp: post.timestamp || "",
-    images: post.image ? [post.image] : [],
-    imageRefs: post.image ? [{ url: post.image, path: "", name: "instagram" }] : [],
+    // Nunca persistimos una URL temporal de Instagram. Al importar se copia al
+    // bucket products/<id>/ para que siga existiendo al recargar o días después.
+    images: importedImage ? [importedImage.url] : [],
+    imageRefs: importedImage ? [importedImage] : [],
     createdAt: serverTimestamp(), updatedAt: serverTimestamp()
-  }, { merge: false });
+    }, { merge: false });
+  } catch (error) {
+    if (importedImage?.path) {
+      await deleteObject(ref(storage, importedImage.path)).catch(() => {});
+    }
+    throw error;
+  }
   await loadProducts();
   renderInstagramFeed();
   ui.instagramSyncState.textContent = status === "published"
@@ -301,7 +339,9 @@ function normalizeImageReference(image) {
 function setExistingImageReferences(images) {
   existingImageRefs = (Array.isArray(images) ? images : [])
     .map(normalizeImageReference)
-    .filter((image) => image.url);
+    // Los productos antiguos pueden tener únicamente el path de Storage.
+    // No se descarta al editar: sigue siendo una referencia persistente.
+    .filter((image) => image.url || image.path);
   existingImages = existingImageRefs.map((image) => image.url);
   ui.imageUrls.value = existingImages.join("\n");
 }
@@ -414,6 +454,36 @@ function validateSelectedImages(files) {
     if (file.size > 8 * 1024 * 1024) return `${file.name}: supera el máximo de 8 MB.`;
   }
   return "";
+}
+
+function extensionForImage(contentType, sourceUrl = "") {
+  const byType = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp"
+  };
+  if (byType[contentType]) return byType[contentType];
+  const fromUrl = String(sourceUrl).split("?")[0].split(".").pop()?.toLowerCase();
+  return ["jpg", "jpeg", "png", "webp"].includes(fromUrl) ? fromUrl : "jpg";
+}
+
+async function copyInstagramImageToStorage(sourceUrl, documentId, mediaId) {
+  if (!storage || !sourceUrl) return null;
+  const response = await fetch(sourceUrl, { cache: "no-store" });
+  if (!response.ok) throw new Error(`La imagen de Instagram devolviÃ³ HTTP ${response.status}.`);
+  const blob = await response.blob();
+  const contentType = String(blob.type || response.headers.get("content-type") || "").split(";")[0].toLowerCase();
+  if (!contentType.startsWith("image/")) throw new Error("La publicaciÃ³n no contiene una imagen compatible.");
+  if (!blob.size || blob.size > 8 * 1024 * 1024) throw new Error("La imagen supera el mÃ¡ximo de 8 MB para Storage.");
+  const fileName = `instagram-${slugify(mediaId) || crypto.randomUUID()}.${extensionForImage(contentType, sourceUrl)}`;
+  const storageReference = ref(storage, `products/${documentId}/${fileName}`);
+  const task = uploadBytesResumable(storageReference, blob, { contentType });
+  await new Promise((resolve, reject) => task.on("state_changed", undefined, reject, resolve));
+  return {
+    path: storageReference.fullPath,
+    url: await getDownloadURL(storageReference),
+    name: fileName
+  };
 }
 
 function uploadFile(documentId, file, index, total) {
@@ -1079,7 +1149,13 @@ async function initialize(user) {
     return;
   }
   ui.uid.value = user.uid;
-  const admin = await getDoc(doc(db, "admins", user.uid));
+  // La validación de permisos debe responder desde Firestore y no quedar
+  // esperando indefinidamente si hay una conexión interrumpida.
+  const admin = await withTimeout(
+    getDocFromServer(doc(db, "admins", user.uid)),
+    12000,
+    "La conexión con Firebase tardó demasiado. Revisá tu conexión y actualizá la página."
+  );
   ui.loading.hidden = true;
   if (!admin.exists()) {
     ui.denied.hidden = false;
@@ -1175,12 +1251,15 @@ if (!firebaseConfigured) {
   ui.denied.hidden = false;
   ui.denied.querySelector("p").textContent = "Falta completar la configuración pública de Firebase.";
 } else {
+  accessWatchdog = window.setTimeout(() => {
+    showAccessError("Firebase no respondió al verificar tu sesión. Actualizá la página e intentá nuevamente.");
+  }, 15000);
+
   onAuthStateChanged(auth, (user) => {
+    if (accessWatchdog) clearTimeout(accessWatchdog);
     initialize(user).catch((error) => {
-      ui.loading.hidden = true;
-      ui.denied.hidden = false;
-      ui.denied.querySelector("p").textContent =
-        error.message || "No pudimos abrir el panel.";
+      console.error("No se pudo inicializar el panel administrador:", error);
+      showAccessError(error.message || "No pudimos abrir el panel. Actualizá la página e intentá nuevamente.");
     });
   });
 
