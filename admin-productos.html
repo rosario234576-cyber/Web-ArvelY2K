@@ -247,11 +247,12 @@
               </div>
               <div class="admin-image-preview" id="image-preview"></div>
               <details class="admin-image-links">
-                <summary>Agregar una imagen mediante enlace</summary>
+                <summary>Agregar una imagen mediante enlace existente</summary>
                 <label>Una ruta o enlace por línea
                   <textarea class="textarea" id="product-image-urls" name="imageUrls" rows="4"></textarea>
                 </label>
                 <button class="button button--secondary admin-preview-images" id="preview-image-urls" type="button">Agregar enlaces</button>
+                <p class="admin-form-help">Para fotos nuevas usá el selector: se guardan de forma permanente en Firebase Storage. No se aceptan URLs temporales.</p>
               </details>
               <p class="field-help">
                 La primera fotografía será la portada. Las imágenes se guardarán en Firebase Storage usando tu sesión de administradora. Un borrador puede guardarse sin fotos.
@@ -288,6 +289,7 @@
               <button class="button button--pink" type="submit">Guardar producto</button>
               <button class="button button--secondary" id="save-draft" type="button">Guardar borrador</button>
               <button class="button button--secondary" id="duplicate-current" type="button" hidden>Duplicar</button>
+              <button class="button button--danger" id="remove-current" type="button" hidden>Eliminar producto</button>
             </div>
           </form>
         </section>
@@ -373,6 +375,6 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
-    <script type="module" src="js/admin-productos.js?v=20260810-instagram-resiliente"></script>
+    <script type="module" src="js/admin-productos.js?v=20260811-admin-access"></script>
   </body>
 </html>
