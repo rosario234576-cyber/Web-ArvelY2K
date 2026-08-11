@@ -306,6 +306,16 @@
 .admin-status--draft { background: #fff0c9; color: #725200 !important; }
 .admin-status--hidden { background: #eadfe6; color: #5c4052 !important; }
 
+.button--danger {
+  border-color: #a80d32;
+  color: #a80d32;
+}
+
+.button--danger:hover {
+  background: #a80d32;
+  color: #fff;
+}
+
 .admin-editor {
   padding: clamp(1.15rem, 3vw, 2.25rem);
 }
