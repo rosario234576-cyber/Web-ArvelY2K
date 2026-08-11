@@ -26,6 +26,13 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Los pagos y los pedidos completos se escriben exclusivamente desde el
+    // backend con Firebase Admin. El panel privado puede consultarlos.
+    match /orders/{orderId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
     // Cada clienta puede consultar y editar únicamente su propio perfil.
     match /users/{userId} {
       allow read: if signedIn() && request.auth.uid == userId;
