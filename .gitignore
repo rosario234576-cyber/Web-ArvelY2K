@@ -1,0 +1,31 @@
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editores
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Variables y secretos
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.instagram-access-token
+.facebook-page-access-token
+.facebook-long-lived-user-token
+
+# Registros y temporales
+*.log
+*.zip
+tmp/
+temp/
+
+# Salidas de herramientas opcionales
+node_modules/
+dist/
+coverage/
+.vercel/

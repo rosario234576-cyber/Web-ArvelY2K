@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Administrá tu perfil, direcciones, pedidos y favoritos de Arvel Customs.">
+    <meta name="robots" content="noindex">
+    <meta name="theme-color" content="#2f1e2a">
+    <link rel="icon" type="image/png" href="assets/logo/IsoBlanco.png?v=20260804-brand">
+    <title>Mi cuenta | Arvel Custom Y2K</title>
+    <script>document.documentElement.classList.add("js");</script>
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/components.css?v=20260804-card-payment-layout">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/auth.css?v=20260803-account2">
+    <link rel="stylesheet" href="css/responsive.css?v=20260804-card-payment-layout">
+  </head>
+  <body data-page="cuenta">
+    <a class="skip-link" href="#main-content">Saltar al contenido</a>
+    <div id="site-header"></div>
+
+    <main class="account-page" id="main-content" data-auth-page="account">
+      <div class="container">
+        <p class="account-loading" id="account-loading">Comprobando tu sesión…</p>
+
+        <section class="auth-card account-guest" id="account-guest" hidden>
+          <span class="eyebrow">Identidad Arvel</span>
+          <h1>Tu espacio personal</h1>
+          <p>Ingresá para administrar tus datos, favoritos, direcciones y pedidos.</p>
+          <div class="cluster">
+            <a class="button button--pink" href="login.html?next=cuenta.html">Ingresar</a>
+            <a class="button button--secondary" href="registro.html?next=cuenta.html">Crear cuenta</a>
+          </div>
+        </section>
+
+        <div class="account-shell" id="account-content" hidden>
+          <aside class="account-sidebar">
+            <div class="account-sidebar__identity">
+              <span class="eyebrow">Mi cuenta</span>
+              <strong id="account-name">Clienta Arvel</strong>
+              <span id="account-email"></span>
+            </div>
+            <nav class="account-nav" aria-label="Secciones de mi cuenta">
+              <button class="is-active" type="button" data-account-tab="summary">Resumen</button>
+              <button type="button" data-account-tab="orders">Mis pedidos</button>
+              <button type="button" data-account-tab="favorites">Mi lista de deseos</button>
+              <button type="button" data-account-tab="addresses">Libreta de direcciones</button>
+              <button type="button" data-account-tab="profile">Información de la cuenta</button>
+              <button type="button" data-account-tab="security">Seguridad</button>
+            </nav>
+            <a class="account-admin-link" id="account-admin-products" href="admin-productos.html" hidden>Administrar productos ↗</a>
+            <button class="account-logout" id="account-logout" type="button">Cerrar sesión</button>
+          </aside>
+
+          <div class="account-main">
+            <header class="account-heading">
+              <span class="eyebrow">Panel personal</span>
+              <h1>Hola, <em id="account-first-name">Arvel girl</em></h1>
+              <p>Desde acá podés organizar toda tu experiencia en Arvel.</p>
+            </header>
+            <p class="auth-status" id="account-status" role="status" aria-live="polite" hidden></p>
+
+            <section class="account-panel is-active" data-account-panel="summary">
+              <div class="account-card-grid">
+                <article class="account-card">
+                  <span class="account-card__number" id="account-orders-count">0</span>
+                  <h2>Pedidos</h2>
+                  <p>Consultá el estado de tus compras registradas.</p>
+                  <button class="text-link" type="button" data-account-go="orders">Ver pedidos →</button>
+                </article>
+                <article class="account-card">
+                  <span class="account-card__number" id="account-favorites-count">0</span>
+                  <h2>Favoritos</h2>
+                  <p>Volvé a las piezas que guardaste.</p>
+                  <button class="text-link" type="button" data-account-go="favorites">Ver favoritos →</button>
+                </article>
+              </div>
+              <div class="account-info-grid">
+                <article class="account-info-block">
+                  <h2>Información de contacto</h2>
+                  <strong id="summary-name"></strong>
+                  <span id="summary-email"></span>
+                  <span id="summary-phone">Teléfono pendiente</span>
+                  <button class="text-link" type="button" data-account-go="profile">Editar información →</button>
+                </article>
+                <article class="account-info-block">
+                  <h2>Dirección de envío</h2>
+                  <p id="summary-address">Todavía no agregaste una dirección.</p>
+                  <button class="text-link" type="button" data-account-go="addresses">Gestionar dirección →</button>
+                </article>
+                <article class="account-info-block">
+                  <h2>Boletín Arvel</h2>
+                  <p id="summary-newsletter">No estás suscripta.</p>
+                  <button class="text-link" type="button" data-account-go="profile">Editar preferencia →</button>
+                </article>
+              </div>
+            </section>
+
+            <section class="account-panel" data-account-panel="orders" hidden>
+              <div class="account-section-title"><div><span class="eyebrow">Historial</span><h2>Mis pedidos</h2></div></div>
+              <div id="account-orders" class="account-list"></div>
+            </section>
+
+            <section class="account-panel" data-account-panel="favorites" hidden>
+              <div class="account-section-title"><div><span class="eyebrow">Guardados</span><h2>Mi lista de deseos</h2></div><a class="text-link" href="tienda.html">Seguir explorando →</a></div>
+              <div id="account-favorites" class="product-grid"></div>
+            </section>
+
+            <section class="account-panel" data-account-panel="addresses" hidden>
+              <div class="account-section-title"><div><span class="eyebrow">Entregas</span><h2>Libreta de direcciones</h2></div></div>
+              <form class="account-form" id="address-form">
+                <div class="account-form__grid">
+                  <label>Provincia *<input name="province" required autocomplete="address-level1"></label>
+                  <label>Ciudad *<input name="city" required autocomplete="address-level2"></label>
+                  <label>Código postal *<input name="postalCode" required autocomplete="postal-code"></label>
+                  <label>Calle *<input name="street" required autocomplete="address-line1"></label>
+                  <label>Número *<input name="streetNumber" required inputmode="numeric"></label>
+                  <label>Piso / departamento<input name="apartment" autocomplete="address-line2"></label>
+                  <label class="account-form__wide">Entre calles o referencias<textarea name="references" rows="3"></textarea></label>
+                </div>
+                <button class="button button--pink" type="submit">Guardar dirección</button>
+              </form>
+            </section>
+
+            <section class="account-panel" data-account-panel="profile" hidden>
+              <div class="account-section-title"><div><span class="eyebrow">Tus datos</span><h2>Información de la cuenta</h2></div></div>
+              <form class="account-form" id="profile-form">
+                <div class="account-form__grid">
+                  <label>Nombre y apellido *<input name="fullName" required autocomplete="name"></label>
+                  <label>Correo electrónico<input id="profile-email" disabled></label>
+                  <label>Teléfono<input name="phone" autocomplete="tel" inputmode="tel"></label>
+                  <label>DNI<input name="dni" inputmode="numeric" aria-describedby="profile-dni-help"><small id="profile-dni-help">Solo se utiliza cuando el envío lo requiere.</small></label>
+                </div>
+                <label class="account-newsletter"><input name="newsletter" type="checkbox"> Quiero recibir novedades y próximos drops de Arvel.</label>
+                <button class="button button--pink" type="submit">Guardar cambios</button>
+              </form>
+            </section>
+
+            <section class="account-panel" data-account-panel="security" hidden>
+              <div class="account-section-title"><div><span class="eyebrow">Acceso</span><h2>Seguridad</h2></div></div>
+              <div class="account-info-grid">
+                <article class="account-info-block">
+                  <h2>Estado del correo</h2>
+                  <span class="auth-account__verification" id="account-verification"></span>
+                  <button class="text-link" id="resend-verification" type="button">Reenviar verificación</button>
+                </article>
+                <article class="account-info-block">
+                  <h2>Contraseña</h2>
+                  <p>Te enviaremos un enlace seguro a tu correo para cambiarla.</p>
+                  <button class="button button--secondary" id="account-password-reset" type="button">Cambiar contraseña</button>
+                </article>
+                <article class="account-info-block">
+                  <h2>Métodos de pago</h2>
+                  <p>Arvel no guarda números de tarjeta ni códigos de seguridad. Mercado Pago administra esos datos en su plataforma.</p>
+                </article>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div id="site-footer"></div>
+    <div id="global-overlays"></div>
+    <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
+    <script src="js/data/productos.js"></script>
+    <script src="js/firebase-products.js?v=20260803-account1"></script>
+    <script src="js/components.js?v=20260804-card-payment-layout"></script>
+    <script src="js/main.js?v=20260804-card-actions"></script>
+    <script src="js/chatbot.js"></script>
+    <script src="js/favoritos.js?v=20260803-account1"></script>
+    <script type="module" src="js/firebase-auth.js?v=20260810-session-expiry-fix"></script>
+    <script type="module" src="js/account.js?v=20260803-account4"></script>
+  </body>
+</html>
