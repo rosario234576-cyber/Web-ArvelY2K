@@ -1,187 +1,116 @@
-export async function initMetrics() {
-  "use strict";
+let initialized = false;
 
-  const [{ initializeApp, getApps }, { getFirestore, collection, query, getDocs, where, orderBy, limit }, configModule] =
-    await Promise.all([
-      import("https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js"),
-      import("https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js"),
-      import("./firebase-config.js?v=20260731-5")
-    ]);
+const API_BASE = String(window.ARVEL_API_BASE || "https://web-arvel-y2-k.vercel.app").replace(/\/+$/, "");
 
-  if (!configModule.firebaseConfigured) {
-    document.getElementById("total-events").textContent = "Sin datos";
+function escapeHtml(value) {
+  return String(value || "").replace(/[&<>'"]/g, (char) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", "\"": "&quot;"
+  }[char]));
+}
+
+function number(value) {
+  return new Intl.NumberFormat("es-AR").format(Number(value) || 0);
+}
+
+function renderRows(id, values, emptyText) {
+  const container = document.getElementById(id);
+  if (!container) return;
+  const rows = Array.isArray(values) ? values : [];
+  const total = rows.reduce((sum, row) => sum + (Number(row.value) || 0), 0);
+  if (!rows.length) {
+    container.innerHTML = `<p class="metrics-empty">${escapeHtml(emptyText || "Todavía no hay datos.")}</p>`;
     return;
   }
+  container.innerHTML = rows.slice(0, 6).map((row) => {
+    const percent = total ? Math.max(4, Math.round((Number(row.value) / total) * 100)) : 0;
+    return `<div class="metrics-row"><span>${escapeHtml(row.label)}</span><strong>${number(row.value)}</strong><i><b style="width:${percent}%"></b></i></div>`;
+  }).join("");
+}
 
-  const app = getApps().find((candidate) => candidate.name === "[DEFAULT]")
-    || initializeApp(configModule.firebaseConfig);
-  const db = getFirestore(app);
+function renderTimeline(values) {
+  const container = document.getElementById("timeline-stats");
+  if (!container) return;
+  const rows = Array.isArray(values) ? values : [];
+  const max = Math.max(1, ...rows.map((row) => Number(row.value) || 0));
+  container.innerHTML = rows.map((row) => {
+    const height = Math.max(7, Math.round(((Number(row.value) || 0) / max) * 100));
+    return `<div class="metrics-timeline__bar" title="${escapeHtml(row.label)}: ${number(row.value)} visitantes"><i style="height:${height}%"></i><span>${escapeHtml(row.shortLabel || row.label)}</span><strong>${number(row.value)}</strong></div>`;
+  }).join("") || '<p class="metrics-empty">Los primeros visitantes aparecerán acá.</p>';
+}
+
+function setSummary(summary, total) {
+  const values = {
+    "metric-unique-visitors": summary.uniqueVisitors,
+    "metric-sessions": summary.sessions,
+    "metric-exits": summary.sessionEnds,
+    "metric-page-views": summary.pageViews,
+    "metric-product-views": summary.productViews,
+    "metric-product-clicks": summary.productClicks,
+    "metric-add-to-cart": summary.addToCart,
+    "metric-checkout-starts": summary.checkoutStarts,
+    "total-events": total
+  };
+  Object.entries(values).forEach(([id, value]) => {
+    const element = document.getElementById(id);
+    if (element) element.textContent = number(value);
+  });
+}
+
+export async function initMetrics() {
+  const refresh = document.getElementById("metrics-refresh");
+  const state = document.getElementById("metrics-state");
+  if (!refresh) return;
 
   async function loadMetrics() {
+    refresh.disabled = true;
+    refresh.textContent = "Actualizando…";
+    if (state) state.textContent = "Consultando las métricas seguras…";
     try {
-      // Cargar eventos de analytics
-      const eventsRef = collection(db, "analytics_events");
-      const eventsSnap = await getDocs(eventsRef);
-      const events = eventsSnap.docs.map(doc => doc.data());
-
-      // Calcular estadísticas
-      const deviceTypes = {};
-      const browsers = {};
-      const operatingSystems = {};
-      const timelineData = {};
-
-      events.forEach(event => {
-        const device = event.device_type || "unknown";
-        const browser = event.browser || "unknown";
-        const os = event.operating_system || "unknown";
-
-        deviceTypes[device] = (deviceTypes[device] || 0) + 1;
-        browsers[browser] = (browsers[browser] || 0) + 1;
-        operatingSystems[os] = (operatingSystems[os] || 0) + 1;
-
-        // Timeline por día
-        if (event.timestamp) {
-          const date = new Date(event.timestamp.toDate());
-          const day = date.toISOString().split("T")[0];
-          timelineData[day] = (timelineData[day] || 0) + 1;
-        }
+      const [{ initializeApp, getApps }, { getAuth, onAuthStateChanged }, configModule] = await Promise.all([
+        import("https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js"),
+        import("https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js"),
+        import("./firebase-config.js?v=20260731-5")
+      ]);
+      if (!configModule.firebaseConfigured) throw new Error("Firebase no está configurado.");
+      const app = getApps().find((candidate) => candidate.name === "[DEFAULT]") || initializeApp(configModule.firebaseConfig);
+      const auth = getAuth(app);
+      // Firebase restaura la sesión de forma asíncrona. Esperamos ese primer
+      // estado para que el panel no quede vacío si se abre recién después de iniciar sesión.
+      const user = auth.currentUser || await new Promise((resolve) => {
+        const stop = onAuthStateChanged(auth, (currentUser) => {
+          stop();
+          resolve(currentUser);
+        });
       });
+      if (!user) throw new Error("Tu sesión venció. Volvé a ingresar al administrador.");
+      const token = await user.getIdToken();
+      const response = await fetch(`${API_BASE}/api/admin-metrics`, {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store"
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "No pudimos cargar las métricas.");
 
-      // Renderizar gráficos
-      renderDeviceChart(deviceTypes);
-      renderBrowserChart(browsers);
-      renderOSChart(operatingSystems);
-      renderTimelineChart(timelineData);
-
-      document.getElementById("total-events").textContent = events.length;
+      setSummary(result.summary || {}, result.totalEvents || 0);
+      renderRows("devices-stats", result.devices, "Todavía no hay visitas registradas.");
+      renderRows("browsers-stats", result.browsers, "Todavía no hay navegadores registrados.");
+      renderRows("os-stats", result.operatingSystems, "Todavía no hay sistemas registrados.");
+      renderRows("pages-stats", result.topPages, "Todavía no hay páginas visitadas.");
+      renderRows("products-stats", result.topProducts, "Todavía no hubo interacción con productos.");
+      renderTimeline(result.timeline);
+      if (state) state.textContent = `Actualizado ${new Date(result.generatedAt).toLocaleString("es-AR")}.`;
     } catch (error) {
       console.error("Error cargando métricas:", error);
-      document.getElementById("total-events").textContent = "Error";
+      if (state) state.textContent = error.message || "No pudimos cargar las métricas. Intentá nuevamente.";
+    } finally {
+      refresh.disabled = false;
+      refresh.textContent = "↻ Actualizar";
     }
   }
 
-  function renderDeviceChart(data) {
-    const ctx = document.getElementById("chart-devices").getContext("2d");
-    const colors = ["#f15bb5", "#00b4d8", "#ffd60a"];
-    const labels = Object.keys(data).sort((a, b) => data[b] - data[a]);
-    const values = labels.map(label => data[label]);
-
-    new Chart(ctx, {
-      type: "doughnut",
-      data: {
-        labels: labels.map(l => l.charAt(0).toUpperCase() + l.slice(1)),
-        datasets: [{
-          data: values,
-          backgroundColor: colors.slice(0, labels.length),
-          borderColor: "#fff",
-          borderWidth: 2
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { position: "bottom" } }
-      }
-    });
-
-    const statsHtml = labels
-      .map((label, i) => `<div><strong>${label}:</strong> ${values[i]} (${((values[i]/values.reduce((a,b)=>a+b,0))*100).toFixed(1)}%)</div>`)
-      .join("");
-    document.getElementById("devices-stats").innerHTML = statsHtml;
+  if (!initialized) {
+    refresh.addEventListener("click", loadMetrics);
+    initialized = true;
   }
-
-  function renderBrowserChart(data) {
-    const ctx = document.getElementById("chart-browsers").getContext("2d");
-    const colors = ["#00b4d8", "#f15bb5", "#ffd60a", "#90e0ef"];
-    const labels = Object.keys(data).sort((a, b) => data[b] - data[a]);
-    const values = labels.map(label => data[label]);
-
-    new Chart(ctx, {
-      type: "bar",
-      data: {
-        labels: labels.map(l => l.charAt(0).toUpperCase() + l.slice(1)),
-        datasets: [{
-          label: "Usuarios",
-          data: values,
-          backgroundColor: colors.slice(0, labels.length)
-        }]
-      },
-      options: {
-        responsive: true,
-        indexAxis: "y",
-        plugins: { legend: { display: false } }
-      }
-    });
-
-    const statsHtml = labels
-      .map((label, i) => `<div><strong>${label}:</strong> ${values[i]}</div>`)
-      .join("");
-    document.getElementById("browsers-stats").innerHTML = statsHtml;
-  }
-
-  function renderOSChart(data) {
-    const ctx = document.getElementById("chart-os").getContext("2d");
-    const colors = ["#ffd60a", "#00b4d8", "#f15bb5", "#90e0ef"];
-    const labels = Object.keys(data).sort((a, b) => data[b] - data[a]);
-    const values = labels.map(label => data[label]);
-
-    new Chart(ctx, {
-      type: "doughnut",
-      data: {
-        labels: labels.map(l => l.charAt(0).toUpperCase() + l.slice(1)),
-        datasets: [{
-          data: values,
-          backgroundColor: colors.slice(0, labels.length),
-          borderColor: "#fff",
-          borderWidth: 2
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { position: "bottom" } }
-      }
-    });
-
-    const statsHtml = labels
-      .map((label, i) => `<div><strong>${label}:</strong> ${values[i]}</div>`)
-      .join("");
-    document.getElementById("os-stats").innerHTML = statsHtml;
-  }
-
-  function renderTimelineChart(data) {
-    const ctx = document.getElementById("chart-timeline").getContext("2d");
-    const sortedDays = Object.keys(data).sort();
-    const values = sortedDays.map(day => data[day]);
-
-    new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: sortedDays,
-        datasets: [{
-          label: "Visitantes",
-          data: values,
-          borderColor: "#f15bb5",
-          backgroundColor: "rgba(241, 91, 181, 0.1)",
-          fill: true,
-          tension: 0.4
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: true } },
-        scales: {
-          y: { beginAtZero: true, title: { display: true, text: "Visitantes" } }
-        }
-      }
-    });
-
-    const total = values.reduce((a, b) => a + b, 0);
-    const statsHtml = `<div><strong>Total últimos 7 días:</strong> ${total}</div>`;
-    document.getElementById("timeline-stats").innerHTML = statsHtml;
-  }
-
-  // Cargar métricas al abrir la pestaña
-  document.getElementById("metrics-refresh").addEventListener("click", loadMetrics);
-
-  // Cargar al iniciar
   await loadMetrics();
 }

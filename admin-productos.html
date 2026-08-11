@@ -87,28 +87,37 @@
             <button class="button button--secondary" type="button" id="metrics-refresh">🔄 Actualizar</button>
           </div>
 
+          <p class="admin-metrics-state" id="metrics-state" role="status">Las métricas comenzarán a registrar visitas y acciones desde esta actualización.</p>
+
+          <div class="admin-metrics-kpis" aria-label="Resumen de actividad">
+            <article class="admin-metric-kpi"><span>Visitantes únicos · 7 días</span><strong id="metric-unique-visitors">0</strong></article>
+            <article class="admin-metric-kpi"><span>Sesiones</span><strong id="metric-sessions">0</strong></article>
+            <article class="admin-metric-kpi"><span>Salidas registradas</span><strong id="metric-exits">0</strong></article>
+            <article class="admin-metric-kpi"><span>Páginas vistas</span><strong id="metric-page-views">0</strong></article>
+            <article class="admin-metric-kpi"><span>Vistas de producto</span><strong id="metric-product-views">0</strong></article>
+            <article class="admin-metric-kpi"><span>Clicks en productos</span><strong id="metric-product-clicks">0</strong></article>
+            <article class="admin-metric-kpi"><span>Agregados al carrito</span><strong id="metric-add-to-cart">0</strong></article>
+            <article class="admin-metric-kpi"><span>Inicios de checkout</span><strong id="metric-checkout-starts">0</strong></article>
+          </div>
+
           <div class="admin-metrics-grid">
             <article class="admin-metric-card">
               <h3>Visitantes por dispositivo</h3>
-              <canvas id="chart-devices"></canvas>
               <div id="devices-stats" class="metrics-stats"></div>
             </article>
 
             <article class="admin-metric-card">
               <h3>Navegadores más usados</h3>
-              <canvas id="chart-browsers"></canvas>
               <div id="browsers-stats" class="metrics-stats"></div>
             </article>
 
             <article class="admin-metric-card" style="grid-column: 1 / -1;">
               <h3>Visitantes en los últimos 7 días</h3>
-              <canvas id="chart-timeline"></canvas>
-              <div id="timeline-stats" class="metrics-stats"></div>
+              <div id="timeline-stats" class="metrics-timeline"></div>
             </article>
 
             <article class="admin-metric-card">
               <h3>Sistemas operativos</h3>
-              <canvas id="chart-os"></canvas>
               <div id="os-stats" class="metrics-stats"></div>
             </article>
 
@@ -116,6 +125,16 @@
               <h3>Total de eventos</h3>
               <div class="metrics-big-number" id="total-events">0</div>
               <small>Desde el inicio de tracking</small>
+            </article>
+
+            <article class="admin-metric-card">
+              <h3>Páginas más vistas</h3>
+              <div id="pages-stats" class="metrics-stats"></div>
+            </article>
+
+            <article class="admin-metric-card">
+              <h3>Interacciones con productos</h3>
+              <div id="products-stats" class="metrics-stats"></div>
             </article>
           </div>
         </section>
