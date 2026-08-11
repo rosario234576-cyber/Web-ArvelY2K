@@ -1,20 +1,14 @@
 const { getAdminDb, verifyFirebaseUser } = require("./_firebase-admin");
 
-const ALLOWED_ORIGINS = new Set([
-  "https://arvelcustomy2k.store",
-  "https://www.arvelcustomy2k.store",
-  "https://web-arvel-y2-k.vercel.app",
-  "https://rosario234576-cyber.github.io"
-]);
-
 function setCors(req, res) {
-  const origin = req.headers.origin;
-  if (ALLOWED_ORIGINS.has(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader("Vary", "Origin");
-  }
+  // Esta ruta recibe un Bearer token (no cookies), por lo que puede responder
+  // con CORS abierto. Evitamos depender de un dominio puntual o de un header
+  // duplicado de Vercel, que hacía fallar el preflight antes de crear la
+  // preferencia de Mercado Pago.
+  res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Max-Age", "86400");
 }
 
 function cleanText(value, maxLength = 120) {

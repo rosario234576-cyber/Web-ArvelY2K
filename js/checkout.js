@@ -665,7 +665,16 @@
         throw new Error("Falta configurar la dirección segura de Mercado Pago.");
       }
 
-      const token = await window.ARVEL_CHECKOUT_USER.getIdToken(true);
+      // No forzamos un refresh: Firebase devuelve el token vigente y renueva
+      // solo si es necesario. Forzarlo al tocar "Comprar" podía cortar el
+      // flujo aunque la sesión continuara siendo válida.
+      let token;
+      try {
+        token = await window.ARVEL_CHECKOUT_USER.getIdToken();
+      } catch (sessionError) {
+        console.error("No se pudo obtener el token de Firebase para el pago", sessionError);
+        throw new Error("No pudimos validar tu sesión. Volvé a ingresar e intentá nuevamente.");
+      }
       const controller = new AbortController();
       const timeout = window.setTimeout(() => controller.abort(), 20000);
       let response;
