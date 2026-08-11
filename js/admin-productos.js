@@ -5,6 +5,7 @@ import {
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 import {
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -15,8 +16,10 @@ import {
   setDoc
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import {
+  deleteObject,
   getDownloadURL,
   getStorage,
+  listAll,
   ref,
   uploadBytesResumable
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-storage.js";
@@ -55,6 +58,7 @@ const ui = {
   preview: document.querySelector("#image-preview"),
   saveDraft: document.querySelector("#save-draft"),
   duplicate: document.querySelector("#duplicate-current"),
+  removeProduct: document.querySelector("#remove-current"),
   editorMode: document.querySelector("#editor-mode"),
   editorTitle: document.querySelector("#editor-title"),
   tabs: document.querySelector(".admin-tabs"),
@@ -80,8 +84,10 @@ const ui = {
 
 let products = [];
 let existingImages = [];
+let existingImageRefs = [];
 let selectedImages = [];
 let previewObjectUrls = [];
+let removedStoragePaths = [];
 let activeDocumentId = "";
 let instagramFeedPosts = [];
 let instagramSyncStatus = null;
@@ -208,7 +214,9 @@ async function importInstagramProduct(mediaId, requestedStatus = "draft") {
     stock, soldOut: analysis.sold, archived: false, discount: 0, featured: status === "published", uniquePiece: true,
     tags: ["instagram", analysis.sold ? "vendido" : "revisar"], source: "instagram",
     instagramMediaId: post.id, instagramPermalink: post.permalink, instagramTimestamp: post.timestamp || "",
-    images: post.image ? [post.image] : [], createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+    images: post.image ? [post.image] : [],
+    imageRefs: post.image ? [{ url: post.image, path: "", name: "instagram" }] : [],
+    createdAt: serverTimestamp(), updatedAt: serverTimestamp()
   }, { merge: false });
   await loadProducts();
   renderInstagramFeed();
@@ -272,16 +280,61 @@ function updatePriceFieldState() {
   }
 }
 
-function renderImages() {
-  existingImages = ui.imageUrls.value
+function isTemporaryImageUrl(url) {
+  return /^(blob:|data:)/i.test(String(url || "").trim());
+}
+
+function normalizeImageReference(image) {
+  if (typeof image === "string") {
+    const url = image.trim();
+    return { url: isTemporaryImageUrl(url) ? "" : url, path: "", name: "" };
+  }
+  if (!image || typeof image !== "object") return { url: "", path: "", name: "" };
+  const url = String(image.url || image.downloadURL || "").trim();
+  return {
+    url: isTemporaryImageUrl(url) ? "" : url,
+    path: String(image.path || "").trim(),
+    name: String(image.name || "").trim()
+  };
+}
+
+function setExistingImageReferences(images) {
+  existingImageRefs = (Array.isArray(images) ? images : [])
+    .map(normalizeImageReference)
+    .filter((image) => image.url);
+  existingImages = existingImageRefs.map((image) => image.url);
+  ui.imageUrls.value = existingImages.join("\n");
+}
+
+function syncImageReferencesFromTextarea() {
+  const enteredUrls = ui.imageUrls.value
     .split(/\r?\n/)
     .map((url) => url.trim())
     .filter(Boolean);
+  const ignoredTemporaryUrls = enteredUrls.filter(isTemporaryImageUrl);
+  const urls = enteredUrls.filter((url) => !isTemporaryImageUrl(url));
+  if (ignoredTemporaryUrls.length) {
+    ui.error.textContent = "Las URLs temporales no se pueden guardar. Para una foto nueva usá el selector de archivos.";
+    ui.imageUrls.value = urls.join("\n");
+  }
+  const refsByUrl = new Map(existingImageRefs.map((image) => [image.url, image]));
+  existingImageRefs = urls.map((url) => refsByUrl.get(url) || { url, path: "", name: "" });
+  existingImages = urls;
+}
+
+function productImageUrls(product) {
+  const refs = Array.isArray(product?.imageRefs) ? product.imageRefs : [];
+  const refUrls = refs.map(normalizeImageReference).map((image) => image.url).filter(Boolean);
+  return refUrls.length ? refUrls : (Array.isArray(product?.images) ? product.images.filter(Boolean) : []);
+}
+
+function renderImages() {
+  syncImageReferencesFromTextarea();
   previewObjectUrls.forEach((url) => URL.revokeObjectURL(url));
   previewObjectUrls = selectedImages.map((file) => URL.createObjectURL(file));
   const savedMarkup = existingImages.map((url, index) => `
     <figure draggable="true" data-saved-image-index="${index}" class="image-preview-item">
-      <img src="${escapeHtml(url)}" alt="">
+      <img src="${escapeHtml(url)}" alt="" onerror="this.onerror=null;this.src='assets/logo/IsoNegro.png';this.classList.add('is-image-fallback');">
       <span>Guardada</span>
       <button type="button" data-saved-image-index="${index}" aria-label="Quitar foto">×</button>
     </figure>
@@ -332,7 +385,7 @@ function setupDragAndDrop() {
 
 function syncImagesAfterDrag() {
   const figures = ui.preview.querySelectorAll("figure");
-  const newSavedImages = [];
+  const newSavedImageRefs = [];
   const newSelectedImages = [];
 
   figures.forEach((fig) => {
@@ -340,13 +393,14 @@ function syncImagesAfterDrag() {
     const pendingIndex = fig.getAttribute("data-pending-image-index");
 
     if (savedIndex !== null) {
-      newSavedImages.push(existingImages[parseInt(savedIndex)]);
+      newSavedImageRefs.push(existingImageRefs[parseInt(savedIndex)]);
     } else if (pendingIndex !== null) {
       newSelectedImages.push(selectedImages[parseInt(pendingIndex)]);
     }
   });
 
-  existingImages = newSavedImages;
+  existingImageRefs = newSavedImageRefs;
+  existingImages = existingImageRefs.map((image) => image.url);
   selectedImages = newSelectedImages;
   ui.imageUrls.value = existingImages.join("\n");
   previewObjectUrls.forEach((url) => URL.revokeObjectURL(url));
@@ -364,7 +418,7 @@ function validateSelectedImages(files) {
 
 function uploadFile(documentId, file, index, total) {
   const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
-  const fileName = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${extension}`;
+  const fileName = `image-${String(index + 1).padStart(2, "0")}-${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${extension}`;
   const storageReference = ref(storage, `products/${documentId}/${fileName}`);
   const task = uploadBytesResumable(storageReference, file, { contentType: file.type });
   return new Promise((resolve, reject) => {
@@ -374,7 +428,11 @@ function uploadFile(documentId, file, index, total) {
       ui.uploadBar.value = percent;
       ui.uploadPercent.textContent = `${percent}%`;
       ui.uploadLabel.textContent = `Subiendo ${index + 1} de ${total}: ${file.name}`;
-    }, reject, async () => resolve(await getDownloadURL(task.snapshot.ref)));
+    }, reject, async () => resolve({
+      path: task.snapshot.ref.fullPath,
+      url: await getDownloadURL(task.snapshot.ref),
+      name: file.name
+    }));
   });
 }
 
@@ -400,13 +458,16 @@ function resetForm() {
   ui.variants.innerHTML = "";
   addVariantRow();
   existingImages = [];
+  existingImageRefs = [];
   selectedImages = [];
+  removedStoragePaths = [];
   ui.imageFiles.value = "";
   ui.uploadProgress.hidden = true;
   ui.imageUrls.value = "";
   renderImages();
   ui.error.textContent = "";
   ui.duplicate.hidden = true;
+  ui.removeProduct.hidden = true;
   ui.saveDraft.hidden = false;
   ui.form.querySelector('[type="submit"]').textContent = "Guardar producto";
   ui.editorMode.textContent = "Nuevo producto";
@@ -460,12 +521,12 @@ function fillForm(product) {
   const variants = productVariants(product);
   (variants.length ? variants : [{}]).forEach(addVariantRow);
   updatePriceFieldState();
-  existingImages = [...(product.images || [])];
+  setExistingImageReferences(product.imageRefs?.length ? product.imageRefs : (product.images || []));
   selectedImages = [];
   ui.imageFiles.value = "";
-  ui.imageUrls.value = existingImages.join("\n");
   renderImages();
   ui.duplicate.hidden = false;
+  ui.removeProduct.hidden = false;
   ui.saveDraft.hidden = product.status === "published";
   ui.form.querySelector('[type="submit"]').textContent = "Guardar cambios";
   ui.editorMode.textContent = "Editando producto";
@@ -481,7 +542,7 @@ function renderList() {
   );
   ui.list.innerHTML = visible.length ? visible.map((product) => `
     <button class="admin-product-item" type="button" data-product-id="${escapeHtml(product.documentId)}">
-      <img src="${escapeHtml(product.images?.[0] || placeholder)}" alt="">
+      <img src="${escapeHtml(productImageUrls(product)[0] || placeholder)}" alt="">
       <span><strong>${escapeHtml(product.name)}</strong><small>${escapeHtml(product.sku)}</small></span>
       <span class="admin-status admin-status--${escapeHtml(product.status || "draft")}">${escapeHtml(product.status || "draft")}</span>
     </button>
@@ -593,7 +654,7 @@ function duplicateGroups() {
 
 function managementItem(product, actions = "") {
   return `<article class="admin-management-item">
-    <img src="${escapeHtml(product.images?.[0] || placeholder)}" alt="">
+    <img src="${escapeHtml(productImageUrls(product)[0] || placeholder)}" alt="">
     <div><strong>${escapeHtml(product.name)}</strong><small>${escapeHtml(product.sku || "Sin SKU")} · ${escapeHtml(product.status || "draft")}</small></div>
     <div class="admin-management-actions">${actions}</div>
   </article>`;
@@ -750,11 +811,15 @@ async function repairImportedInstagramImages() {
     const post = postsById.get(String(product.instagramMediaId));
     const cachedImage = String(post?.image || "");
     if (!cachedImage || isTemporaryInstagramImage(cachedImage)) continue;
-    const currentImages = Array.isArray(product.images) ? product.images.filter(Boolean) : [];
+    const currentImages = productImageUrls(product);
     if (currentImages[0] === cachedImage) continue;
     if (currentImages.length && !isTemporaryInstagramImage(currentImages[0])) continue;
     const images = [cachedImage, ...currentImages.slice(1).filter((url) => url !== cachedImage && !isTemporaryInstagramImage(url))];
-    repairs.push(setDoc(doc(db, "products", product.documentId), { images, updatedAt: serverTimestamp() }, { merge: true }));
+    repairs.push(setDoc(doc(db, "products", product.documentId), {
+      images,
+      imageRefs: images.map((url) => ({ url, path: "", name: "" })),
+      updatedAt: serverTimestamp()
+    }, { merge: true }));
   }
   if (!repairs.length) return 0;
   await Promise.all(repairs);
@@ -784,6 +849,8 @@ async function saveProduct(statusOverride) {
     return;
   }
   setBusy(true);
+  let uploadedForThisSave = [];
+  let productPersisted = false;
   try {
     const currentId = activeDocumentId || ui.form.elements.documentId.value;
     const documentId = currentId || `${product.slug}-${crypto.randomUUID().slice(0, 8)}`;
@@ -791,24 +858,81 @@ async function saveProduct(statusOverride) {
     product.id = Number(currentProduct?.id) || Date.now();
     renderImages();
     const uploadedImages = await uploadSelectedImages(documentId);
+    uploadedForThisSave = uploadedImages;
     if (uploadedImages.length) {
-      existingImages = [...existingImages, ...uploadedImages];
+      existingImageRefs = [...existingImageRefs, ...uploadedImages];
+      existingImages = existingImageRefs.map((image) => image.url);
       ui.imageUrls.value = existingImages.join("\n");
       selectedImages = [];
       ui.imageFiles.value = "";
       renderImages();
     }
     product.images = [...existingImages];
+    product.imageRefs = existingImageRefs.map((image) => ({
+      url: image.url,
+      path: image.path || "",
+      name: image.name || ""
+    }));
     product.updatedAt = serverTimestamp();
     if (!currentId) product.createdAt = serverTimestamp();
     await setDoc(doc(db, "products", documentId), product, { merge: true });
+    productPersisted = true;
+    const ownPrefix = `products/${documentId}/`;
+    const pendingDeletes = removedStoragePaths
+      .filter((path) => path.startsWith(ownPrefix))
+      .map((path) => deleteObject(ref(storage, path)));
+    if (pendingDeletes.length) {
+      const results = await Promise.allSettled(pendingDeletes);
+      const failures = results.filter((result) => result.status === "rejected");
+      if (failures.length) console.warn("Algunas fotos antiguas no pudieron eliminarse de Storage.", failures);
+    }
+    removedStoragePaths = [];
     setState(product.status === "published" ? "Producto publicado" : "Producto guardado", "success");
     await loadProducts();
     const saved = products.find((item) => item.documentId === documentId);
     if (saved) fillForm(saved);
   } catch (error) {
+    if (!productPersisted && uploadedForThisSave.length) {
+      const cleanup = await Promise.allSettled(
+        uploadedForThisSave.map((image) => deleteObject(ref(storage, image.path)))
+      );
+      if (cleanup.some((result) => result.status === "rejected")) {
+        console.warn("No pudimos limpiar algunas fotos que no llegaron a guardarse en el producto.");
+      }
+    }
     ui.error.textContent = error.message || "No pudimos guardar el producto.";
     setState("Error al guardar", "error");
+  } finally {
+    setBusy(false);
+  }
+}
+
+async function removeCurrentProduct() {
+  const documentId = activeDocumentId || ui.form.elements.documentId.value;
+  if (!documentId) return;
+  const product = products.find((item) => item.documentId === documentId);
+  const confirmed = window.confirm(`¿Eliminar definitivamente ${product?.name || "este producto"} y sus fotografías? Esta acción no se puede deshacer.`);
+  if (!confirmed) return;
+
+  ui.error.textContent = "";
+  setBusy(true);
+  try {
+    // Las nuevas fotos se guardan siempre en esta carpeta. Se elimina la carpeta
+    // antes del documento para no dejar un producto sin imágenes si Storage falla.
+    const folder = ref(storage, `products/${documentId}`);
+    const listing = await listAll(folder);
+    const removals = await Promise.allSettled(listing.items.map((item) => deleteObject(item)));
+    const failures = removals.filter((result) => result.status === "rejected");
+    if (failures.length) throw new Error("No pudimos eliminar todas las fotografías del producto. Intentá nuevamente.");
+
+    await deleteDoc(doc(db, "products", documentId));
+    setState("Producto eliminado", "success");
+    resetForm();
+    await loadProducts();
+  } catch (error) {
+    console.error("removeCurrentProduct", error);
+    ui.error.textContent = error.message || "No pudimos eliminar el producto.";
+    setState("Error al eliminar", "error");
   } finally {
     setBusy(false);
   }
@@ -916,7 +1040,11 @@ ui.preview.addEventListener("click", (event) => {
   const button = event.target.closest("[data-saved-image-index], [data-pending-image-index]");
   if (!button) return;
   if (button.dataset.savedImageIndex !== undefined) {
-    existingImages.splice(Number(button.dataset.savedImageIndex), 1);
+    const index = Number(button.dataset.savedImageIndex);
+    const removed = existingImageRefs[index];
+    if (removed?.path) removedStoragePaths.push(removed.path);
+    existingImageRefs.splice(index, 1);
+    existingImages = existingImageRefs.map((image) => image.url);
     ui.imageUrls.value = existingImages.join("\n");
   } else {
     selectedImages.splice(Number(button.dataset.pendingImageIndex), 1);
@@ -939,6 +1067,7 @@ ui.duplicate.addEventListener("click", () => {
   ui.form.querySelector('[type="submit"]').textContent = "Guardar copia";
   ui.editorMode.textContent = "Duplicando producto";
 });
+ui.removeProduct.addEventListener("click", removeCurrentProduct);
 ui.logout.addEventListener("click", async () => {
   if (auth) await signOut(auth);
   location.href = "login.html";

@@ -50,7 +50,13 @@
           condition: data.condition || "Seleccionada",
           category: data.category || "Sin categoría",
           collection: data.collection || "Arvel",
-          images: Array.isArray(data.images) ? data.images.filter(Boolean) : [],
+          images: (() => {
+            const durable = (Array.isArray(data.imageRefs) ? data.imageRefs : [])
+              .map((ref) => typeof ref === "string" ? ref : ref?.url)
+              .filter(Boolean);
+            const legacy = Array.isArray(data.images) ? data.images.filter(Boolean) : [];
+            return durable.length ? durable : legacy;
+          })(),
           measurements: data.measurements || {},
           material: data.material || "Consultá la publicación",
           care: data.care || "Consultá antes de lavar",

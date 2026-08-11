@@ -125,9 +125,20 @@
       : ["assets/images/moodboard/arvel-editorial-hero.png"];
     let currentIndex = 0;
     let pointerStartX = 0;
+    const fallbackImage = "assets/images/moodboard/arvel-editorial-hero.png";
+
+    function applyImageFallback(imageElement) {
+      imageElement.addEventListener("error", () => {
+        if (imageElement.dataset.fallbackApplied === "true") return;
+        imageElement.dataset.fallbackApplied = "true";
+        imageElement.src = fallbackImage;
+      });
+    }
 
     function selectImage(image, index) {
       currentIndex = index;
+      delete elements.mainImage.dataset.fallbackApplied;
+      delete elements.zoomImage.dataset.fallbackApplied;
       elements.mainImage.src = image;
       elements.mainImage.alt = `Imagen ${index + 1} de ${product.name}`;
       elements.zoomImage.src = image;
@@ -154,7 +165,7 @@
             aria-pressed="${index === 0}"
             data-image-index="${index}"
           >
-            <img src="${image}" alt="" width="180" height="240">
+            <img src="${image}" alt="" width="180" height="240" onerror="this.onerror=null;this.src='${fallbackImage}';">
           </button>
         `
       )
@@ -189,6 +200,8 @@
       moveGallery(distance < 0 ? 1 : -1);
     });
 
+    applyImageFallback(elements.mainImage);
+    applyImageFallback(elements.zoomImage);
     selectImage(images[0], 0);
   }
 

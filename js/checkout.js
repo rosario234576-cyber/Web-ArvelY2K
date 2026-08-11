@@ -112,6 +112,7 @@
       : Number(input.dataset.cost);
     const canBeFree = selected.startsWith("correo-") || selected === "punto";
     const freeByThreshold = getSubtotal() >= FREE_SHIPPING_THRESHOLD && canBeFree;
+
     return {
       value: selected,
       label: isMeeting && meetingOption?.value
@@ -152,24 +153,13 @@
     const shipping = delivery?.cost || 0;
     const total = subtotal + shipping;
 
-    // Comisiones de Mercado Pago según método de pago
-    const commissions = {
-      dinero: 0.0629,    // Dinero en Mercado Pago: 6.29%
-      1: 0.0629,         // 1 cuota (tarjeta): 6.29%
-      2: 0.0779,         // 2 cuotas (tarjeta): 7.79%
-      3: 0.1049          // 3 cuotas (tarjeta): 10.49%
+    // Mostrar precios SIN comisión (el cliente ve estos precios)
+    const prices = {
+      dinero: total,
+      1: total,
+      2: Math.round((total / 2) * 100) / 100,
+      3: Math.round((total / 3) * 100) / 100
     };
-
-    const prices = {};
-    for (const [method, commission] of Object.entries(commissions)) {
-      const priceWithCommission = total / (1 - commission);
-      if (method === "dinero") {
-        prices.dinero = Math.round(priceWithCommission * 100) / 100;
-      } else {
-        const cuotas = Number(method);
-        prices[cuotas] = Math.round((priceWithCommission / cuotas) * 100) / 100;
-      }
-    }
 
     // Actualizar dinero en Mercado Pago
     const dineroElement = document.querySelector("#installments-dinero-price");
@@ -178,12 +168,10 @@
     }
 
     // Actualizar cuotas con tarjeta
-    for (const [cuotas, price] of Object.entries(prices)) {
-      if (cuotas !== "dinero") {
-        const priceElement = document.querySelector(`#installments-${cuotas}-price`);
-        if (priceElement) {
-          priceElement.textContent = `${window.Arvel.formatPrice(price)} c/u`;
-        }
+    for (const cuotas of [1, 2, 3]) {
+      const priceElement = document.querySelector(`#installments-${cuotas}-price`);
+      if (priceElement) {
+        priceElement.textContent = `${window.Arvel.formatPrice(prices[cuotas])} c/u`;
       }
     }
   }
@@ -242,12 +230,10 @@
   }
 
   function updateDeliveryFields() {
-    const isHome = elements.form.elements.delivery?.value === "correo-domicilio";
     elements.homeDeliveryFields.forEach((wrapper) => {
-      wrapper.hidden = !isHome;
+      wrapper.hidden = false;
       wrapper.querySelectorAll("input, textarea").forEach((field) => {
-        field.required = isHome;
-        if (!isHome) field.removeAttribute("aria-invalid");
+        field.required = true;
       });
     });
   }
@@ -260,7 +246,6 @@
     elements.meetingPoint.required = isMeeting;
 
     if (!isMeeting) {
-      elements.meetingPoint.value = "";
       elements.meetingPoint.removeAttribute("aria-invalid");
       document.querySelector("#meeting-point-error").textContent = "";
       return;
@@ -434,28 +419,46 @@
     const payment = getPayment();
     const subtotal = getSubtotal();
     const total = subtotal + delivery.cost;
+    const fullName = data.get("fullName").trim();
+    const nameParts = fullName.split(/\s+/).filter(Boolean);
+    const address = {
+      province: data.get("province"),
+      city: data.get("city").trim(),
+      postalCode: data.get("postalCode").trim(),
+      street: data.get("street").trim(),
+      streetNumber: data.get("streetNumber").trim(),
+      apartment: data.get("apartment").trim(),
+      references: data.get("deliveryReferences").trim(),
+      agencyName: String(data.get("correoAgency") || "").trim(),
+      agencyAddress: String(data.get("correoAgencyAddress") || "").trim(),
+      meetingPoint: String(data.get("meetingPoint") || "").trim(),
+      notes: data.get("notes").trim()
+    };
 
     return {
       orderNumber,
       createdAt: new Date(),
       discount: 0,
       customer: {
-        fullName: data.get("fullName").trim(),
+        fullName,
+        firstName: nameParts[0] || "",
+        lastName: nameParts.slice(1).join(" "),
         email: data.get("email").trim(),
         phone: data.get("phone").trim(),
         dni: data.get("dni").trim()
       },
-      address: {
-        province: data.get("province"),
-        city: data.get("city").trim(),
-        postalCode: data.get("postalCode").trim(),
-        street: data.get("street").trim(),
-        streetNumber: data.get("streetNumber").trim(),
-        apartment: data.get("apartment").trim(),
-        references: data.get("deliveryReferences").trim(),
-        agencyName: String(data.get("correoAgency") || "").trim(),
-        agencyAddress: String(data.get("correoAgencyAddress") || "").trim(),
-        notes: data.get("notes").trim()
+      address,
+      shipping: {
+        type: delivery.value,
+        province: address.province,
+        city: address.city,
+        postalCode: address.postalCode,
+        street: address.street,
+        number: address.streetNumber,
+        floorApartment: address.apartment,
+        reference: address.references,
+        branch: { name: address.agencyName, address: address.agencyAddress },
+        meetingPoint: address.meetingPoint
       },
       delivery,
       payment,
@@ -550,7 +553,7 @@
       </dl>
     `;
     elements.confirmationNotice.textContent =
-      "El pedido todavía no fue recibido, guardado, cobrado ni reservado. Para enviarlo a Arvel tenés que tocar el botón y confirmar el mensaje en WhatsApp.";
+      "Registramos tu pedido como pendiente de pago. Transferí el total exacto, subí el comprobante y enviá el mensaje por WhatsApp. La reserva se confirma al verificar el pago y el stock.";
     elements.confirmationWhatsAppLabel.textContent = "Abrir WhatsApp y enviar comprobante";
     const alias = String(window.ARVEL_TRANSFER?.alias || "").trim();
     elements.transferAlias.textContent = alias || "Alias todavía no configurado";
@@ -689,6 +692,54 @@
     }
   }
 
+  async function createTransferOrder(order) {
+    const submit = elements.form.querySelector('[type="submit"]');
+    const originalLabel = submit.textContent;
+    submit.disabled = true;
+    submit.textContent = "Registrando pedido…";
+    elements.globalError.textContent = "";
+    try {
+      const apiBase = String(window.ARVEL_PAYMENT_API_BASE || window.ARVEL_API_BASE || "").replace(/\/+$/, "");
+      if (!apiBase || !window.ARVEL_CHECKOUT_USER) {
+        throw new Error("No pudimos validar tu sesión. Volvé a ingresar.");
+      }
+      const response = await fetch(`${apiBase}/api/create-transfer-order`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${await window.ARVEL_CHECKOUT_USER.getIdToken()}`
+        },
+        body: JSON.stringify({
+          orderNumber: order.orderNumber,
+          customer: order.customer,
+          address: order.address,
+          delivery: {
+            method: order.delivery.value,
+            postalCode: order.address.postalCode,
+            meetingPoint: order.address.meetingPoint || ""
+          },
+          items: order.items.map((item) => ({
+            documentId: item.product.documentId || item.documentId || "",
+            variant_id: item.variant_id || item.variantId || "",
+            size: item.size,
+            color: item.color,
+            quantity: item.quantity
+          }))
+        })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.ok) {
+        throw new Error(result.error || "No pudimos registrar el pedido.");
+      }
+      order.total = Number(result.total) || order.total;
+      showConfirmation(order);
+    } catch (error) {
+      elements.globalError.textContent = error.message || "No pudimos registrar el pedido. Intentá nuevamente.";
+      submit.disabled = false;
+      submit.textContent = originalLabel;
+    }
+  }
+
   function bindEvents() {
     elements.copyTransferAlias?.addEventListener("click", async () => {
       const alias = String(window.ARVEL_TRANSFER?.alias || "").trim();
@@ -749,7 +800,7 @@
         await startMercadoPago(order);
         return;
       }
-      showConfirmation(order);
+      await createTransferOrder(order);
     });
 
     updateCheckoutProgress("checkout-customer");
