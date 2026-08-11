@@ -334,7 +334,6 @@
     const transferPrice = Number(product.transferPrice || mainPrice || 0);
     const originalPrice = mainPrice;
     const discount = Number(product.discount || 0);
-    const mercadoPagoReady = window.ARVEL_MERCADOPAGO_READY === true;
     const unavailable = product.soldOut || product.stock <= 0;
 
     return `
@@ -378,7 +377,7 @@
             ` : ""}
             <p class="product-card__price-main">${formatPrice(transferPrice)}</p>
           </div>
-          <p class="product-card__installments" data-mercadopago-financing ${mercadoPagoReady ? "" : "hidden"}>Mercado Pago calcula el total y las cuotas al comprar</p>
+          <p class="product-card__installments">Desde $50.000: solicitá por WhatsApp un link de Mercado Pago en 1, 2 o 3 cuotas con recargo.</p>
           <div class="product-card__actions">
             <button
               class="product-card__buy-link"
@@ -420,24 +419,9 @@
     renderGlobalComponents
   });
 
+  // El pago con Mercado Pago se solicita manualmente por WhatsApp. Las fichas
+  // públicas no consultan Vercel ni exponen credenciales para mostrarlo.
   window.ARVEL_MERCADOPAGO_READY = false;
-  window.ARVEL_MP_3_INSTALLMENTS_FEE_RATE = 0;
-  fetch("https://web-arvel-y2-k.vercel.app/api/mercadopago-health", { cache: "no-store" })
-    .then((response) => response.ok ? response.json() : null)
-    .then((result) => {
-      const ready = result?.connected === true && result?.mode === "production";
-      window.ARVEL_MERCADOPAGO_READY = ready;
-      window.ARVEL_MP_3_INSTALLMENTS_FEE_RATE = Number(result?.installmentFeeRate) || 0;
-      document.querySelectorAll("[data-mercadopago-financing]").forEach((element) => {
-        element.hidden = !ready;
-      });
-      window.dispatchEvent(new CustomEvent("arvel:mercadopago-ready", {
-        detail: { ready, installmentFeeRate: window.ARVEL_MP_3_INSTALLMENTS_FEE_RATE }
-      }));
-    })
-    .catch(() => {
-      window.ARVEL_MERCADOPAGO_READY = false;
-    });
 
   renderGlobalComponents();
   if (!document.querySelector("[data-auth-page]")) {

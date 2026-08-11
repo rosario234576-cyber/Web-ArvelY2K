@@ -94,18 +94,12 @@
       : "";
     const discountBadge = isVariantPrice ? "" : (discount > 0 ? `<span class="product-info__discount">-${discount}%</span>` : "");
 
-    // Calcular precio en 3 cuotas con Mercado Pago (solo si no es precio de variante)
+    // El link de Mercado Pago se prepara manualmente desde $50.000 por carrito.
     let mercadoPagoSection = "";
-    if (!isVariantPrice && window.ARVEL_MERCADOPAGO_READY === true) {
-      const mercadoPagoPrice = window.Arvel?.calculateMercadoPagoPrice
-        ? window.Arvel.calculateMercadoPagoPrice(transferPrice)
-        : transferPrice;
-      const pricePerInstallment = Math.round((mercadoPagoPrice / 3) * 100) / 100;
-      const installmentText = `<span class="product-info__price-installment">💳 3 cuotas de ${window.Arvel.formatPrice(pricePerInstallment)} con tarjeta</span>`;
+    if (!isVariantPrice) {
       mercadoPagoSection = `
-        <span class="product-info__price-option" data-mercadopago-financing>
-          Mercado Pago: ${window.Arvel.formatPrice(mercadoPagoPrice)}
-          ${installmentText}
+        <span class="product-info__price-option">
+          Desde $50.000 en el carrito podés solicitar por WhatsApp un link de Mercado Pago en 1, 2 o 3 cuotas con recargo.
         </span>
       `;
     }
@@ -442,9 +436,6 @@
   }
 
   function bindEvents() {
-    window.addEventListener("arvel:mercadopago-ready", (event) => {
-      renderPrice();
-    });
     elements.form.addEventListener("submit", (event) => {
       event.preventDefault();
       addToCart(false);

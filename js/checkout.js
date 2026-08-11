@@ -26,6 +26,13 @@
     deliveryGroup: document.querySelector("#delivery-group"),
     paymentGroup: document.querySelector("#payment-group"),
     mercadopagoInstallments: document.querySelector("#mercadopago-installments"),
+    mercadopagoOption: document.querySelector("#mercadopago-payment-option"),
+    mercadopagoInput: document.querySelector('input[name="payment"][value="mercadopago"]'),
+    manualMpBase: document.querySelector("#manual-mp-base"),
+    manualMpFee: document.querySelector("#manual-mp-fee"),
+    manualMpFinal: document.querySelector("#manual-mp-final"),
+    manualMpInstallmentTotal: document.querySelector("#manual-mp-installment-total"),
+    mercadopagoMinimumNote: document.querySelector("#mercadopago-minimum-note"),
     cashChoice: document.querySelector("#cash-choice"),
     cashInput: document.querySelector('input[value="efectivo"]'),
     postalCode: document.querySelector("#postal-code"),
@@ -139,14 +146,9 @@
 
     if (selected === "mercadopago") {
       const installmentValue = elements.form.elements.installments?.value || "1";
-      if (installmentValue === "dinero") {
-        paymentType = "mercadopago_money";
-        installments = 0;
-      } else {
-        const cuotas = Number(installmentValue);
-        paymentType = `mercadopago_card_${cuotas}`;
-        installments = cuotas;
-      }
+      const cuotas = Math.min(3, Math.max(1, Number(installmentValue) || 1));
+      paymentType = `mercadopago_manual_link_${cuotas}`;
+      installments = cuotas;
     }
 
     return { value: selected, label: input.dataset.label, installments, paymentType };
@@ -156,45 +158,59 @@
     const subtotal = getSubtotal();
     const delivery = getDelivery();
     const shipping = delivery?.cost || 0;
-    const prices = {
-      dinero: 0,
-      1: 0,
-      2: 0,
-      3: 0
-    };
-    const fees = window.ARVEL_MERCADOPAGO_CONFIG?.fees || {};
-    const readFee = (key) => {
-      const value = Number(fees[key]);
-      return Number.isFinite(value) && value >= 0 && value < 0.9 ? value : 0;
-    };
-    const grossUp = (amount, fee) => fee > 0
-      ? Math.ceil((amount / (1 - fee)) / 100) * 100
-      : Math.round(amount);
+    const baseAmount = subtotal + shipping;
+    const config = window.ARVEL_MANUAL_PAYMENT_LINK;
+    if (!config) return;
 
-    ["dinero", "1", "2", "3"].forEach((installments) => {
-      const key = installments === "dinero"
-        ? "mercadopago_money"
-        : `mercadopago_card_${installments}`;
-      prices[installments] = grossUp(subtotal, readFee(key)) + shipping;
-    });
-
-    // Actualizar dinero en Mercado Pago
-    const dineroElement = document.querySelector("#installments-dinero-price");
-    if (dineroElement) {
-      dineroElement.textContent = window.Arvel.formatPrice(prices.dinero);
-    }
-
-    // Actualizar cuotas con tarjeta
     for (const cuotas of [1, 2, 3]) {
       const priceElement = document.querySelector(`#installments-${cuotas}-price`);
       if (priceElement) {
-        const cuota = Math.round((prices[cuotas] / cuotas) * 100) / 100;
-        priceElement.textContent = `${window.Arvel.formatPrice(cuota)} c/u`;
+        const quote = config.calculate(baseAmount, cuotas);
+        priceElement.textContent = cuotas === 1
+          ? window.Arvel.formatPrice(quote.finalAmount)
+          : `aprox. ${window.Arvel.formatPrice(quote.installmentAmount)} c/u`;
       }
+    }
+
+    const selectedInstallments = Number(elements.form.elements.installments?.value || 1);
+    const quote = config.calculate(baseAmount, selectedInstallments);
+    if (elements.manualMpBase) elements.manualMpBase.textContent = window.Arvel.formatPrice(quote.baseAmount);
+    if (elements.manualMpFee) elements.manualMpFee.textContent = window.Arvel.formatPrice(quote.feeAmount);
+    if (elements.manualMpFinal) elements.manualMpFinal.textContent = window.Arvel.formatPrice(quote.finalAmount);
+    if (elements.manualMpInstallmentTotal) {
+      elements.manualMpInstallmentTotal.textContent = quote.installments === 1
+        ? "Un pago con link de Mercado Pago."
+        : `${quote.installments} cuotas aproximadas de ${window.Arvel.formatPrice(quote.installmentAmount)}.`;
     }
   }
 
+  function updateManualPaymentAvailability() {
+    const config = window.ARVEL_MANUAL_PAYMENT_LINK;
+    if (!config || !elements.mercadopagoInput) return;
+    const eligible = getSubtotal() >= Number(config.minimumAmount || 50000);
+    elements.mercadopagoInput.disabled = !eligible;
+    elements.mercadopagoOption?.classList.toggle("is-disabled", !eligible);
+    if (elements.mercadopagoMinimumNote) {
+      elements.mercadopagoMinimumNote.textContent = eligible
+        ? "El link se solicita manualmente por WhatsApp. Los porcentajes contemplan el costo informado de Mercado Pago; no incluyen impuestos o retenciones que pudieran corresponder."
+        : `Esta opción se habilita cuando los productos suman ${window.Arvel.formatPrice(config.minimumAmount)}.`;
+    }
+    if (!eligible && elements.form.elements.payment?.value === "mercadopago") {
+      const transfer = elements.form.querySelector('input[name="payment"][value="transferencia"]');
+      if (transfer) transfer.checked = true;
+    }
+  }
+
+  function updateSubmitLabel() {
+    const submit = elements.form.querySelector('[type="submit"]');
+    if (!submit || submit.disabled) return;
+    submit.textContent = elements.form.elements.payment?.value === "mercadopago"
+      ? "Solicitar link por WhatsApp"
+      : "Confirmar pedido";
+  }
+
   function updateInstallmentsVisibility() {
+    updateManualPaymentAvailability();
     const paymentMethod = elements.form.elements.payment?.value;
     if (elements.mercadopagoInstallments) {
       elements.mercadopagoInstallments.hidden = paymentMethod !== "mercadopago";
@@ -202,6 +218,7 @@
         updateInstallmentsPrices();
       }
     }
+    updateSubmitLabel();
   }
 
   function renderItems() {
@@ -228,13 +245,21 @@
     const subtotal = getSubtotal();
     const delivery = getDelivery();
     const shipping = delivery?.cost || 0;
+    const baseTotal = subtotal + shipping;
+    const selectedPayment = elements.form.elements.payment?.value;
+    const selectedInstallments = Number(elements.form.elements.installments?.value || 1);
+    const manualQuote = selectedPayment === "mercadopago" && subtotal >= Number(window.ARVEL_MANUAL_PAYMENT_LINK?.minimumAmount || 50000)
+      ? window.ARVEL_MANUAL_PAYMENT_LINK?.calculate(baseTotal, selectedInstallments)
+      : null;
     elements.subtotal.textContent = window.Arvel.formatPrice(subtotal);
     elements.shipping.textContent = delivery
       ? shipping === 0
         ? "Gratis"
         : window.Arvel.formatPrice(shipping)
       : "A calcular";
-    elements.total.textContent = window.Arvel.formatPrice(subtotal + shipping);
+    elements.total.textContent = window.Arvel.formatPrice(manualQuote?.finalAmount || baseTotal);
+    updateManualPaymentAvailability();
+    updateInstallmentsPrices();
   }
 
   function updatePaymentAvailability() {
@@ -436,7 +461,18 @@
     const delivery = getDelivery();
     const payment = getPayment();
     const subtotal = getSubtotal();
-    const total = subtotal + delivery.cost;
+    const baseTotal = subtotal + delivery.cost;
+    const manualQuote = payment?.value === "mercadopago"
+      ? window.ARVEL_MANUAL_PAYMENT_LINK?.calculate(baseTotal, payment.installments || 1)
+      : null;
+    if (manualQuote) {
+      payment.baseAmount = manualQuote.baseAmount;
+      payment.feeAmount = manualQuote.feeAmount;
+      payment.finalAmount = manualQuote.finalAmount;
+      payment.installmentAmount = manualQuote.installmentAmount;
+      payment.rate = manualQuote.rate;
+      payment.label = `Link de Mercado Pago · ${manualQuote.label}`;
+    }
     const fullName = data.get("fullName").trim();
     const nameParts = fullName.split(/\s+/).filter(Boolean);
     const address = {
@@ -481,7 +517,8 @@
       delivery,
       payment,
       subtotal,
-      total,
+      baseTotal,
+      total: manualQuote?.finalAmount || baseTotal,
       items: cart.map((item) => ({
         ...item,
         product: findProduct(item)
@@ -510,6 +547,26 @@
           order.address.references ? `↔️ Entre calles: ${order.address.references}` : null
         ];
 
+    const isManualPaymentLink = order.payment.value === "mercadopago";
+    const paymentLines = isManualPaymentLink
+      ? [
+          `Método: ${order.payment.label}`,
+          `Total base (productos + envío): ${window.Arvel.formatPrice(order.baseTotal)}`,
+          `Costo por cobro/cuotas: ${window.Arvel.formatPrice(order.payment.feeAmount)}`,
+          `💰 *TOTAL DEL LINK: ${window.Arvel.formatPrice(order.payment.finalAmount)}*`,
+          order.payment.installments > 1
+            ? `Cuotas solicitadas: ${order.payment.installments} de aprox. ${window.Arvel.formatPrice(order.payment.installmentAmount)}`
+            : "Modalidad solicitada: 1 pago"
+        ]
+      : [
+          `Método: ${order.payment.label}`,
+          `Subtotal: ${window.Arvel.formatPrice(order.subtotal)}`,
+          `Envío: ${order.delivery.cost === 0 ? "GRATIS" : window.Arvel.formatPrice(order.delivery.cost)}`,
+          `💰 *TOTAL: ${window.Arvel.formatPrice(order.total)}*`,
+          window.ARVEL_TRANSFER?.alias ? `Alias: *${window.ARVEL_TRANSFER.alias}*` : null,
+          window.ARVEL_TRANSFER?.wallet ? `Billetera: ${window.ARVEL_TRANSFER.wallet}` : null
+        ];
+
     return [
       "🛙️ *NUEVO PEDIDO ARVEL*",
       "Hola, quiero enviar este pedido para revisión.",
@@ -528,12 +585,7 @@
       ...productLines,
       "",
       "💳 *PAGO*",
-      `Método: ${order.payment.label}`,
-      `Subtotal: ${window.Arvel.formatPrice(order.subtotal)}`,
-      `Envío: ${order.delivery.cost === 0 ? "GRATIS" : window.Arvel.formatPrice(order.delivery.cost)}`,
-      `💰 *TOTAL: ${window.Arvel.formatPrice(order.total)}*`,
-      window.ARVEL_TRANSFER?.alias ? `Alias: *${window.ARVEL_TRANSFER.alias}*` : null,
-      window.ARVEL_TRANSFER?.wallet ? `Billetera: ${window.ARVEL_TRANSFER.wallet}` : null,
+      ...paymentLines,
       "",
       "📦 *ENTREGA*",
       `Modalidad: ${order.delivery.label}`,
@@ -542,13 +594,17 @@
       `📮 Código postal: ${order.address.postalCode}`,
       order.address.notes ? `📝 Observaciones: ${order.address.notes}` : null,
       "",
-      "🧾 *COMPROBANTE*",
-      hasReceipt
-        ? "✅ Confirmo que realicé la transferencia y adjunto el comprobante."
-        : "⏳ Todavía no adjunté el comprobante de pago.",
+      isManualPaymentLink ? "🔗 *SOLICITUD DE LINK*" : "🧾 *COMPROBANTE*",
+      isManualPaymentLink
+        ? "Solicito que me envíen el link de Mercado Pago por el total y las cuotas indicadas. Todavía no realicé el pago."
+        : hasReceipt
+          ? "✅ Confirmo que realicé la transferencia y adjunto el comprobante."
+          : "⏳ Todavía no adjunté el comprobante de pago.",
       "",
       "⚠️ *IMPORTANTE*",
-      "El pedido se considera enviado cuando confirme este mensaje. Queda sujeto a verificación de stock y acreditación del pago."
+      isManualPaymentLink
+        ? "El pedido queda sujeto a verificación de stock. Arvel enviará manualmente el link correspondiente; revisá el importe antes de pagarlo."
+        : "El pedido se considera enviado cuando confirme este mensaje. Queda sujeto a verificación de stock y acreditación del pago."
     ]
       .filter((line) => line !== null && line !== undefined)
       .join("\n");
@@ -647,105 +703,18 @@
       "Se abrió el chat administrativo de Arvel al +54 9 11 6015-3234 con todos tus datos. WhatsApp no permite adjuntar el archivo desde un enlace: tocá el clip, elegí el comprobante y enviá el mensaje.";
   }
 
-  async function startMercadoPago(order) {
-    const submit = elements.form.querySelector('[type="submit"]');
-    const originalLabel = submit.textContent;
-    submit.disabled = true;
-    submit.textContent = "Conectando con Mercado Pago…";
-    elements.globalError.textContent = "";
-
-    try {
-      if (!window.ARVEL_CHECKOUT_USER || typeof window.ARVEL_CHECKOUT_USER.getIdToken !== "function") {
-        throw new Error("Tu sesiÃ³n venciÃ³. VolvÃ© a ingresar antes de continuar con Mercado Pago.");
-      }
-      const paymentApiBase = String(
-        window.ARVEL_PAYMENT_API_BASE || window.ARVEL_API_BASE || ""
-      ).replace(/\/+$/, "");
-      if (!paymentApiBase) {
-        throw new Error("Falta configurar la dirección segura de Mercado Pago.");
-      }
-
-      // No forzamos un refresh: Firebase devuelve el token vigente y renueva
-      // solo si es necesario. Forzarlo al tocar "Comprar" podía cortar el
-      // flujo aunque la sesión continuara siendo válida.
-      let token;
-      try {
-        token = await window.ARVEL_CHECKOUT_USER.getIdToken();
-      } catch (sessionError) {
-        console.error("No se pudo obtener el token de Firebase para el pago", sessionError);
-        throw new Error("No pudimos validar tu sesión. Volvé a ingresar e intentá nuevamente.");
-      }
-      const controller = new AbortController();
-      const timeout = window.setTimeout(() => controller.abort(), 20000);
-      let response;
-      try {
-        response = await fetch(
-          `${paymentApiBase}/api/create-mercadopago-preference`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`
-            },
-            signal: controller.signal,
-            body: JSON.stringify({
-            orderNumber: order.orderNumber,
-            customer: order.customer,
-            delivery: {
-              method: order.delivery.value,
-              postalCode: order.address.postalCode,
-              meetingPoint: elements.meetingPoint?.value || "",
-              agencyId: order.delivery.agencyId || ""
-            },
-            address: order.address,
-            installments: order.payment.installments ? Number(order.payment.installments) : 0,
-            paymentType: order.payment.paymentType,
-            items: order.items.map((item) => ({
-              documentId: item.product.documentId || item.documentId || "",
-              variant_id: item.variant_id || item.variantId || `${item.product.documentId || item.documentId || item.product.id}::${item.size}::${item.color}`,
-              size: item.size,
-              color: item.color,
-              quantity: item.quantity
-            }))
-            })
-          }
-        );
-      } finally {
-        window.clearTimeout(timeout);
-      }
-      const contentType = response.headers.get("content-type") || "";
-      let result = { error: "El servidor de pagos devolvió una respuesta inválida." };
-      if (contentType.includes("application/json")) {
-        try {
-          result = await response.json();
-        } catch (parseError) {
-          console.error("Respuesta JSON inválida de Mercado Pago", parseError);
-        }
-      }
-      if (!response.ok || !result.checkoutUrl) {
-        console.error("Mercado Pago no inició el checkout", {
-          status: response.status,
-          response: result
-        });
-        throw new Error(result.error || "No pudimos iniciar Mercado Pago.");
-      }
-      const checkoutUrl = new URL(result.checkoutUrl);
-      if (checkoutUrl.protocol !== "https:") {
-        throw new Error("Mercado Pago devolvió un enlace de pago no válido.");
-      }
-      window.location.assign(checkoutUrl.href);
-    } catch (error) {
-      console.error("No se pudo iniciar Mercado Pago", error);
-      const networkFailure = error instanceof TypeError && /fetch|network|load/i.test(error.message || "");
-      const timedOut = error?.name === "AbortError";
-      elements.globalError.textContent = networkFailure
-        ? "No pudimos comunicarnos con el servicio de pagos. Tus datos siguen en este formulario: revisá tu conexión e intentá nuevamente."
-        : timedOut
-          ? "Mercado Pago tardó demasiado en responder. Tus datos siguen en el formulario; intentá nuevamente en unos segundos."
-        : error.message || "No pudimos conectar con Mercado Pago. Intentá nuevamente.";
-      submit.disabled = false;
-      submit.textContent = originalLabel;
+  function requestManualMercadoPagoLink(order) {
+    const config = window.ARVEL_MANUAL_PAYMENT_LINK;
+    if (!config || order.subtotal < Number(config.minimumAmount || 50000)) {
+      elements.globalError.textContent = `El link de Mercado Pago está disponible desde ${window.Arvel.formatPrice(config?.minimumAmount || 50000)} en productos.`;
+      return;
     }
+    const message = buildWhatsAppMessage(order, false);
+    const adminNumber = String(config.whatsappNumber || "5491160153234").replace(/\D/g, "");
+    const whatsappUrl = `https://wa.me/${adminNumber}?text=${encodeURIComponent(message)}`;
+    elements.globalError.textContent = "Se abrió WhatsApp para solicitar el link. El pedido todavía no está pagado ni confirmado.";
+    const whatsappWindow = window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+    if (!whatsappWindow) window.location.href = whatsappUrl;
   }
 
   async function createTransferOrder(order) {
@@ -798,8 +767,8 @@
 
   function bindEvents() {
     window.addEventListener("arvel:mercadopago-status", () => {
-      // payment-config.js termina su consulta en forma asíncrona; al hacerlo,
-      // recalculamos la vista sin tocar ningún dato del formulario.
+      // La configuración centralizada permite recalcular los importes
+      // sin tocar ningún dato que la clienta ya haya completado.
       updateInstallmentsPrices();
     });
     elements.copyTransferAlias?.addEventListener("click", async () => {
@@ -830,8 +799,11 @@
       }
       if (event.target.name === "payment") {
         updateInstallmentsVisibility();
+        updateTotals();
       }
       if (event.target.name === "installments") {
+        updateTotals();
+        updateSubmitLabel();
         updateCheckoutProgress(event.target.closest(".checkout-block")?.id || null);
       }
       if (event.target.name === "province") {
@@ -858,7 +830,7 @@
       if (!validateForm()) return;
       const order = buildOrderData(generateOrderNumber());
       if (order.payment.value === "mercadopago") {
-        await startMercadoPago(order);
+        requestManualMercadoPagoLink(order);
         return;
       }
       await createTransferOrder(order);

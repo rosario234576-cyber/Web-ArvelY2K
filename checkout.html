@@ -23,7 +23,7 @@
     <link rel="stylesheet" href="css/reset.css">
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/components.css?v=20260806-transfer-only">
-    <link rel="stylesheet" href="css/styles.css?v=20260803-shipping-manual1">
+    <link rel="stylesheet" href="css/styles.css?v=20260811-manual-payment-link">
     <link rel="stylesheet" href="css/responsive.css?v=20260806-transfer-only">
   </head>
   <body>
@@ -285,18 +285,23 @@
                     <input type="radio" name="payment" value="transferencia" data-label="Transferencia o Depósito" checked required>
                     <span><strong>Transferencia bancaria o Depósito</strong><small>Pagá por transferencia o depósito. Al confirmar verás el alias y podrás enviar el comprobante por WhatsApp. ↗</small></span>
                   </label>
-                  <label class="checkout-choice" id="mercadopago-payment-option" hidden>
-                    <input type="radio" name="payment" value="mercadopago" data-label="Mercado Pago">
-                    <span><strong>Mercado Pago</strong><small>Pagá con dinero disponible o tarjeta. Podrás elegir hasta 3 cuotas; el importe final se calcula antes de confirmar el pago.</small></span>
+                  <label class="checkout-choice" id="mercadopago-payment-option">
+                    <input type="radio" name="payment" value="mercadopago" data-label="Link de Mercado Pago (manual)">
+                    <span><strong>Solicitar link de Mercado Pago</strong><small>Disponible desde $50.000. Elegí 1 pago, 2 o 3 cuotas y pedí el link exacto por WhatsApp.</small></span>
                   </label>
                 </div>
                 <div class="mercadopago-installments" id="mercadopago-installments" hidden aria-live="polite">
-                  <strong>Elegí cómo querés pagar</strong>
-                  <label><input type="radio" name="installments" value="dinero" checked> Dinero disponible en Mercado Pago <small id="installments-dinero-price"></small></label>
-                  <label><input type="radio" name="installments" value="1"> Tarjeta en 1 pago <small id="installments-1-price"></small></label>
+                  <strong>Elegí cómo querés solicitar el link</strong>
+                  <label><input type="radio" name="installments" value="1" checked> Tarjeta en 1 pago <small id="installments-1-price"></small></label>
                   <label><input type="radio" name="installments" value="2"> Tarjeta en 2 cuotas <small id="installments-2-price"></small></label>
                   <label><input type="radio" name="installments" value="3"> Tarjeta en 3 cuotas <small id="installments-3-price"></small></label>
-                  <small class="field-help">El total con tarjeta incluye el costo informado por Mercado Pago para que Arvel reciba el valor publicado por transferencia. Mercado Pago confirma los medios disponibles antes del pago.</small>
+                  <div class="manual-payment-summary">
+                    <div><span>Total del pedido</span><strong id="manual-mp-base">$ 0</strong></div>
+                    <div><span>Costo del link y cuotas</span><strong id="manual-mp-fee">$ 0</strong></div>
+                    <div class="manual-payment-summary__total"><span>Total a pagar</span><strong id="manual-mp-final">$ 0</strong></div>
+                    <p id="manual-mp-installment-total"></p>
+                  </div>
+                  <small class="field-help" id="mercadopago-minimum-note">El link se solicita manualmente por WhatsApp. Los porcentajes contemplan el costo informado de Mercado Pago; no incluyen impuestos o retenciones que pudieran corresponder.</small>
                 </div>
                 <p class="field-error" id="payment-error"></p>
               </fieldset>
@@ -397,12 +402,12 @@
     <script src="js/checkout-auth-guard.js?v=20260805-mp-comisiones-mercadopago"></script>
     <script src="js/data/productos.js"></script>
     <script src="js/firebase-products.js?v=20260804-fast-catalog"></script>
-    <script src="js/components.js?v=20260804-mp-conditional"></script>
+    <script src="js/components.js?v=20260811-manual-payment-link"></script>
     <script src="js/main.js?v=20260804-cart-variant-fix"></script>
     <script src="js/transfer-config.js?v=20260803-payment2"></script>
-    <script src="js/payment-config.js?v=20260810-mp-robusto"></script>
+    <script src="js/payment-config.js?v=20260811-manual-payment-link"></script>
     <script src="js/shipping.js?v=20260803-ca1"></script>
-    <script src="js/checkout.js?v=20260810-mp-robusto"></script>
+    <script src="js/checkout.js?v=20260811-manual-payment-link"></script>
     <script src="js/chatbot.js"></script>
     <script src="js/favoritos.js"></script>
     <script src="js/analytics.js"></script>
