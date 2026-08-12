@@ -526,7 +526,7 @@
     };
   }
 
-  function buildWhatsAppMessage(order, hasReceipt = false) {
+  function buildWhatsAppMessageLegacy(order, hasReceipt = false) {
     const productLines = order.items.map((item, index) =>
       `${index + 1}. *${item.product.name}*\n` +
       `   📏 Talle: ${item.size} · 🎨 Color: ${item.color}\n` +
@@ -605,6 +605,97 @@
       isManualPaymentLink
         ? "El pedido queda sujeto a verificación de stock. Arvel enviará manualmente el link correspondiente; revisá el importe antes de pagarlo."
         : "El pedido se considera enviado cuando confirme este mensaje. Queda sujeto a verificación de stock y acreditación del pago."
+    ]
+      .filter((line) => line !== null && line !== undefined)
+      .join("\n");
+  }
+
+  function buildWhatsAppMessage(order, hasReceipt = false) {
+    const productLines = order.items.flatMap((item, index) => [
+      `${index + 1}. ✨ *${item.product.name}*`,
+      `📏 Talle: ${item.size || "Único"}`,
+      `🎨 Color: ${item.color || "Sin especificar"}`,
+      `📦 Cantidad: ${item.quantity}`,
+      `💰 Precio: ${window.Arvel.formatPrice(item.product.price * item.quantity)}`,
+      index < order.items.length - 1 ? "" : null
+    ]);
+
+    const deliveryLines = order.delivery.value === "correo-sucursal"
+      ? [
+          `📍 Sucursal: ${order.address.agencyName}`,
+          `🏠 Dirección: ${order.address.agencyAddress}`
+        ]
+      : order.delivery.value === "encuentro"
+        ? [
+            `🤝 Punto coordinado: ${elements.meetingPoint?.value || "A coordinar"}`,
+            "📅 Día y horario: a coordinar con la vendedora"
+          ]
+        : [
+            `🏠 Dirección: ${order.address.street} ${order.address.streetNumber}${order.address.apartment ? `, ${order.address.apartment}` : ""}`,
+            order.address.references ? `↔️ Entre calles / referencia: ${order.address.references}` : null
+          ];
+
+    const isManualPaymentLink = order.payment.value === "mercadopago";
+    const paymentLines = isManualPaymentLink
+      ? [
+          `💳 Método: ${order.payment.label}`,
+          `🧾 Total base: ${window.Arvel.formatPrice(order.baseTotal)}`,
+          `📈 Recargo del link/cuotas: ${window.Arvel.formatPrice(order.payment.feeAmount)}`,
+          `💖 *TOTAL DEL LINK: ${window.Arvel.formatPrice(order.payment.finalAmount)}*`,
+          order.payment.installments > 1
+            ? `🔢 Cuotas solicitadas: ${order.payment.installments} de aprox. ${window.Arvel.formatPrice(order.payment.installmentAmount)}`
+            : "🔢 Modalidad solicitada: 1 pago"
+        ]
+      : [
+          `💳 Método: ${order.payment.label}`,
+          `🧾 Subtotal: ${window.Arvel.formatPrice(order.subtotal)}`,
+          `🚚 Envío: ${order.delivery.cost === 0 ? "GRATIS" : window.Arvel.formatPrice(order.delivery.cost)}`,
+          `💖 *TOTAL: ${window.Arvel.formatPrice(order.total)}*`,
+          window.ARVEL_TRANSFER?.alias ? `💡 Alias: *${window.ARVEL_TRANSFER.alias}*` : null,
+          window.ARVEL_TRANSFER?.wallet ? `💳 Billetera: ${window.ARVEL_TRANSFER.wallet}` : null
+        ];
+
+    return [
+      "🛍️ ✨ *NUEVO PEDIDO ARVEL*",
+      "¡Hola! 💌 Quiero enviar mi pedido para revisión y confirmación.",
+      "",
+      "🧾 *DATOS DEL PEDIDO*",
+      `📌 Pedido: *${order.orderNumber}*`,
+      `🗓️ Fecha: ${new Intl.DateTimeFormat("es-AR", { dateStyle: "short", timeStyle: "short" }).format(order.createdAt)}`,
+      "",
+      "👥 *DATOS DE LA CLIENTA*",
+      `👤 Nombre: ${order.customer.fullName}`,
+      `📱 Teléfono: ${order.customer.phone}`,
+      `💌 Correo: ${order.customer.email}`,
+      order.customer.dni ? `🪪 DNI: ${order.customer.dni}` : null,
+      "",
+      "🛒 *MI PEDIDO*",
+      ...productLines,
+      "",
+      "💳 *PAGO*",
+      ...paymentLines,
+      "",
+      "📦 *ENTREGA*",
+      `🚚 Modalidad: ${order.delivery.label}`,
+      ...deliveryLines,
+      `🏙️ Localidad: ${order.address.city}, ${order.address.province}`,
+      `📮 Código postal: ${order.address.postalCode}`,
+      order.address.notes ? `📝 Observaciones: ${order.address.notes}` : null,
+      "",
+      isManualPaymentLink ? "🔗 ✨ *SOLICITUD DE LINK*" : "🧾 ✨ *COMPROBANTE*",
+      isManualPaymentLink
+        ? "✅ Solicito el link de Mercado Pago por el total y las cuotas indicadas. Todavía no realicé el pago."
+        : hasReceipt
+          ? "✅ Confirmo que realicé la transferencia y adjunto el comprobante de pago."
+          : "⏳ Todavía no adjunté el comprobante de pago.",
+      "",
+      "💌 *IMPORTANTE*",
+      isManualPaymentLink
+        ? "Al enviar este mensaje, mi pedido queda enviado para revisión. Arvel confirmará el stock y me enviará manualmente el link correspondiente."
+        : "Al enviar este mensaje, mi pedido queda enviado para revisión ✨",
+      "La confirmación final queda sujeta a la verificación de stock y acreditación del pago.",
+      "",
+      "¡Gracias! 🛒 🛍️ 💖"
     ]
       .filter((line) => line !== null && line !== undefined)
       .join("\n");
