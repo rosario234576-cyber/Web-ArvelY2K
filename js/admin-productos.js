@@ -792,14 +792,20 @@ function renderControlCenter() {
     ? groups.map((group) => `<article class="admin-card"><span class="eyebrow">Coincidencia por ${escapeHtml(group.field)}</span><h2>${escapeHtml(group.value)}</h2>${group.items.map((product) => managementItem(product, `<button type="button" data-edit-product="${escapeHtml(product.documentId)}">Revisar</button>`)).join("")}</article>`).join("")
     : '<article class="admin-card admin-empty-state"><strong>No encontramos duplicados exactos</strong><p>El panel seguirá controlando SKU e identificadores de Instagram al guardar.</p></article>';
   ui.inventory.innerHTML = products.length ? products.map((product) => `
-    <tr><td><strong>${escapeHtml(product.name)}</strong></td><td>${escapeHtml(product.sku)}</td><td>${Number(product.stock) || 0}</td><td>${product.soldOut ? "Vendido" : escapeHtml(product.status || "draft")}</td>
-    <td><button type="button" data-stock-action="${product.soldOut ? "restore" : "sold"}" data-product-id="${escapeHtml(product.documentId)}">${product.soldOut ? "Reactivar" : "Marcar vendido"}</button> <button type="button" data-edit-product="${escapeHtml(product.documentId)}">Editar</button></td></tr>
+    <tr><td data-label="Producto"><strong>${escapeHtml(product.name)}</strong></td><td data-label="SKU">${escapeHtml(product.sku)}</td><td data-label="Stock">${Number(product.stock) || 0}</td><td data-label="Estado">${product.soldOut ? "Vendido" : escapeHtml(product.status || "draft")}</td>
+    <td data-label="Acciones"><button type="button" data-stock-action="${product.soldOut ? "restore" : "sold"}" data-product-id="${escapeHtml(product.documentId)}">${product.soldOut ? "Reactivar" : "Marcar vendido"}</button> <button type="button" data-edit-product="${escapeHtml(product.documentId)}">Editar</button></td></tr>
   `).join("") : '<tr><td colspan="5">Todavía no hay productos.</td></tr>';
 }
 
 async function openView(name) {
   ui.panels.forEach((panel) => { panel.hidden = panel.dataset.adminPanel !== name; });
-  ui.tabs.querySelectorAll("[data-admin-view]").forEach((button) => button.classList.toggle("is-active", button.dataset.adminView === name));
+  ui.tabs.querySelectorAll("[data-admin-view]").forEach((button) => {
+    const isActive = button.dataset.adminView === name;
+    button.classList.toggle("is-active", isActive);
+    if (isActive && window.matchMedia("(max-width: 64rem)").matches) {
+      requestAnimationFrame(() => button.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" }));
+    }
+  });
   window.scrollTo({ top: 0, behavior: "smooth" });
 
   // Cargar métricas cuando se abre esa pestaña
