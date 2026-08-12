@@ -283,7 +283,7 @@
                 <div class="checkout-choices">
                   <label class="checkout-choice">
                     <input type="radio" name="payment" value="transferencia" data-label="Transferencia o Depósito" checked required>
-                    <span><strong>Transferencia bancaria o Depósito</strong><small>Pagá por transferencia o depósito. Al confirmar verás el alias y podrás enviar el comprobante por WhatsApp. ↗</small></span>
+                    <span><strong>Transferencia bancaria o Depósito</strong><small>Pagá por transferencia o depósito. Al confirmar verás el alias; después abrirás WhatsApp para adjuntar allí el comprobante. ↗</small></span>
                   </label>
                   <label class="checkout-choice" id="mercadopago-payment-option">
                     <input type="radio" name="payment" value="mercadopago" data-label="Link de Mercado Pago (manual)">
@@ -366,28 +366,10 @@
                 <div><dt>CVU</dt><dd id="transfer-cvu">0000168300000012819548</dd></div>
               </dl>
               <button class="button button--secondary" id="copy-transfer-alias" type="button">Copiar alias</button>
-              <small>Transferí el total exacto. Después subí el comprobante para compartirlo con Arvel por WhatsApp.</small>
-            </div>
-            <div class="receipt-upload" id="receipt-upload">
-              <label class="receipt-upload__label" for="payment-receipt">
-                <span class="eyebrow">Comprobante de transferencia</span>
-                <strong>Subí el comprobante</strong>
-                <small>Imagen JPG, PNG, WEBP o PDF · máximo 10 MB.</small>
-              </label>
-              <input id="payment-receipt" type="file" accept="image/jpeg,image/png,image/webp,application/pdf">
-              <div class="receipt-upload__preview" id="receipt-preview" hidden>
-                <img id="receipt-preview-image" src="" alt="Vista previa del comprobante" hidden>
-                <div>
-                  <strong id="receipt-file-name"></strong>
-                  <small id="receipt-file-size"></small>
-                </div>
-                <button class="text-link" id="remove-receipt" type="button">Quitar</button>
-              </div>
-              <p class="field-error" id="receipt-error" role="alert"></p>
-              <p class="field-help" id="receipt-help">El archivo no se guarda en la web. El botón abre el chat correcto con todos tus datos; por seguridad, WhatsApp te pedirá adjuntar el comprobante desde el clip.</p>
+              <small>Transferí el total exacto. Después abrí WhatsApp y adjuntá el comprobante directamente en el chat.</small>
             </div>
             <button class="button button--pink" id="confirmation-whatsapp" type="button">
-              <span id="confirmation-whatsapp-label">Abrir WhatsApp y enviar comprobante</span>
+              <span id="confirmation-whatsapp-label">Enviar pedido por WhatsApp</span>
             </button>
             <a class="button button--secondary" href="tienda.html">Volver al shop</a>
           </section>
@@ -407,7 +389,7 @@
     <script src="js/transfer-config.js?v=20260803-payment2"></script>
     <script src="js/payment-config.js?v=20260811-manual-payment-link"></script>
     <script src="js/shipping.js?v=20260803-ca1"></script>
-    <script src="js/checkout.js?v=20260812-transfer-fallback"></script>
+    <script src="js/checkout.js?v=20260812-whatsapp-transfer"></script>
     <script src="js/chatbot.js"></script>
     <script src="js/favoritos.js"></script>
     <script src="js/analytics.js"></script>

@@ -11,7 +11,6 @@
   );
   let cart = window.ArvelStore.readStoredArray(window.ArvelStore.storageKeys.cart);
   let preparedOrder = null;
-  let receiptObjectUrl = "";
 
   const elements = {
     empty: document.querySelector("#checkout-empty"),
@@ -62,15 +61,7 @@
     copyTransferAlias: document.querySelector("#copy-transfer-alias"),
     transferWallet: document.querySelector("#transfer-wallet"),
     transferHolder: document.querySelector("#transfer-holder"),
-    transferCvu: document.querySelector("#transfer-cvu"),
-    receipt: document.querySelector("#payment-receipt"),
-    receiptPreview: document.querySelector("#receipt-preview"),
-    receiptPreviewImage: document.querySelector("#receipt-preview-image"),
-    receiptFileName: document.querySelector("#receipt-file-name"),
-    receiptFileSize: document.querySelector("#receipt-file-size"),
-    receiptError: document.querySelector("#receipt-error"),
-    receiptHelp: document.querySelector("#receipt-help"),
-    removeReceipt: document.querySelector("#remove-receipt")
+    transferCvu: document.querySelector("#transfer-cvu")
   };
 
   function findProduct(itemOrId) {
@@ -610,7 +601,7 @@
       .join("\n");
   }
 
-  function buildWhatsAppMessage(order, hasReceipt = false) {
+  function buildWhatsAppMessage(order) {
     const productLines = order.items.flatMap((item, index) => [
       `${index + 1}. ✨ *${item.product.name}*`,
       `📏 Talle: ${item.size || "Único"}`,
@@ -685,9 +676,7 @@
       isManualPaymentLink ? "🔗 ✨ *SOLICITUD DE LINK*" : "🧾 ✨ *COMPROBANTE*",
       isManualPaymentLink
         ? "✅ Solicito el link de Mercado Pago por el total y las cuotas indicadas. Todavía no realicé el pago."
-        : hasReceipt
-          ? "✅ Confirmo que realicé la transferencia y adjunto el comprobante de pago."
-          : "⏳ Todavía no adjunté el comprobante de pago.",
+        : "✅ Confirmo que realicé la transferencia. Voy a adjuntar el comprobante de pago en este chat.",
       "",
       "💌 *IMPORTANTE*",
       isManualPaymentLink
@@ -719,9 +708,9 @@
       </dl>
     `;
     elements.confirmationNotice.textContent = registered
-      ? "Registramos tu pedido como pendiente de pago. Transferí el total exacto, subí el comprobante y enviá el mensaje por WhatsApp. La reserva se confirma al verificar el pago y el stock."
-      : "El registro automático no está disponible en este momento. Conservamos tu resumen en esta pantalla, pero el pedido todavía no fue recibido: transferí el total exacto y enviá el comprobante junto con el mensaje de WhatsApp para que Arvel lo revise manualmente.";
-    elements.confirmationWhatsAppLabel.textContent = "Abrir WhatsApp y enviar comprobante";
+      ? "Registramos tu pedido como pendiente de pago. Transferí el total exacto y enviá el pedido por WhatsApp; dentro del chat adjuntá el comprobante desde el clip. La reserva se confirma al verificar el pago y el stock."
+      : "El registro automático no está disponible en este momento. Conservamos tu resumen en esta pantalla, pero el pedido todavía no fue recibido: transferí el total exacto, abrí WhatsApp y adjuntá allí el comprobante para que Arvel lo revise manualmente.";
+    elements.confirmationWhatsAppLabel.textContent = "Enviar pedido por WhatsApp";
     const alias = String(window.ARVEL_TRANSFER?.alias || "").trim();
     elements.transferAlias.textContent = alias || "Alias todavía no configurado";
     elements.transferWallet.textContent = window.ARVEL_TRANSFER?.wallet || "";
@@ -732,68 +721,16 @@
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function clearReceipt() {
-    if (receiptObjectUrl) URL.revokeObjectURL(receiptObjectUrl);
-    receiptObjectUrl = "";
-    elements.receipt.value = "";
-    elements.receiptPreview.hidden = true;
-    elements.receiptPreviewImage.hidden = true;
-    elements.receiptPreviewImage.removeAttribute("src");
-    elements.receiptFileName.textContent = "";
-    elements.receiptFileSize.textContent = "";
-    elements.receiptError.textContent = "";
-  }
-
-  function updateReceiptPreview() {
-    const file = elements.receipt.files?.[0];
-    elements.receiptError.textContent = "";
-    if (!file) {
-      clearReceipt();
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      clearReceipt();
-      elements.receiptError.textContent = "El comprobante supera los 10 MB. Elegí un archivo más liviano.";
-      return;
-    }
-    const allowed = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
-    if (!allowed.includes(file.type)) {
-      clearReceipt();
-      elements.receiptError.textContent = "Usá una imagen JPG, PNG, WEBP o un archivo PDF.";
-      return;
-    }
-    if (receiptObjectUrl) URL.revokeObjectURL(receiptObjectUrl);
-    receiptObjectUrl = "";
-    elements.receiptPreview.hidden = false;
-    elements.receiptFileName.textContent = file.name;
-    elements.receiptFileSize.textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB`;
-    if (file.type.startsWith("image/")) {
-      receiptObjectUrl = URL.createObjectURL(file);
-      elements.receiptPreviewImage.src = receiptObjectUrl;
-      elements.receiptPreviewImage.hidden = false;
-    } else {
-      elements.receiptPreviewImage.hidden = true;
-    }
-  }
-
-  async function sendOrderWithReceipt() {
+  function sendOrderToWhatsApp() {
     if (!preparedOrder) return;
-    const file = elements.receipt.files?.[0];
-    if (!file) {
-      elements.receiptError.textContent = "Subí el comprobante antes de enviar el pedido.";
-      elements.receipt.focus();
-      return;
-    }
-
-    const message = buildWhatsAppMessage(preparedOrder, true);
-    elements.receiptError.textContent = "";
+    const message = buildWhatsAppMessage(preparedOrder);
     const adminNumber = String(window.ARVEL_TRANSFER?.whatsappNumber || "5491160153234")
       .replace(/\D/g, "");
     const whatsappUrl = `https://wa.me/${adminNumber}?text=${encodeURIComponent(message)}`;
     const whatsappWindow = window.open(whatsappUrl, "_blank", "noopener,noreferrer");
     if (!whatsappWindow) window.location.href = whatsappUrl;
-    elements.receiptHelp.textContent =
-      "Se abrió el chat administrativo de Arvel al +54 9 11 6015-3234 con todos tus datos. WhatsApp no permite adjuntar el archivo desde un enlace: tocá el clip, elegí el comprobante y enviá el mensaje.";
+    elements.confirmationNotice.textContent =
+      "Abrimos el chat administrativo de Arvel con todos los datos del pedido. Antes de enviarlo, adjuntá el comprobante desde el clip de WhatsApp.";
   }
 
   function requestManualMercadoPagoLink(order) {
@@ -802,7 +739,7 @@
       elements.globalError.textContent = `El link de Mercado Pago está disponible desde ${window.Arvel.formatPrice(config?.minimumAmount || 50000)} en productos.`;
       return;
     }
-    const message = buildWhatsAppMessage(order, false);
+    const message = buildWhatsAppMessage(order);
     const adminNumber = String(config.whatsappNumber || "5491160153234").replace(/\D/g, "");
     const whatsappUrl = `https://wa.me/${adminNumber}?text=${encodeURIComponent(message)}`;
     elements.globalError.textContent = "Se abrió WhatsApp para solicitar el link. El pedido todavía no está pagado ni confirmado.";
@@ -890,9 +827,7 @@
       await navigator.clipboard.writeText(alias);
       elements.copyTransferAlias.textContent = "Alias copiado ✓";
     });
-    elements.receipt?.addEventListener("change", updateReceiptPreview);
-    elements.removeReceipt?.addEventListener("click", clearReceipt);
-    elements.confirmationWhatsApp?.addEventListener("click", sendOrderWithReceipt);
+    elements.confirmationWhatsApp?.addEventListener("click", sendOrderToWhatsApp);
     elements.postalCode.addEventListener("change", updateCorreoEstimate);
     elements.postalCode.addEventListener("blur", updateCorreoEstimate);
     elements.form.addEventListener("change", (event) => {

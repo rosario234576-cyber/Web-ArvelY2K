@@ -3776,65 +3776,6 @@ body.is-locked {
   font-weight: 700;
 }
 
-.receipt-upload {
-  display: grid;
-  gap: var(--space-3);
-  margin-block: var(--space-5);
-  padding: var(--space-5);
-  border: 2px dashed var(--color-pink-dark);
-  background: color-mix(in srgb, var(--color-pink) 10%, white);
-  text-align: left;
-}
-
-.receipt-upload__label {
-  display: grid;
-  gap: var(--space-2);
-  cursor: pointer;
-}
-
-.receipt-upload__label > strong {
-  font-family: var(--font-display);
-  font-size: clamp(1.7rem, 5vw, 2.5rem);
-}
-
-.receipt-upload input[type="file"] {
-  width: 100%;
-  padding: var(--space-3);
-  border: var(--border-thin);
-  background: var(--color-white);
-}
-
-.receipt-upload__preview {
-  display: grid;
-  grid-template-columns: 4.5rem 1fr auto;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3);
-  border: var(--border-thin);
-  background: var(--color-white);
-}
-
-.receipt-upload__preview[hidden] {
-  display: none;
-}
-
-.receipt-upload__preview img {
-  width: 4.5rem;
-  height: 4.5rem;
-  object-fit: cover;
-}
-
-.receipt-upload__preview div {
-  display: grid;
-  min-width: 0;
-}
-
-.receipt-upload__preview strong {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .checkout-terms {
   display: grid;
   gap: var(--space-2);
