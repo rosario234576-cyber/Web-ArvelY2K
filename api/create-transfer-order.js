@@ -1,5 +1,3 @@
-const { getAdminDb, verifyFirebaseUser } = require("./_firebase-admin");
-
 const ALLOWED_ORIGINS = new Set([
   "https://arvelcustomy2k.store", "https://www.arvelcustomy2k.store",
   "https://web-arvel-y2-k.vercel.app", "https://rosario234576-cyber.github.io"
@@ -45,6 +43,20 @@ module.exports = async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Método no permitido." });
   try {
+    // Cargamos Firebase Admin después del preflight. Así, aunque Vercel tenga
+    // un problema iniciando esa dependencia, OPTIONS sigue respondiendo CORS
+    // y el navegador recibe un error legible en vez de `Failed to fetch`.
+    let firebaseAdmin;
+    try {
+      firebaseAdmin = require("./_firebase-admin");
+    } catch (firebaseError) {
+      console.error("create-transfer-order: firebase-admin unavailable", firebaseError);
+      return res.status(503).json({
+        error: "El registro automático de pedidos está temporalmente fuera de servicio. Podés continuar por WhatsApp.",
+        manualFallback: true
+      });
+    }
+    const { getAdminDb, verifyFirebaseUser } = firebaseAdmin;
     const user = await verifyFirebaseUser(req);
     const body = typeof req.body === "string" ? JSON.parse(req.body) : (req.body || {});
     const orderNumber = cleanText(body.orderNumber, 32);

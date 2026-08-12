@@ -701,7 +701,8 @@
       .join("\n");
   }
 
-  function showConfirmation(order) {
+  function showConfirmation(order, options = {}) {
+    const registered = options.registered !== false;
     preparedOrder = order;
     elements.content.hidden = true;
     elements.confirmation.hidden = false;
@@ -717,8 +718,9 @@
         <div><dt>Total</dt><dd>${window.Arvel.formatPrice(order.total)}</dd></div>
       </dl>
     `;
-    elements.confirmationNotice.textContent =
-      "Registramos tu pedido como pendiente de pago. Transferí el total exacto, subí el comprobante y enviá el mensaje por WhatsApp. La reserva se confirma al verificar el pago y el stock.";
+    elements.confirmationNotice.textContent = registered
+      ? "Registramos tu pedido como pendiente de pago. Transferí el total exacto, subí el comprobante y enviá el mensaje por WhatsApp. La reserva se confirma al verificar el pago y el stock."
+      : "El registro automático no está disponible en este momento. Conservamos tu resumen en esta pantalla, pero el pedido todavía no fue recibido: transferí el total exacto y enviá el comprobante junto con el mensaje de WhatsApp para que Arvel lo revise manualmente.";
     elements.confirmationWhatsAppLabel.textContent = "Abrir WhatsApp y enviar comprobante";
     const alias = String(window.ARVEL_TRANSFER?.alias || "").trim();
     elements.transferAlias.textContent = alias || "Alias todavía no configurado";
@@ -844,13 +846,33 @@
         })
       });
       const result = await response.json().catch(() => ({}));
+
+      if (response.status >= 500) {
+        console.error("No se pudo registrar el pedido automáticamente:", result);
+        showConfirmation(order, { registered: false });
+        return;
+      }
+
       if (!response.ok || !result.ok) {
         throw new Error(result.error || "No pudimos registrar el pedido.");
       }
       order.total = Number(result.total) || order.total;
-      showConfirmation(order);
+      showConfirmation(order, { registered: true });
     } catch (error) {
-      elements.globalError.textContent = error.message || "No pudimos registrar el pedido. Intentá nuevamente.";
+      console.error("No se pudo registrar el pedido por API", error);
+      const message = String(error?.message || "");
+      const isNetworkFailure =
+        error instanceof TypeError ||
+        /failed to fetch|networkerror|load failed|network request failed/i.test(message);
+
+      if (isNetworkFailure) {
+        // La transferencia y el envío por WhatsApp continúan como proceso
+        // manual. No afirmamos que el pedido haya quedado guardado en Firebase.
+        showConfirmation(order, { registered: false });
+        return;
+      }
+
+      elements.globalError.textContent = message || "No pudimos registrar el pedido. Intentá nuevamente.";
       submit.disabled = false;
       submit.textContent = originalLabel;
     }
