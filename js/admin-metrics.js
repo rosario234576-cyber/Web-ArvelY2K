@@ -83,22 +83,47 @@ export async function initMetrics() {
         });
       });
       if (!user) throw new Error("Tu sesión venció. Volvé a ingresar al administrador.");
-      const token = await user.getIdToken();
-      const response = await fetch(`${API_BASE}/api/admin-metrics`, {
-        headers: { Authorization: `Bearer ${token}` },
-        cache: "no-store"
-      });
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(result.error || "No pudimos cargar las métricas.");
 
-      setSummary(result.summary || {}, result.totalEvents || 0);
-      renderRows("devices-stats", result.devices, "Todavía no hay visitas registradas.");
-      renderRows("browsers-stats", result.browsers, "Todavía no hay navegadores registrados.");
-      renderRows("os-stats", result.operatingSystems, "Todavía no hay sistemas registrados.");
-      renderRows("pages-stats", result.topPages, "Todavía no hay páginas visitadas.");
-      renderRows("products-stats", result.topProducts, "Todavía no hubo interacción con productos.");
-      renderTimeline(result.timeline);
-      if (state) state.textContent = `Actualizado ${new Date(result.generatedAt).toLocaleString("es-AR")}.`;
+      const { db } = configModule;
+      const { collection, getDocs, query, where, orderBy, limit } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+
+      const events = await getDocs(collection(db, "analytics_events"));
+      const last7Days = new Date();
+      last7Days.setDate(last7Days.getDate() - 7);
+
+      let pageViews = 0, uniqueVisitors = new Set(), productClicks = 0, sessions = new Set();
+      const pageStats = {}, devices = {}, browsers = {};
+
+      events.docs.forEach(doc => {
+        const data = doc.data();
+        const timestamp = data.timestamp?.toDate?.();
+        if (!timestamp || timestamp < last7Days) return;
+
+        if (data.event === 'page_view') {
+          pageViews++;
+          uniqueVisitors.add(data.sessionId);
+          sessions.add(data.sessionId);
+          const page = data.url || '/';
+          pageStats[page] = (pageStats[page] || 0) + 1;
+
+          const ua = data.userAgent || '';
+          if (ua.includes('Chrome')) browsers['Chrome'] = (browsers['Chrome'] || 0) + 1;
+          else if (ua.includes('Firefox')) browsers['Firefox'] = (browsers['Firefox'] || 0) + 1;
+          else if (ua.includes('Safari')) browsers['Safari'] = (browsers['Safari'] || 0) + 1;
+
+          if (ua.includes('Mobile')) devices['Mobile'] = (devices['Mobile'] || 0) + 1;
+          else devices['Desktop'] = (devices['Desktop'] || 0) + 1;
+        }
+        if (data.event === 'product_click') productClicks++;
+      });
+
+      const pageRows = Object.entries(pageStats).map(([label, value]) => ({ label, value }));
+
+      setSummary({ uniqueVisitors: uniqueVisitors.size, sessions: sessions.size, pageViews, productClicks }, events.size);
+      renderRows("devices-stats", Object.entries(devices).map(([label, value]) => ({ label, value })));
+      renderRows("browsers-stats", Object.entries(browsers).map(([label, value]) => ({ label, value })));
+      renderRows("pages-stats", pageRows);
+      if (state) state.textContent = `Actualizado ${new Date().toLocaleString("es-AR")}. Se registraron ${events.size} eventos.`;
     } catch (error) {
       console.error("Error cargando métricas:", error);
       if (state) state.textContent = "Las métricas se completarán al conectar Google Analytics o un servicio de tracking.";
