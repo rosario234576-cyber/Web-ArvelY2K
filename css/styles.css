@@ -1389,6 +1389,31 @@ body.is-locked {
   max-width: 35rem;
 }
 
+.drop-filter-btn {
+  appearance: none;
+  padding: 0.6rem 1.2rem;
+  border: 1px solid rgba(241, 91, 181, 0.5);
+  border-radius: 2rem;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 300ms ease;
+}
+
+.drop-filter-btn:hover {
+  border-color: var(--color-pink);
+  color: var(--color-white);
+}
+
+.drop-filter-btn.is-active {
+  background: var(--color-pink);
+  border-color: var(--color-pink);
+  color: var(--color-text);
+}
+
 .button--on-dark {
   border-color: var(--color-white);
   color: var(--color-white);

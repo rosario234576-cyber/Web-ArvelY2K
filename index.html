@@ -150,6 +150,17 @@
               </div>
             </div>
           </div>
+
+          <div class="drop-products-section" style="margin-top: 4rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 3rem;">
+            <div class="drop-filters" style="display: flex; gap: 1rem; justify-content: center; margin-bottom: 2rem; flex-wrap: wrap;">
+              <button class="drop-filter-btn is-active" data-filter="all">Todas</button>
+              <button class="drop-filter-btn" data-filter="custom">🎨 Custom</button>
+              <button class="drop-filter-btn" data-filter="unique">💎 Piezas únicas</button>
+            </div>
+            <div class="shop-grid" id="minis-products-grid" style="min-height: 400px; opacity: 0.7; text-align: center; display: flex; align-items: center; justify-content: center; color: var(--color-silver);">
+              Cargando productos...
+            </div>
+          </div>
         </div>
       </section>
 
@@ -384,5 +395,6 @@
     <script src="js/chatbot.js?v=20260806-categories-keywords"></script>
     <script src="js/favoritos.js"></script>
     <script src="js/analytics.js"></script>
+    <script type="module" src="js/minis-section.js"></script>
   </body>
 </html>
