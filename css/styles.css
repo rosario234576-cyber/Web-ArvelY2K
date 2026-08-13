@@ -67,6 +67,19 @@ body.is-locked {
   color: var(--color-white);
 }
 
+.section--dark .eyebrow {
+  color: var(--color-pink-light);
+}
+
+.section--dark .display-title {
+  color: var(--color-white);
+}
+
+.section--dark .lead,
+.section--dark .drop-section__subtitle {
+  color: var(--color-silver);
+}
+
 .section--pink {
   background: var(--color-pink-light);
 }
@@ -1356,7 +1369,21 @@ body.is-locked {
 .drop-section__layout {
   display: grid;
   gap: var(--space-7);
-  align-items: end;
+  align-items: center;
+  justify-items: center;
+  text-align: center;
+}
+
+.drop-section__layout > .stack {
+  width: min(100%, 40rem);
+  align-items: center;
+}
+
+.drop-section__subtitle {
+  color: var(--color-silver);
+  font-size: var(--text-md);
+  line-height: 1.6;
+  max-width: 35rem;
 }
 
 .button--on-dark {

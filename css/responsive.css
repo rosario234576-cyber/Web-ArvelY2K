@@ -285,23 +285,27 @@ body:not(.admin-body) {
   }
 
   .drop-section__layout > .stack {
-    width: min(100%, 30rem);
+    width: min(100%, 28rem);
     justify-items: center;
     align-items: center;
   }
 
-  .drop-section__layout .lead {
-    max-width: 27rem;
+  .drop-section__layout .lead,
+  .drop-section__layout .drop-section__subtitle {
+    max-width: 26rem;
     margin-inline: auto;
   }
 
   .drop-section__layout .cluster {
     width: 100%;
     justify-content: center;
+    flex-direction: column;
+    align-items: center;
   }
 
   .drop-section__layout .button {
-    width: min(100%, 18rem);
+    width: min(100%, 20rem);
+    min-height: 3rem;
   }
 
   .drop-section__layout .countdown {
