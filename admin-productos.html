@@ -356,11 +356,88 @@
 
         <section class="admin-view" data-admin-panel="sales" hidden>
           <div class="admin-page-heading"><div><span class="eyebrow">Pedidos</span><h1>Ventas</h1></div></div>
-          <div class="admin-dashboard-grid">
-            <article class="admin-card"><h2>Mercado Pago</h2><p id="mercadopago-connection-copy">Comprobando el acceso seguro configurado en Vercel.</p><span class="admin-pill admin-pill--pending" id="mercadopago-connection-state">Comprobando</span></article>
-            <article class="admin-card"><h2>Transferencias</h2><p>Confirmá manualmente el comprobante antes de marcar el pedido como pagado y descontar el stock.</p><span class="admin-pill">Control manual</span></article>
-          </div>
-          <article class="admin-card admin-empty-state"><strong>Todavía no hay pedidos sincronizados</strong><p>Esta sección se completará al conectar el backend de pedidos.</p></article>
+
+          <article class="admin-card">
+            <h2>Nuevo pedido</h2>
+            <form id="orders-form" class="admin-form" style="display: grid; gap: 1.5rem;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <label>Cliente *
+                  <select class="select" id="order-customer" required>
+                    <option value="">Seleccionar cliente...</option>
+                  </select>
+                </label>
+                <label>Método de pago *
+                  <select class="select" id="order-method" required>
+                    <option value="">Seleccionar método...</option>
+                    <option value="mercadopago">Mercado Pago</option>
+                    <option value="transferencia">Transferencia</option>
+                    <option value="whatsapp">WhatsApp / Manual</option>
+                  </select>
+                </label>
+              </div>
+
+              <div style="border-top: 1px solid var(--color-border); padding-top: 1rem;">
+                <h3 style="margin-bottom: 1rem; font-size: 0.95rem; font-weight: 700;">Productos</h3>
+                <div style="display: grid; gap: 0.75rem; margin-bottom: 1rem;">
+                  <div style="display: grid; grid-template-columns: 1fr auto auto; gap: 0.5rem; align-items: end;">
+                    <label>Buscar producto
+                      <input class="input" id="order-product-search" type="search" placeholder="Nombre o SKU...">
+                    </label>
+                    <button class="button button--secondary" id="order-add-product" type="button">Agregar</button>
+                  </div>
+                </div>
+                <div class="admin-table-wrap" style="max-height: 300px; overflow-y: auto;">
+                  <table class="admin-table" style="font-size: 0.9rem;">
+                    <thead>
+                      <tr>
+                        <th>Producto</th>
+                        <th>Precio</th>
+                        <th>Cant.</th>
+                        <th>Total</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody id="order-items"></tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div style="border-top: 1px solid var(--color-border); padding-top: 1rem; display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: end;">
+                <label style="grid-column: 1;">Estado del pago *
+                  <select class="select" id="order-status" required>
+                    <option value="pendiente">Pendiente de confirmación</option>
+                    <option value="confirmado">Pagado / Confirmado</option>
+                  </select>
+                </label>
+                <div style="text-align: right;">
+                  <p style="font-size: 0.85rem; color: var(--color-text-muted);">Total:</p>
+                  <strong style="font-size: 1.5rem; color: var(--color-pink);">$<span id="order-total">0</span></strong>
+                </div>
+              </div>
+
+              <button class="button button--pink" id="orders-save" type="submit">Guardar pedido</button>
+              <span id="orders-state" role="status"></span>
+            </form>
+          </article>
+
+          <article class="admin-card" style="margin-top: 2rem;">
+            <h2>Histórico de pedidos</h2>
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Cliente</th>
+                    <th>Monto</th>
+                    <th>Método</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="orders-list"></tbody>
+              </table>
+            </div>
+          </article>
         </section>
 
         <section class="admin-view" data-admin-panel="settings" hidden>

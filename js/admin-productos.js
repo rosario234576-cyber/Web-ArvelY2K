@@ -1377,6 +1377,250 @@ document.querySelector("#close-customer-detail")?.addEventListener("click", () =
   loadCustomers();
 });
 
+// Pedidos
+let orderItemsMap = new Map();
+let allProducts = [];
+let allCustomers = [];
+
+async function loadProductsForOrders() {
+  try {
+    const productsRef = collection(db, "products");
+    const q = query(productsRef, where("status", "==", "published"));
+    const snapshot = await getDocs(q);
+    allProducts = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  } catch (error) {
+    console.error("Error cargando productos:", error);
+  }
+}
+
+async function loadCustomersForOrders() {
+  try {
+    const customersRef = collection(db, "users");
+    const snapshot = await getDocs(customersRef);
+    allCustomers = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    const select = document.querySelector("#order-customer");
+    if (select) {
+      select.innerHTML = '<option value="">Seleccionar cliente...</option>';
+      allCustomers.forEach(customer => {
+        const option = document.createElement("option");
+        option.value = customer.id;
+        option.textContent = `${customer.first_name || ""} ${customer.last_name || ""} (${customer.email || customer.phone || ""})`;
+        select.appendChild(option);
+      });
+    }
+  } catch (error) {
+    console.error("Error cargando clientes:", error);
+  }
+}
+
+async function loadOrdersHistory() {
+  const ordersList = document.querySelector("#orders-list");
+  if (!ordersList || !db) return;
+
+  try {
+    const ordersRef = collection(db, "orders");
+    const q = query(ordersRef, orderBy("created_at", "desc"), limit(50));
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      ordersList.innerHTML = "<tr><td colspan='6' style='text-align: center; padding: 2rem;'>No hay pedidos registrados</td></tr>";
+      return;
+    }
+
+    ordersList.innerHTML = snapshot.docs.map(doc => {
+      const data = doc.data();
+      const customer = allCustomers.find(c => c.id === data.customerId);
+      const customerName = customer ? `${customer.first_name || ""} ${customer.last_name || ""}`.trim() : "Desconocido";
+      const date = data.created_at ? new Date(data.created_at).toLocaleDateString("es-AR") : "N/A";
+      const status = data.paymentStatus === "confirmado" ? "✓ Pagado" : "⏳ Pendiente";
+      const statusStyle = data.paymentStatus === "confirmado" ? "color: #14642d; background: #effff3; padding: 0.3rem 0.6rem; border-radius: 0.3rem; font-size: 0.85rem;" : "color: #704500; background: #fff6df; padding: 0.3rem 0.6rem; border-radius: 0.3rem; font-size: 0.85rem;";
+
+      return `
+        <tr>
+          <td>${escapeHtml(customerName)}</td>
+          <td>$${(data.total || 0).toLocaleString("es-AR")}</td>
+          <td>${escapeHtml(data.paymentMethod === "mercadopago" ? "Mercado Pago" : data.paymentMethod === "transferencia" ? "Transferencia" : "Manual")}</td>
+          <td><span style="${statusStyle}">${status}</span></td>
+          <td>${date}</td>
+          <td><button class="button button--secondary" type="button" onclick="viewOrder('${doc.id}')">Ver</button></td>
+        </tr>
+      `;
+    }).join("");
+  } catch (error) {
+    console.error("Error cargando pedidos:", error);
+  }
+}
+
+document.querySelector("#order-product-search")?.addEventListener("keyup", (e) => {
+  if (e.key === "Enter") {
+    document.querySelector("#order-add-product").click();
+  }
+});
+
+document.querySelector("#order-add-product")?.addEventListener("click", () => {
+  const searchInput = document.querySelector("#order-product-search");
+  const searchTerm = (searchInput.value || "").toLowerCase();
+
+  if (!searchTerm) return;
+
+  const product = allProducts.find(p =>
+    p.name?.toLowerCase().includes(searchTerm) ||
+    p.sku?.toLowerCase().includes(searchTerm)
+  );
+
+  if (!product) {
+    alert("Producto no encontrado");
+    return;
+  }
+
+  const itemsDiv = document.querySelector("#order-items");
+  const key = product.id;
+
+  if (orderItemsMap.has(key)) {
+    const item = orderItemsMap.get(key);
+    item.quantity += 1;
+  } else {
+    orderItemsMap.set(key, {
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: 1
+    });
+  }
+
+  renderOrderItems();
+  searchInput.value = "";
+});
+
+function renderOrderItems() {
+  const itemsDiv = document.querySelector("#order-items");
+  let html = "";
+  let total = 0;
+
+  orderItemsMap.forEach((item, key) => {
+    const rowTotal = item.price * item.quantity;
+    total += rowTotal;
+    html += `
+      <tr>
+        <td>${escapeHtml(item.name)}</td>
+        <td>$${item.price.toLocaleString("es-AR")}</td>
+        <td>
+          <input type="number" min="1" value="${item.quantity}" style="width: 50px; padding: 0.3rem;"
+            onchange="updateOrderQuantity('${key}', this.value)">
+        </td>
+        <td>$${rowTotal.toLocaleString("es-AR")}</td>
+        <td>
+          <button class="button button--secondary" type="button" onclick="removeOrderItem('${key}')" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;">✕</button>
+        </td>
+      </tr>
+    `;
+  });
+
+  itemsDiv.innerHTML = html || "<tr><td colspan='5' style='text-align: center; color: var(--color-text-muted); padding: 1rem;'>Sin productos</td></tr>";
+
+  const totalSpan = document.querySelector("#order-total");
+  if (totalSpan) {
+    totalSpan.textContent = total.toLocaleString("es-AR");
+  }
+}
+
+function updateOrderQuantity(key, value) {
+  const qty = parseInt(value) || 1;
+  if (qty < 1) {
+    removeOrderItem(key);
+  } else {
+    const item = orderItemsMap.get(key);
+    if (item) {
+      item.quantity = qty;
+      renderOrderItems();
+    }
+  }
+}
+
+function removeOrderItem(key) {
+  orderItemsMap.delete(key);
+  renderOrderItems();
+}
+
+document.querySelector("#orders-form")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const customerId = document.querySelector("#order-customer").value;
+  const method = document.querySelector("#order-method").value;
+  const status = document.querySelector("#order-status").value;
+  const stateSpan = document.querySelector("#orders-state");
+
+  if (!customerId || !method || orderItemsMap.size === 0) {
+    alert("Completá cliente, método de pago y productos");
+    return;
+  }
+
+  try {
+    if (stateSpan) stateSpan.textContent = "Guardando...";
+
+    let total = 0;
+    const items = [];
+    orderItemsMap.forEach(item => {
+      total += item.price * item.quantity;
+      items.push({
+        productId: item.productId,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity
+      });
+    });
+
+    const orderData = {
+      customerId,
+      items,
+      total,
+      paymentMethod: method,
+      paymentStatus: status,
+      created_at: serverTimestamp(),
+      updated_at: serverTimestamp()
+    };
+
+    const ordersRef = collection(db, "orders");
+    await addDoc(ordersRef, orderData);
+
+    if (status === "confirmado") {
+      for (const item of items) {
+        const productRef = doc(db, "products", item.productId);
+        const productSnap = await getDoc(productRef);
+        if (productSnap.exists()) {
+          const currentStock = productSnap.data().stock || 0;
+          await updateDoc(productRef, {
+            stock: Math.max(0, currentStock - item.quantity),
+            updated_at: serverTimestamp()
+          });
+        }
+      }
+    }
+
+    if (stateSpan) stateSpan.textContent = "✓ Pedido guardado";
+    orderItemsMap.clear();
+    renderOrderItems();
+    document.querySelector("#orders-form").reset();
+    document.querySelector("#order-total").textContent = "0";
+
+    setTimeout(() => {
+      if (stateSpan) stateSpan.textContent = "";
+      loadOrdersHistory();
+    }, 1500);
+
+  } catch (error) {
+    console.error("Error guardando pedido:", error);
+    if (stateSpan) stateSpan.textContent = `Error: ${error.message}`;
+  }
+});
+
 if (firebaseConfigured) {
   document.querySelector("#check-categories")?.addEventListener("click", checkCategories);
   document.querySelector("#fix-categories")?.addEventListener("click", fixCategories);
@@ -1385,5 +1629,15 @@ if (firebaseConfigured) {
   const customerTab = document.querySelector('[data-admin-view="customers"]');
   if (customerTab) {
     customerTab.addEventListener("click", loadCustomers);
+  }
+
+  // Cargar datos para pedidos cuando se active la pestaña de ventas
+  const salesTab = document.querySelector('[data-admin-view="sales"]');
+  if (salesTab) {
+    salesTab.addEventListener("click", async () => {
+      await loadProductsForOrders();
+      await loadCustomersForOrders();
+      await loadOrdersHistory();
+    });
   }
 }
