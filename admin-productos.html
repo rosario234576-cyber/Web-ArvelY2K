@@ -48,7 +48,7 @@
           <button class="is-active" type="button" data-admin-view="summary">Resumen</button>
           <button type="button" data-admin-view="metrics">Métricas</button>
           <button type="button" data-admin-view="products">Productos</button>
-          <button type="button" data-admin-view="instagram">Instagram</button>
+          <button type="button" data-admin-view="customers">Clientes</button>
           <button type="button" data-admin-view="duplicates">Duplicados</button>
           <button type="button" data-admin-view="inventory">Inventario</button>
           <button type="button" data-admin-view="sales">Ventas</button>
@@ -70,9 +70,9 @@
           </div>
           <div class="admin-dashboard-grid">
             <article class="admin-card admin-card--dark">
-              <span class="eyebrow">Instagram</span><h2>Sincronización preparada</h2>
-              <p id="instagram-summary">GitHub actualizará el feed de Instagram de forma automática y segura.</p>
-              <button class="button button--pink" type="button" data-open-view="instagram">Ver conexión</button>
+              <span class="eyebrow">Usuarios</span><h2>Clientes registrados</h2>
+              <p id="customers-summary">Gestiona y revisa los datos de las clientas de Arvel.</p>
+              <button class="button button--pink" type="button" data-open-view="customers">Ver clientes</button>
             </article>
             <article class="admin-card">
               <span class="eyebrow">Atención</span><h2>Revisión del catálogo</h2>
@@ -290,15 +290,8 @@
               <div class="admin-form-grid admin-source-fields">
                 <label>Origen
                   <select class="select" name="source">
-                    <option value="manual">Carga manual</option>
-                    <option value="instagram">Instagram</option>
+                    <option value="manual" selected>Carga manual</option>
                   </select>
-                </label>
-                <label>ID de publicación de Instagram
-                  <input class="input" name="instagramMediaId" autocomplete="off">
-                </label>
-                <label class="admin-form-wide">Enlace de la publicación
-                  <input class="input" name="instagramPermalink" type="url" placeholder="https://www.instagram.com/p/…">
                 </label>
               </div>
             </fieldset>
@@ -314,31 +307,40 @@
         </section>
         </div>
 
-        <section class="admin-view" data-admin-panel="instagram" hidden>
-          <div class="admin-page-heading"><div><span class="eyebrow">Automatización</span><h1>Instagram → tienda</h1></div></div>
-          <div class="admin-dashboard-grid">
-            <article class="admin-card admin-card--dark">
-              <span class="admin-connection-dot" id="instagram-dot"></span>
-              <h2 id="instagram-connection-title">Comprobando conexión</h2>
-              <p id="instagram-connection-copy">La conexión se realiza de forma segura mediante GitHub Actions.</p>
-              <button class="button button--pink" id="instagram-sync" type="button">Sincronizar ahora</button>
-              <small id="instagram-sync-state" role="status"></small>
-            </article>
+        <section class="admin-view" data-admin-panel="customers" hidden>
+          <div class="admin-page-heading"><div><span class="eyebrow">Base de datos</span><h1>Clientes registrados</h1></div></div>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Email</th>
+                  <th>Teléfono</th>
+                  <th>Registrada</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="customers-list"></tbody>
+            </table>
+          </div>
+          <div id="customer-detail" class="admin-customer-detail" hidden>
+            <button class="button button--secondary" id="close-customer-detail" type="button">← Volver a lista</button>
             <article class="admin-card">
-              <span class="eyebrow">Regla principal</span><h2>Solo productos</h2>
-              <p>Las publicaciones con el marcador configurado se importarán. Anuncios, sorteos e información general quedarán afuera.</p>
-              <p><strong>Marcador actual:</strong> <code id="instagram-marker-preview">#productoarvel</code></p>
+              <h2 id="customer-detail-name">Información de la clienta</h2>
+              <div class="admin-customer-info">
+                <p><strong>Nombre:</strong> <span id="detail-name"></span></p>
+                <p><strong>Email:</strong> <span id="detail-email"></span></p>
+                <p><strong>Teléfono:</strong> <span id="detail-phone"></span></p>
+                <p><strong>DNI:</strong> <span id="detail-dni"></span></p>
+                <p><strong>Registrada:</strong> <span id="detail-created"></span></p>
+                <p><strong>Suscrita al boletín:</strong> <span id="detail-newsletter"></span></p>
+              </div>
+              <div class="admin-customer-address" hidden>
+                <h3>Dirección de envío</h3>
+                <p><span id="detail-address"></span></p>
+              </div>
             </article>
           </div>
-          <article class="admin-card admin-card--flush">
-            <div class="admin-section-heading"><div><span class="eyebrow">Feed reciente</span><h2>Publicaciones detectadas</h2></div><span id="instagram-feed-count">0</span></div>
-            <p class="admin-intro">Revisá la detección antes de crear el producto. Siempre se guardará como borrador.</p>
-            <div class="admin-instagram-feed" id="instagram-feed-preview"><p>Cargando la última sincronización de GitHub…</p></div>
-          </article>
-          <article class="admin-card admin-card--flush">
-            <div class="admin-section-heading"><div><span class="eyebrow">Importados</span><h2>Productos vinculados al feed</h2></div><span id="instagram-product-count">0</span></div>
-            <div class="admin-management-list" id="instagram-products"></div>
-          </article>
         </section>
 
         <section class="admin-view" data-admin-panel="duplicates" hidden>

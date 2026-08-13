@@ -1285,7 +1285,66 @@ async function fixCategories() {
   }
 }
 
+// Clientes
+async function loadCustomers() {
+  const customersList = document.querySelector("#customers-list");
+  if (!customersList) return;
+
+  try {
+    const customersRef = collection(db, "customers");
+    const q = query(customersRef, orderBy("created_at", "desc"));
+    const snapshot = await getDocs(q);
+
+    customersList.innerHTML = snapshot.docs.map(doc => `
+      <tr>
+        <td>${escapeHtml(doc.data().first_name || "")} ${escapeHtml(doc.data().last_name || "")}</td>
+        <td>${escapeHtml(doc.data().email || "")}</td>
+        <td>${escapeHtml(doc.data().phone || "")}</td>
+        <td>${new Date(doc.data().created_at).toLocaleDateString("es-AR")}</td>
+        <td><button class="button button--secondary" onclick="showCustomerDetail('${doc.id}')">Ver</button></td>
+      </tr>
+    `).join("");
+  } catch (error) {
+    console.error("Error cargando clientes:", error);
+  }
+}
+
+async function showCustomerDetail(customerId) {
+  const customerList = document.querySelector("#customers-list").parentElement;
+  const detailDiv = document.querySelector("#customer-detail");
+
+  try {
+    const docSnapshot = await getDoc(doc(db, "customers", customerId));
+    if (!docSnapshot.exists()) return;
+
+    const data = docSnapshot.data();
+    document.querySelector("#detail-name").textContent = `${data.first_name} ${data.last_name}`;
+    document.querySelector("#detail-email").textContent = data.email;
+    document.querySelector("#detail-phone").textContent = data.phone || "No registrado";
+    document.querySelector("#detail-dni").textContent = data.dni || "No registrado";
+    document.querySelector("#detail-created").textContent = new Date(data.created_at).toLocaleDateString("es-AR");
+    document.querySelector("#detail-newsletter").textContent = data.newsletter ? "Sí" : "No";
+
+    customerList.hidden = true;
+    detailDiv.hidden = false;
+  } catch (error) {
+    console.error("Error cargando detalle:", error);
+  }
+}
+
+document.querySelector("#close-customer-detail")?.addEventListener("click", () => {
+  document.querySelector("#customers-list").parentElement.hidden = false;
+  document.querySelector("#customer-detail").hidden = true;
+  loadCustomers();
+});
+
 if (firebaseConfigured) {
   document.querySelector("#check-categories")?.addEventListener("click", checkCategories);
   document.querySelector("#fix-categories")?.addEventListener("click", fixCategories);
+
+  // Cargar clientes cuando se active la pestaña
+  const customerTab = document.querySelector('[data-admin-view="customers"]');
+  if (customerTab) {
+    customerTab.addEventListener("click", loadCustomers);
+  }
 }
