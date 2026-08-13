@@ -1065,31 +1065,32 @@ ui.settingsForm?.addEventListener("submit", async (event) => {
     ui.settingsState.textContent = error.message || "No pudimos guardar la configuración.";
   }
 });
-ui.instagramSync?.addEventListener("click", async () => {
-  ui.instagramSync.disabled = true;
-  ui.instagramSyncState.textContent = "Consultando el último estado de GitHub…";
-  try {
-    await checkInstagramConnection();
-    const repaired = await repairImportedInstagramImages();
-    const suffix = repaired ? ` · ${repaired} producto${repaired === 1 ? "" : "s"} reparado${repaired === 1 ? "" : "s"}` : "";
-    ui.instagramSyncState.textContent = `${instagramFeedPosts.length} publicaciones · última sincronización ${formatInstagramDate(instagramSyncStatus?.lastSuccessAt)}${suffix}`;
-  } catch (error) {
-    console.error("No se pudo recargar Instagram:", error);
-    ui.instagramSyncState.textContent = "No pudimos recargar el estado. El último contenido disponible continúa visible.";
-  } finally {
-    ui.instagramSync.disabled = false;
-  }
-});
-
-ui.instagramFeed?.addEventListener("click", (event) => {
-  const button = event.target.closest("[data-import-instagram]");
-  if (!button) return;
-  button.disabled = true;
-  importInstagramProduct(button.dataset.importInstagram, button.dataset.importStatus).catch((error) => {
-    button.disabled = false;
-    ui.instagramSyncState.textContent = error.message || "No pudimos crear el producto.";
-  });
-});
+// Instagram fue removido - event listeners desactivados
+// ui.instagramSync?.addEventListener("click", async () => {
+//   ui.instagramSync.disabled = true;
+//   ui.instagramSyncState.textContent = "Consultando el último estado de GitHub…";
+//   try {
+//     await checkInstagramConnection();
+//     const repaired = await repairImportedInstagramImages();
+//     const suffix = repaired ? ` · ${repaired} producto${repaired === 1 ? "" : "s"} reparado${repaired === 1 ? "" : "s"}` : "";
+//     ui.instagramSyncState.textContent = `${instagramFeedPosts.length} publicaciones · última sincronización ${formatInstagramDate(instagramSyncStatus?.lastSuccessAt)}${suffix}`;
+//   } catch (error) {
+//     console.error("No se pudo recargar Instagram:", error);
+//     ui.instagramSyncState.textContent = "No pudimos recargar el estado. El último contenido disponible continúa visible.";
+//   } finally {
+//     ui.instagramSync.disabled = false;
+//   }
+// });
+//
+// ui.instagramFeed?.addEventListener("click", (event) => {
+//   const button = event.target.closest("[data-import-instagram]");
+//   if (!button) return;
+//   button.disabled = true;
+//   importInstagramProduct(button.dataset.importInstagram, button.dataset.importStatus).catch((error) => {
+//     button.disabled = false;
+//     ui.instagramSyncState.textContent = error.message || "No pudimos crear el producto.";
+//   });
+// });
 
 ui.addVariant?.addEventListener("click", () => {
   addVariantRow();
