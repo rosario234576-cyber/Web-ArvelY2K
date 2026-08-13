@@ -153,17 +153,25 @@ async function checkMercadoPagoConnection() {
     );
     const result = await response.json();
     if (!response.ok || !result.connected) throw new Error(result.reason || "not_connected");
-    ui.mercadoPagoState.textContent = result.mode === "production"
-      ? "Producción conectada"
-      : "Prueba conectada";
-    ui.mercadoPagoState.classList.remove("admin-pill--pending");
-    ui.mercadoPagoCopy.textContent = result.mode === "production"
-      ? "El checkout puede crear pagos reales. Falta finalizar el descuento automático de stock desde el webhook."
-      : "El checkout puede crear pagos de prueba. Cambiá a credenciales productivas antes de cobrar ventas reales.";
+    if (ui.mercadoPagoState) {
+      ui.mercadoPagoState.textContent = result.mode === "production"
+        ? "Producción conectada"
+        : "Prueba conectada";
+      ui.mercadoPagoState.classList.remove("admin-pill--pending");
+    }
+    if (ui.mercadoPagoCopy) {
+      ui.mercadoPagoCopy.textContent = result.mode === "production"
+        ? "El checkout puede crear pagos reales. Falta finalizar el descuento automático de stock desde el webhook."
+        : "El checkout puede crear pagos de prueba. Cambiá a credenciales productivas antes de cobrar ventas reales.";
+    }
   } catch (_error) {
-    ui.mercadoPagoState.textContent = "Conexión pendiente";
-    ui.mercadoPagoState.classList.add("admin-pill--pending");
-    ui.mercadoPagoCopy.textContent = "Revisá MP_ACCESS_TOKEN en Vercel y volvé a desplegar el proyecto.";
+    if (ui.mercadoPagoState) {
+      ui.mercadoPagoState.textContent = "Conexión pendiente";
+      ui.mercadoPagoState.classList.add("admin-pill--pending");
+    }
+    if (ui.mercadoPagoCopy) {
+      ui.mercadoPagoCopy.textContent = "Revisá MP_ACCESS_TOKEN en Vercel y volvé a desplegar el proyecto.";
+    }
   }
 }
 
@@ -219,9 +227,9 @@ function instagramPostAnalysis(post) {
 }
 
 function renderInstagramFeed() {
-  if (!ui.instagramFeed) return;
-  ui.instagramFeedCount.textContent = String(instagramFeedPosts.length);
-  ui.instagramFeed.innerHTML = instagramFeedPosts.length ? instagramFeedPosts.map((post) => {
+  if (!ui.instagramFeed || !ui.instagramFeedCount) return;
+  if (ui.instagramFeedCount) ui.instagramFeedCount.textContent = String(instagramFeedPosts.length);
+  if (ui.instagramFeed) ui.instagramFeed.innerHTML = instagramFeedPosts.length ? instagramFeedPosts.map((post) => {
     const analysis = instagramPostAnalysis(post);
     const state = analysis.duplicate ? "Ya vinculado" : analysis.sold ? "Vendido" : analysis.isProduct ? "Posible producto" : "No parece producto";
     return `<article class="admin-instagram-post ${analysis.isProduct ? "is-product" : "is-skipped"}">
@@ -291,9 +299,11 @@ async function importInstagramProduct(mediaId, requestedStatus = "draft") {
   }
   await loadProducts();
   renderInstagramFeed();
-  ui.instagramSyncState.textContent = status === "published"
-    ? `Producto publicado en la tienda: ${analysis.name}`
-    : `Borrador creado: ${analysis.name}`;
+  if (ui.instagramSyncState) {
+    ui.instagramSyncState.textContent = status === "published"
+      ? `Producto publicado en la tienda: ${analysis.name}`
+      : `Borrador creado: ${analysis.name}`;
+  }
 }
 
 function setState(message, type = "") {
@@ -557,8 +567,8 @@ async function uploadSelectedImages(documentId) {
 function resetForm() {
   activeDocumentId = "";
   ui.form.reset();
-  ui.form.elements.documentId.value = "";
-  ui.variants.innerHTML = "";
+  if (ui.form?.elements?.documentId) ui.form.elements.documentId.value = "";
+  if (ui.variants) ui.variants.innerHTML = "";
   addVariantRow();
   existingImages = [];
   existingImageRefs = [];
