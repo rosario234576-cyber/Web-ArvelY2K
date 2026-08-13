@@ -39,10 +39,19 @@ const dummyElement = {
   innerHTML: "",
   value: "",
   hidden: false,
-  classList: { add: () => {}, remove: () => {} },
+  classList: {
+    add: () => {},
+    remove: () => {},
+    toggle: () => false,
+    contains: () => false
+  },
   addEventListener: () => {},
   querySelector: () => dummyElement,
+  querySelectorAll: () => [],
   elements: {},
+  parentElement: null,
+  appendChild: () => dummyElement,
+  removeChild: () => {},
 };
 
 const uiBase = {
