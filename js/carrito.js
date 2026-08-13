@@ -170,10 +170,8 @@
   function updateSummary(cart) {
     const totals = calculateTotals(cart);
     const freeShipping = totals.subtotal >= FREE_SHIPPING_THRESHOLD;
-    const shipping = freeShipping ? 0 : STANDARD_SHIPPING_COST;
-    const total = totals.subtotal + shipping;
-    const progress = Math.min(100, (totals.subtotal / FREE_SHIPPING_THRESHOLD) * 100);
     const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - totals.subtotal);
+    const progress = Math.min(100, (totals.subtotal / FREE_SHIPPING_THRESHOLD) * 100);
 
     elements.itemCount.textContent = String(totals.quantity);
     elements.subtotal.textContent = window.Arvel.formatPrice(totals.subtotal);
@@ -182,11 +180,10 @@
 
     const shippingRow = document.querySelector("#shipping-row");
     if (shippingRow) {
-      shippingRow.hidden = freeShipping;
-      elements.shipping.textContent = window.Arvel.formatPrice(shipping);
+      shippingRow.hidden = true;
     }
 
-    elements.total.textContent = window.Arvel.formatPrice(total);
+    elements.total.textContent = window.Arvel.formatPrice(totals.subtotal);
     elements.progress.setAttribute(
       "aria-valuenow",
       String(Math.min(FREE_SHIPPING_THRESHOLD, totals.subtotal))
