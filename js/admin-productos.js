@@ -250,27 +250,8 @@ function instagramPostAnalysis(post) {
 }
 
 function renderInstagramFeed() {
-  if (!ui.instagramFeed || !ui.instagramFeedCount) return;
-  if (ui.instagramFeedCount) ui.instagramFeedCount.textContent = String(instagramFeedPosts.length);
-  if (ui.instagramFeed) ui.instagramFeed.innerHTML = instagramFeedPosts.length ? instagramFeedPosts.map((post) => {
-    const analysis = instagramPostAnalysis(post);
-    const state = analysis.duplicate ? "Ya vinculado" : analysis.sold ? "Vendido" : analysis.isProduct ? "Posible producto" : "No parece producto";
-    return `<article class="admin-instagram-post ${analysis.isProduct ? "is-product" : "is-skipped"}">
-      <img src="${escapeHtml(post.image || placeholder)}" alt="">
-      <div class="admin-instagram-post__body">
-        <div class="admin-instagram-post__badges"><span>${escapeHtml(state)}</span><span>${escapeHtml(analysis.category)}</span></div>
-        <strong>${escapeHtml(analysis.name)}</strong>
-        <p>${escapeHtml(analysis.caption.slice(0, 260))}${analysis.caption.length > 260 ? "…" : ""}</p>
-        <small>${post.timestamp ? new Date(post.timestamp).toLocaleDateString("es-AR") : "Sin fecha"}${analysis.price ? ` · $ ${analysis.price.toLocaleString("es-AR")}` : " · precio pendiente"}</small>
-        <div class="admin-management-actions">
-          ${post.permalink ? `<a href="${escapeHtml(post.permalink)}" target="_blank" rel="noopener">Ver publicación</a>` : ""}
-          ${analysis.isProduct && !analysis.duplicate ? `<button type="button" data-import-instagram="${escapeHtml(post.id)}" data-import-status="draft">Crear borrador</button>` : ""}
-          ${analysis.isProduct && !analysis.duplicate && !analysis.sold ? `<button type="button" data-import-instagram="${escapeHtml(post.id)}" data-import-status="published">Publicar en tienda</button>` : ""}
-          ${analysis.duplicate ? `<button type="button" data-edit-product="${escapeHtml(analysis.duplicate.documentId)}">Editar vinculado</button>` : ""}
-        </div>
-      </div>
-    </article>`;
-  }).join("") : "<p>No se encontraron publicaciones.</p>";
+  // Instagram fue removido
+  return;
 }
 
 async function importInstagramProduct(mediaId, requestedStatus = "draft") {
@@ -876,16 +857,8 @@ async function changeStockState(documentId, action) {
 }
 
 async function checkInstagramConnection() {
-  const [feedResult, statusResult] = await Promise.allSettled([
-    fetchInstagramJson("data/instagram-feed.json"),
-    fetchInstagramJson("data/instagram-sync-status.json")
-  ]);
-  const feed = feedResult.status === "fulfilled" ? feedResult.value : null;
-  const status = statusResult.status === "fulfilled" ? statusResult.value : {
-    state: feed?.connected ? "warning" : "error",
-    error: { message: feed?.connected ? "No se pudo leer el estado de la sincronización." : "Todavía no existe una sincronización válida." }
-  };
-  renderInstagramConnection(feed, status);
+  // Instagram fue removido
+  return;
 }
 
 async function fetchInstagramJson(path) {
@@ -904,41 +877,8 @@ function formatInstagramDate(value) {
 }
 
 function renderInstagramConnection(feed, status) {
-  const hasCache = Boolean(feed?.connected && Array.isArray(feed.posts));
-  const state = status?.state || (hasCache ? "ok" : "not_configured");
-  const reconnectRequired = state === "reconnect_required" || status?.error?.reconnectRequired;
-  const temporaryError = state === "error";
-  const warning = state === "warning";
-
-  ui.instagramDot.classList.toggle("is-connected", hasCache && !reconnectRequired && !temporaryError);
-  ui.instagramDot.classList.toggle("is-warning", warning || (hasCache && temporaryError));
-  ui.instagramDot.classList.toggle("is-error", reconnectRequired || (!hasCache && temporaryError));
-
-  if (reconnectRequired) ui.instagramTitle.textContent = "Instagram necesita reconexión";
-  else if (temporaryError && hasCache) ui.instagramTitle.textContent = "Instagram temporalmente sin respuesta";
-  else if (warning) ui.instagramTitle.textContent = "Instagram conectado · revisar token";
-  else if (hasCache) ui.instagramTitle.textContent = "Instagram conectado con GitHub";
-  else ui.instagramTitle.textContent = "Falta configurar GitHub Actions";
-
-  const lastSuccess = status?.lastSuccessAt || feed?.updatedAt;
-  const account = feed?.username ? ` · @${feed.username}` : "";
-  if (reconnectRequired) {
-    ui.instagramCopy.textContent = `${status?.error?.message || "La autorización venció o fue revocada."} Último contenido válido: ${formatInstagramDate(lastSuccess)}.`;
-  } else if (temporaryError) {
-    ui.instagramCopy.textContent = `${status?.error?.message || "Meta no respondió correctamente."} Se conserva la última sincronización de ${formatInstagramDate(lastSuccess)}${account}.`;
-  } else if (warning) {
-    ui.instagramCopy.textContent = `${status?.token?.warning || "La conexión requiere atención."} Última actualización: ${formatInstagramDate(lastSuccess)}${account}.`;
-  } else if (hasCache) {
-    ui.instagramCopy.textContent = `Última actualización: ${formatInstagramDate(lastSuccess)}${account}.`;
-  } else {
-    ui.instagramCopy.textContent = "Configurá los secretos de Instagram en GitHub y ejecutá el workflow Sincronizar Instagram.";
-  }
-
-  ui.instagramSync.textContent = hasCache ? "Recargar estado" : "Reintentar lectura";
-  ui.instagramSync.disabled = false;
-  instagramFeedPosts = Array.isArray(feed?.posts) ? feed.posts : [];
-  instagramSyncStatus = status || null;
-  renderInstagramFeed();
+  // Instagram fue removido - esta función no hace nada
+  return;
 }
 
 function isTemporaryInstagramImage(url) {
