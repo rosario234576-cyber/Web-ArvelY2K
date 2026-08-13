@@ -133,6 +133,17 @@
 
       <section class="categories-section section section--dark" id="categories-section">
         <div class="container">
+          <select class="categories-select" id="categories-mobile-select" onchange="if(this.value) window.location.href = this.value;">
+            <option value="">Selecciona una categoría...</option>
+            <option value="tienda.html?categoria=Tops">👕 Tops</option>
+            <option value="tienda.html?categoria=Faldas">👗 Faldas</option>
+            <option value="tienda.html?categoria=Pantalones">👖 Pantalones</option>
+            <option value="tienda.html?categoria=Buzos">🧥 Buzos</option>
+            <option value="tienda.html?categoria=Camperas">🧤 Camperas</option>
+            <option value="tienda.html?categoria=Camisas">👔 Camisas</option>
+            <option value="tienda.html?categoria=Short">🩳 Short</option>
+            <option value="tienda.html?categoria=Accesorios">✨ Accesorios</option>
+          </select>
           <div class="categories-grid">
             <a href="tienda.html?categoria=Tops" class="category-card">
               <span class="category-emoji">👕</span>

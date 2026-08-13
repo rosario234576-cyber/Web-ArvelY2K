@@ -1418,6 +1418,37 @@ body.is-locked {
   padding-block: clamp(3rem, 8vw, 6rem);
 }
 
+.categories-select {
+  display: none;
+  width: 100%;
+  max-width: 400px;
+  margin-inline: auto;
+  padding: 0.8rem 1rem;
+  border: 2px solid var(--color-pink);
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--color-white);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.categories-select option {
+  background: var(--color-text);
+  color: var(--color-white);
+}
+
+@media (max-width: 55.999rem) {
+  .categories-select {
+    display: block;
+  }
+
+  .categories-grid {
+    display: none;
+  }
+}
+
 .categories-grid {
   display: flex;
   flex-wrap: wrap;
