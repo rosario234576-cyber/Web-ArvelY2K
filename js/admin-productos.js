@@ -131,7 +131,7 @@ function startAccessValidation() {
 
   accessWatchdog = window.setTimeout(() => {
     showAccessError("Firebase no respondió al verificar tu sesión. Actualizá la página e intentá nuevamente.");
-  }, 15000);
+  }, 30000);
 
   onAuthStateChanged(auth, (user) => {
     if (accessWatchdog) clearTimeout(accessWatchdog);

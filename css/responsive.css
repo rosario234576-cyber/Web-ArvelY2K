@@ -1022,6 +1022,44 @@ body:not(.admin-body) {
     position: sticky;
     top: calc(var(--header-height) + 1.9rem + var(--space-4));
   }
+
+  .shop-section .product-card__price-label {
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+
+  .shop-section .product-card__price-main {
+    color: var(--color-pink);
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    line-height: 1;
+    font-weight: 700;
+  }
+
+  .shop-section .product-card__price-original {
+    color: var(--color-text-muted);
+    text-decoration: line-through;
+    font-size: 0.95rem;
+  }
+
+  .shop-section .product-card__discount-badge {
+    background: var(--color-pink);
+    color: var(--color-text);
+    padding: 0.3rem 0.65rem;
+    border-radius: var(--radius-pill);
+    font-weight: 700;
+    font-size: 0.75rem;
+    margin-left: 0.75rem;
+  }
+
+  .shop-section .product-card__price-with-discount {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
 }
 
 @media (min-width: 90rem) {
@@ -1129,9 +1167,46 @@ body:not(.admin-body) {
   }
 
   .shop-section .product-card__name,
-  .shop-section .product-card__price {
+  .shop-section .product-card__price-main {
     font-weight: 700;
     text-shadow: 0 1px 0 rgb(0 0 0 / 70%);
+  }
+
+  .shop-section .product-card__price-label {
+    color: #c9c0c6;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+
+  .shop-section .product-card__price-main {
+    color: #f15bb5;
+    font-family: var(--font-display);
+    font-size: clamp(1.25rem, 4vw, 1.75rem);
+    line-height: 1;
+  }
+
+  .shop-section .product-card__price-original {
+    color: #bdb2b9;
+    text-decoration: line-through;
+    font-size: 0.9rem;
+  }
+
+  .shop-section .product-card__discount-badge {
+    background: var(--color-pink);
+    color: #090709;
+    padding: 0.2rem 0.5rem;
+    border-radius: var(--radius-pill);
+    font-weight: 700;
+    font-size: 0.75rem;
+    margin-left: 0.5rem;
+  }
+
+  .shop-section .product-card__price-with-discount {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
   }
 
   .shop-section .product-card__quick-view {
