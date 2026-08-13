@@ -52,7 +52,6 @@
           <button type="button" data-admin-view="duplicates">Duplicados</button>
           <button type="button" data-admin-view="inventory">Inventario</button>
           <button type="button" data-admin-view="sales">Ventas</button>
-          <button type="button" data-admin-view="settings">Configuración</button>
         </nav>
 
         <section class="admin-view" data-admin-panel="summary">
@@ -440,35 +439,6 @@
           </article>
         </section>
 
-        <section class="admin-view" data-admin-panel="settings" hidden>
-          <div class="admin-page-heading"><div><span class="eyebrow">Reglas automáticas</span><h1>Configuración</h1></div></div>
-          <form class="admin-card admin-settings-form" id="automation-settings-form">
-            <label>Marcador para reconocer productos
-              <input class="input" name="productMarker" value="#productoarvel">
-            </label>
-            <label>Palabras que indican vendido
-              <input class="input" name="soldWords" value="vendida, vendido, agotada, agotado">
-            </label>
-            <label>Categorías permitidas
-              <textarea class="textarea" name="categories" rows="3">Tops, Faldas, Pantalones, Vestidos, Abrigos, Accesorios, Mini customs</textarea>
-            </label>
-            <label class="admin-switch"><input name="autoPublish" type="checkbox"><span></span>Publicar automáticamente solo coincidencias completas</label>
-            <p class="field-help">Las publicaciones incompletas o dudosas siempre quedarán como borrador.</p>
-            <button class="button button--pink" type="submit">Guardar configuración</button>
-            <span id="settings-state" role="status"></span>
-          </form>
-
-          <div class="admin-card" style="margin-top: var(--space-6);">
-            <span class="eyebrow">Herramientas</span>
-            <h2>Verificar y reparar categorías</h2>
-            <p>Revisa si hay productos con categoría vacía o inválida.</p>
-            <div id="category-check-results" style="margin: var(--space-4) 0;"></div>
-            <div style="display: flex; gap: var(--space-3);">
-              <button class="button button--secondary" id="check-categories" type="button">Verificar categorías</button>
-              <button class="button button--pink" id="fix-categories" type="button" disabled>Reparar todas</button>
-            </div>
-          </div>
-        </section>
       </div>
     </main>
 
