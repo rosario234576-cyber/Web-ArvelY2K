@@ -183,6 +183,7 @@
       shippingRow.hidden = true;
     }
 
+    console.log("Total actualizado a:", totals.subtotal);
     elements.total.textContent = window.Arvel.formatPrice(totals.subtotal);
     elements.progress.setAttribute(
       "aria-valuenow",
