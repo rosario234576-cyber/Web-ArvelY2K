@@ -1299,9 +1299,16 @@ async function loadCustomers() {
   if (!customersList || !db) return;
 
   try {
-    const customersRef = collection(db, "customers");
-    const q = query(customersRef, orderBy("created_at", "desc"));
-    const snapshot = await getDocs(q);
+    const customersRef = collection(db, "users");
+    let snapshot;
+
+    try {
+      const q = query(customersRef, orderBy("created_at", "desc"));
+      snapshot = await getDocs(q);
+    } catch (error) {
+      console.warn("No se pudo ordenar por created_at, intentando sin ordenar:", error.message);
+      snapshot = await getDocs(customersRef);
+    }
 
     if (snapshot.empty) {
       customersList.innerHTML = "<tr><td colspan='5'>No hay clientes registrados</td></tr>";
@@ -1324,7 +1331,7 @@ async function loadCustomers() {
   } catch (error) {
     console.error("Error cargando clientes:", error);
     if (customersList) {
-      customersList.innerHTML = "<tr><td colspan='5' style='color: red;'>Error cargando clientes</td></tr>";
+      customersList.innerHTML = `<tr><td colspan='5' style='color: red;'>Error: ${escapeHtml(error.message)}</td></tr>`;
     }
   }
 }
