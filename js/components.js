@@ -13,7 +13,6 @@
   const navigationItems = [
     ["Inicio", "index.html"],
     ["Shop", "tienda.html"],
-    ["Próximo drop", "index.html#proximo-drop"],
     ["Custom by Arvel", "custom.html"],
     ["Nosotros", "nosotros.html"]
   ];
