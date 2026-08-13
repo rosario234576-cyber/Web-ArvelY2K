@@ -1212,28 +1212,62 @@ async function initialize(user) {
     location.replace("login.html?next=admin-productos.html");
     return;
   }
-  ui.uid.value = user.uid;
-  // La validación de permisos debe responder desde Firestore y no quedar
-  // esperando indefinidamente si hay una conexión interrumpida.
-  const admin = await withTimeout(
-    getDocFromServer(doc(db, "admins", user.uid)),
-    12000,
-    "La conexión con Firebase tardó demasiado. Revisá tu conexión y actualizá la página."
-  );
-  ui.loading.hidden = true;
-  if (!admin.exists()) {
-    ui.denied.hidden = false;
-    return;
-  }
-  ui.content.hidden = false;
-  resetForm();
-  await loadProducts();
-  await Promise.all([loadSettings(), checkInstagramConnection(), checkMercadoPagoConnection()]);
+
   try {
-    const repaired = await repairImportedInstagramImages();
-    if (repaired) ui.instagramSyncState.textContent = `${repaired} imagen${repaired === 1 ? "" : "es"} de productos importados reparada${repaired === 1 ? "" : "s"}.`;
+    if (ui.uid && ui.uid.value !== undefined) {
+      ui.uid.value = user.uid;
+    }
+
+    if (ui.loading && ui.loading.hidden !== undefined) {
+      ui.loading.hidden = true;
+    }
+
+    // Verificar si es administrador
+    const admin = await withTimeout(
+      getDocFromServer(doc(db, "admins", user.uid)),
+      12000,
+      "La conexión con Firebase tardó demasiado. Revisá tu conexión y actualizá la página."
+    );
+
+    if (!admin.exists()) {
+      // Usuario no es admin - mostrar mensaje con su UID
+      if (ui.denied && ui.denied.hidden !== undefined) {
+        ui.denied.hidden = false;
+      }
+
+      const denyTitle = ui.denied ? ui.denied.querySelector("h1") : null;
+      const denyText = ui.denied ? ui.denied.querySelector("p") : null;
+      const denyUID = ui.denied ? ui.denied.querySelector("#admin-current-uid") : null;
+
+      if (denyTitle) denyTitle.textContent = "Este usuario todavía no es administrador";
+      if (denyText) {
+        denyText.textContent = `Iniciá sesión con la cuenta administrativa y agregá este UID en la colección 'admins' de Firestore.`;
+      }
+      if (denyUID) denyUID.value = user.uid;
+
+      return;
+    }
+
+    // Usuario es admin - mostrar panel
+    if (ui.content && ui.content.hidden !== undefined) {
+      ui.content.hidden = false;
+    }
+
+    resetForm();
+    await loadProducts();
+    await Promise.all([loadSettings(), checkInstagramConnection(), checkMercadoPagoConnection()]);
+
+    try {
+      const repaired = await repairImportedInstagramImages();
+      if (repaired && ui.instagramSyncState) {
+        ui.instagramSyncState.textContent = `${repaired} imagen${repaired === 1 ? "" : "es"} de productos importados reparada${repaired === 1 ? "" : "s"}.`;
+      }
+    } catch (error) {
+      console.error("No se pudieron reparar las imágenes importadas de Instagram:", error);
+    }
   } catch (error) {
-    console.error("No se pudieron reparar las imágenes importadas de Instagram:", error);
+    console.error("Error en inicialización:", error);
+    showAccessError(error.message || "Error al verificar acceso");
   }
 }
 
