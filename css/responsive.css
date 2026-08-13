@@ -1101,35 +1101,32 @@ body:not(.admin-body) {
 
 @media (max-width: 63.999rem) {
   html {
-    background: #050505;
+    background: var(--color-background);
     scrollbar-color: #f15bb5 #210a17;
   }
 
   body:not(.admin-body) {
-    background: #050505;
+    background: var(--color-background);
   }
 
-  /* Shop mobile: contraste consistente sobre el fondo oscuro. */
+  /* Shop mobile: fondo blanco como desktop */
   .shop-section {
-    color: #fff9fc;
-    background:
-      radial-gradient(circle at 100% 8%, rgb(241 91 181 / 10%), transparent 18rem),
-      #070607;
+    color: var(--color-text);
+    background: var(--color-background);
   }
 
   .shop-section .shop-results__header,
   .shop-section .shop-results__header h2,
   .shop-section .product-card__name,
-  .shop-section .product-card__name a,
-  .shop-section .product-card__price {
-    color: #fff9fc;
+  .shop-section .product-card__name a {
+    color: var(--color-text);
   }
 
   .shop-section .product-card__meta,
   .shop-section .product-card__old-price,
   .shop-section .results-count,
   .shop-section .field-help {
-    color: #c9c0c6;
+    color: var(--color-text-muted);
   }
 
   .shop-section .product-card__body {
@@ -1143,33 +1140,18 @@ body:not(.admin-body) {
 
   .shop-section .product-card__actions .button {
     min-height: 2.65rem;
-    border-color: #f3e9ef;
-    color: #fff;
   }
 
-  .shop-section .product-card__actions .button--pink {
-    border-color: #f15bb5;
-    color: #090709;
-  }
-
-  .shop-section .product-card__payment {
-    color: #c9c0c6;
-  }
-
+  .shop-section .product-card__payment,
   .shop-section .product-card__transfer,
   .shop-section .product-card__installments,
   .shop-section .product-card__buy-link {
-    color: #fff9fc;
-  }
-
-  .shop-section .product-card__cart img {
-    filter: invert(1) brightness(2);
+    color: var(--color-text);
   }
 
   .shop-section .product-card__name,
   .shop-section .product-card__price-main {
     font-weight: 700;
-    text-shadow: 0 1px 0 rgb(0 0 0 / 70%);
   }
 
   .shop-section .product-card__price-label {

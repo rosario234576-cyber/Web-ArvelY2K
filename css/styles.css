@@ -4610,6 +4610,22 @@ body.is-locked {
   flex: 0 0 auto;
   accent-color: var(--color-pink);
 }
+
+.drop-title-girly {
+  font-size: clamp(3rem, 10vw, 8rem);
+  background: linear-gradient(135deg, var(--color-pink) 0%, var(--color-pink-light) 50%, var(--color-pink) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 3s ease-in-out infinite;
+  letter-spacing: -0.03em;
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+
 /* Scrollbar Arvel: integrada con la paleta bordó, negra y rosa. */
 html {
   scrollbar-color: #f15bb5 #210a17;
