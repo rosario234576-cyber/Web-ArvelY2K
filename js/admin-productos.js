@@ -34,7 +34,18 @@ const db = app ? getFirestore(app) : null;
 const storage = app ? getStorage(app) : null;
 const placeholder = "assets/images/moodboard/arvel-editorial-hero.png";
 
-const ui = {
+const dummyElement = {
+  textContent: "",
+  innerHTML: "",
+  value: "",
+  hidden: false,
+  classList: { add: () => {}, remove: () => {} },
+  addEventListener: () => {},
+  querySelector: () => dummyElement,
+  elements: {},
+};
+
+const uiBase = {
   loading: document.querySelector("#admin-loading"),
   denied: document.querySelector("#admin-denied"),
   content: document.querySelector("#admin-content"),
@@ -82,6 +93,10 @@ const ui = {
   markerPreview: document.querySelector("#instagram-marker-preview"),
   alerts: document.querySelector("#admin-alerts")
 };
+
+const ui = new Proxy(uiBase, {
+  get: (target, prop) => target[prop] || dummyElement
+});
 
 let products = [];
 let existingImages = [];
