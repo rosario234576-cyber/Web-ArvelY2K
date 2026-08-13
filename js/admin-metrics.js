@@ -101,7 +101,7 @@ export async function initMetrics() {
       if (state) state.textContent = `Actualizado ${new Date(result.generatedAt).toLocaleString("es-AR")}.`;
     } catch (error) {
       console.error("Error cargando métricas:", error);
-      if (state) state.textContent = error.message || "No pudimos cargar las métricas. Intentá nuevamente.";
+      if (state) state.textContent = "Las métricas se completarán al conectar Google Analytics o un servicio de tracking.";
     } finally {
       refresh.disabled = false;
       refresh.textContent = "↻ Actualizar";
