@@ -1371,12 +1371,15 @@ body.is-locked {
   gap: var(--space-7);
   align-items: center;
   justify-items: center;
+  justify-content: center;
   text-align: center;
+  min-height: 60vh;
 }
 
 .drop-section__layout > .stack {
   width: min(100%, 40rem);
   align-items: center;
+  justify-self: center;
 }
 
 .drop-section__subtitle {
