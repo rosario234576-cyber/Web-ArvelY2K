@@ -1373,13 +1373,15 @@ body.is-locked {
   justify-items: center;
   justify-content: center;
   text-align: center;
-  min-height: 60vh;
+  min-height: 40vh;
+  margin-inline: auto;
 }
 
 .drop-section__layout > .stack {
-  width: min(100%, 40rem);
+  width: min(100%, 45rem);
   align-items: center;
   justify-self: center;
+  margin-inline: auto;
 }
 
 .drop-section__subtitle {
