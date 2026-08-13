@@ -179,9 +179,13 @@
     elements.subtotal.textContent = window.Arvel.formatPrice(totals.subtotal);
     elements.discountRow.hidden = totals.discount === 0;
     elements.discount.textContent = `− ${window.Arvel.formatPrice(totals.discount)}`;
-    elements.shipping.textContent = freeShipping
-      ? "Gratis"
-      : window.Arvel.formatPrice(shipping);
+
+    const shippingRow = document.querySelector("#shipping-row");
+    if (shippingRow) {
+      shippingRow.hidden = freeShipping;
+      elements.shipping.textContent = window.Arvel.formatPrice(shipping);
+    }
+
     elements.total.textContent = window.Arvel.formatPrice(total);
     elements.progress.setAttribute(
       "aria-valuenow",
