@@ -1288,42 +1288,66 @@ async function fixCategories() {
 // Clientes
 async function loadCustomers() {
   const customersList = document.querySelector("#customers-list");
-  if (!customersList) return;
+  if (!customersList || !db) return;
 
   try {
     const customersRef = collection(db, "customers");
     const q = query(customersRef, orderBy("created_at", "desc"));
     const snapshot = await getDocs(q);
 
-    customersList.innerHTML = snapshot.docs.map(doc => `
-      <tr>
-        <td>${escapeHtml(doc.data().first_name || "")} ${escapeHtml(doc.data().last_name || "")}</td>
-        <td>${escapeHtml(doc.data().email || "")}</td>
-        <td>${escapeHtml(doc.data().phone || "")}</td>
-        <td>${new Date(doc.data().created_at).toLocaleDateString("es-AR")}</td>
-        <td><button class="button button--secondary" onclick="showCustomerDetail('${doc.id}')">Ver</button></td>
-      </tr>
-    `).join("");
+    if (snapshot.empty) {
+      customersList.innerHTML = "<tr><td colspan='5'>No hay clientes registrados</td></tr>";
+      return;
+    }
+
+    customersList.innerHTML = snapshot.docs.map(docData => {
+      const data = docData.data();
+      const createdDate = data.created_at ? new Date(data.created_at).toLocaleDateString("es-AR") : "N/A";
+      return `
+        <tr>
+          <td>${escapeHtml(data.first_name || "")} ${escapeHtml(data.last_name || "")}</td>
+          <td>${escapeHtml(data.email || "")}</td>
+          <td>${escapeHtml(data.phone || "")}</td>
+          <td>${createdDate}</td>
+          <td><button class="button button--secondary" type="button" onclick="showCustomerDetail('${docData.id}')">Ver</button></td>
+        </tr>
+      `;
+    }).join("");
   } catch (error) {
     console.error("Error cargando clientes:", error);
+    if (customersList) {
+      customersList.innerHTML = "<tr><td colspan='5' style='color: red;'>Error cargando clientes</td></tr>";
+    }
   }
 }
 
 async function showCustomerDetail(customerId) {
-  const customerList = document.querySelector("#customers-list").parentElement;
-  const detailDiv = document.querySelector("#customer-detail");
-
   try {
+    const customerList = document.querySelector("#customers-list")?.parentElement;
+    const detailDiv = document.querySelector("#customer-detail");
+
+    if (!customerList || !detailDiv) {
+      console.error("Elementos de cliente no encontrados en el DOM");
+      return;
+    }
+
     const docSnapshot = await getDoc(doc(db, "customers", customerId));
     if (!docSnapshot.exists()) return;
 
     const data = docSnapshot.data();
-    document.querySelector("#detail-name").textContent = `${data.first_name} ${data.last_name}`;
-    document.querySelector("#detail-email").textContent = data.email;
-    document.querySelector("#detail-phone").textContent = data.phone || "No registrado";
-    document.querySelector("#detail-dni").textContent = data.dni || "No registrado";
-    document.querySelector("#detail-created").textContent = new Date(data.created_at).toLocaleDateString("es-AR");
-    document.querySelector("#detail-newsletter").textContent = data.newsletter ? "Sí" : "No";
+    const detailName = document.querySelector("#detail-name");
+    const detailEmail = document.querySelector("#detail-email");
+    const detailPhone = document.querySelector("#detail-phone");
+    const detailDni = document.querySelector("#detail-dni");
+    const detailCreated = document.querySelector("#detail-created");
+    const detailNewsletter = document.querySelector("#detail-newsletter");
+
+    if (detailName) detailName.textContent = `${data.first_name || ""} ${data.last_name || ""}`;
+    if (detailEmail) detailEmail.textContent = data.email || "";
+    if (detailPhone) detailPhone.textContent = data.phone || "No registrado";
+    if (detailDni) detailDni.textContent = data.dni || "No registrado";
+    if (detailCreated) detailCreated.textContent = data.created_at ? new Date(data.created_at).toLocaleDateString("es-AR") : "N/A";
+    if (detailNewsletter) detailNewsletter.textContent = data.newsletter ? "Sí" : "No";
 
     customerList.hidden = true;
     detailDiv.hidden = false;
