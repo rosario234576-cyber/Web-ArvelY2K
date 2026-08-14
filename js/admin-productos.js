@@ -845,9 +845,13 @@ async function loadOrders() {
   const ordersList = document.getElementById("orders-list");
   const refreshBtn = document.getElementById("orders-refresh");
 
+  if (!db) {
+    ordersList.innerHTML = "<p>Error: Base de datos no inicializada.</p>";
+    return;
+  }
+
   try {
     const { getDocs, query, collection, where, orderBy } = await import("https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js");
-    const db = firebaseDb;
 
     const q = query(
       collection(db, "orders"),
