@@ -690,9 +690,42 @@
       .join("\n");
   }
 
+  async function saveOrderToFirestore(order) {
+    try {
+      const apiBase = String(window.ARVEL_PAYMENT_API_BASE || window.ARVEL_API_BASE || "").replace(/\/+$/, "");
+      const endpoint = apiBase ? `${apiBase}/api/create-order` : "/api/create-order";
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderNumber: order.orderNumber,
+          fullName: order.customer.fullName,
+          email: order.customer.email,
+          phone: order.customer.phone,
+          items: order.items.map(item => ({
+            id: item.id || item.documentId,
+            name: (item.product?.name || "Producto"),
+            quantity: item.quantity,
+            price: item.product?.price || 0
+          }))
+        })
+      });
+
+      if (!response.ok) {
+        console.warn("Failed to save order to Firestore");
+      }
+    } catch (error) {
+      console.error("Save order error:", error);
+    }
+  }
+
   function showConfirmation(order, options = {}) {
     const registered = options.registered !== false;
     preparedOrder = order;
+
+    saveOrderToFirestore(order);
+
     elements.content.hidden = true;
     elements.confirmation.hidden = false;
     elements.confirmationName.textContent = order.customer.fullName;
