@@ -851,18 +851,24 @@ async function loadOrders() {
   }
 
   try {
-    const { getDocs, query, collection, where, orderBy } = await import("https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js");
+    const { getDocs, query, collection, where } = await import("https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js");
 
     const q = query(
       collection(db, "orders"),
-      where("status", "==", "pending"),
-      orderBy("createdAt", "desc")
+      where("status", "==", "pending")
     );
 
     const snapshot = await getDocs(q);
     const orders = [];
     snapshot.forEach((doc) => {
       orders.push({ id: doc.id, ...doc.data() });
+    });
+
+    // Ordenar por createdAt descendente (más recientes primero)
+    orders.sort((a, b) => {
+      const dateA = a.createdAt?.toMillis?.() || 0;
+      const dateB = b.createdAt?.toMillis?.() || 0;
+      return dateB - dateA;
     });
 
     console.log("✅ Pedidos cargados:", orders.length);
