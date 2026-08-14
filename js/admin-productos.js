@@ -865,6 +865,8 @@ async function loadOrders() {
       orders.push({ id: doc.id, ...doc.data() });
     });
 
+    console.log("✅ Pedidos cargados:", orders.length);
+
     if (orders.length === 0) {
       ordersList.innerHTML = "<p>No hay pedidos pendientes.</p>";
       return;
@@ -891,8 +893,13 @@ async function loadOrders() {
       </div>
     `).join("");
   } catch (error) {
-    console.error("Error cargando pedidos:", error);
-    ordersList.innerHTML = "<p>Error cargando pedidos.</p>";
+    console.error("❌ Error cargando pedidos:", error.code, error.message);
+    const errorMsg = error.code === "permission-denied"
+      ? "No tienes permiso para leer pedidos. ¿Estás logueado como admin?"
+      : error.code === "failed-precondition"
+      ? "Firestore necesita un índice. Haz click en la URL del error para crearlo."
+      : error.message || "Error desconocido";
+    ordersList.innerHTML = `<p style="color: red;">❌ ${errorMsg}</p>`;
   }
 }
 
