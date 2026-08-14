@@ -103,7 +103,9 @@ const ui = {
   settingsForm: getSafeElement("#automation-settings-form"),
   settingsState: getSafeElement("#settings-state"),
   markerPreview: getSafeElement("#instagram-marker-preview"),
-  alerts: getSafeElement("#admin-alerts")
+  alerts: getSafeElement("#admin-alerts"),
+  ordersRefresh: getSafeElement("#orders-refresh"),
+  ordersList: getSafeElement("#orders-list")
 };
 
 let products = [];
@@ -822,6 +824,11 @@ async function openView(name) {
   });
   window.scrollTo({ top: 0, behavior: "smooth" });
 
+  // Cargar pedidos cuando se abre esa pestaña
+  if (name === "orders") {
+    await loadOrders();
+  }
+
   // Cargar métricas cuando se abre esa pestaña
   if (name === "metrics") {
     try {
@@ -831,6 +838,93 @@ async function openView(name) {
       console.error("Error cargando métricas:", error);
       document.getElementById("total-events").textContent = "Error";
     }
+  }
+}
+
+async function loadOrders() {
+  const ordersList = document.getElementById("orders-list");
+  const refreshBtn = document.getElementById("orders-refresh");
+
+  try {
+    const { getDocs, query, collection, where, orderBy } = await import("https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js");
+    const db = firebaseDb;
+
+    const q = query(
+      collection(db, "orders"),
+      where("status", "==", "pending"),
+      orderBy("createdAt", "desc")
+    );
+
+    const snapshot = await getDocs(q);
+    const orders = [];
+    snapshot.forEach((doc) => {
+      orders.push({ id: doc.id, ...doc.data() });
+    });
+
+    if (orders.length === 0) {
+      ordersList.innerHTML = "<p>No hay pedidos pendientes.</p>";
+      return;
+    }
+
+    ordersList.innerHTML = orders.map((order) => `
+      <div class="admin-order-card">
+        <div class="admin-order-header">
+          <div>
+            <strong>${order.firstName} ${order.lastName}</strong>
+            <p>${order.phone}</p>
+          </div>
+          <div>
+            <span class="eyebrow">Pedido #</span>
+            <strong>${order.orderNumber}</strong>
+          </div>
+        </div>
+        <div class="admin-order-items">
+          ${order.items?.map((item) => `<p>• ${item.name} (x${item.quantity})</p>`).join("") || ""}
+        </div>
+        <button class="button button--pink" onclick="confirmOrderPayment('${order.id}', '${order.orderNumber}', ${JSON.stringify(order.items?.map(i => i.id) || [])})">
+          Marcar como pagado
+        </button>
+      </div>
+    `).join("");
+  } catch (error) {
+    console.error("Error cargando pedidos:", error);
+    ordersList.innerHTML = "<p>Error cargando pedidos.</p>";
+  }
+}
+
+async function confirmOrderPayment(orderId, orderNumber, productIds) {
+  if (!confirm(`¿Confirmar pago del pedido ${orderNumber}? Los productos se marcarán como vendidos.`)) return;
+
+  try {
+    const auth = getAuth();
+    const idToken = await auth.currentUser.getIdToken();
+
+    const apiBase = String(window.ARVEL_PAYMENT_API_BASE || window.ARVEL_API_BASE || "").replace(/\/+$/, "");
+    const endpoint = apiBase ? `${apiBase}/api/confirm-order-payment` : "/api/confirm-order-payment";
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${idToken}`
+      },
+      body: JSON.stringify({
+        orderNumber,
+        productIds
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      alert("Error: " + (data.error || "No pudimos confirmar el pago"));
+      return;
+    }
+
+    alert("✓ Pago confirmado. Productos marcados como vendidos.");
+    await loadOrders();
+  } catch (error) {
+    console.error("Error confirmando pago:", error);
+    alert("Error confirmando pago");
   }
 }
 
@@ -1065,6 +1159,13 @@ ui.settingsForm?.addEventListener("submit", async (event) => {
     ui.settingsState.textContent = error.message || "No pudimos guardar la configuración.";
   }
 });
+
+ui.ordersRefresh?.addEventListener("click", async () => {
+  ui.ordersRefresh.disabled = true;
+  await loadOrders();
+  ui.ordersRefresh.disabled = false;
+});
+
 // Instagram fue removido - event listeners desactivados
 // ui.instagramSync?.addEventListener("click", async () => {
 //   ui.instagramSync.disabled = true;
@@ -1421,7 +1522,7 @@ async function loadCustomersForOrders() {
 }
 
 async function loadOrdersHistory() {
-  const ordersList = document.querySelector("#orders-list");
+  const ordersList = document.querySelector("#sales-orders-list");
   if (!ordersList || !db) return;
 
   try {

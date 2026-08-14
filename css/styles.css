@@ -4772,3 +4772,67 @@ html {
 *::-webkit-scrollbar-thumb:hover {
   background: #ff9bd5;
 }
+
+.admin-order-card {
+  border: var(--border-thin);
+  border-radius: var(--radius-2);
+  padding: var(--space-4);
+  margin-bottom: var(--space-3);
+  background: var(--color-bg-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.admin-order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.admin-order-header > div:first-child {
+  flex: 1;
+}
+
+.admin-order-header > div:first-child strong {
+  display: block;
+  margin-bottom: var(--space-1);
+}
+
+.admin-order-header > div:first-child p {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  margin: 0;
+}
+
+.admin-order-header > div:last-child {
+  text-align: right;
+}
+
+.admin-order-header .eyebrow {
+  display: block;
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  margin-bottom: var(--space-1);
+}
+
+.admin-order-items {
+  padding: var(--space-2);
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-1);
+  font-size: var(--text-sm);
+}
+
+.admin-order-items p {
+  margin: var(--space-1) 0;
+}
+
+.admin-order-items p:first-child {
+  margin-top: 0;
+}
+
+.admin-order-items p:last-child {
+  margin-bottom: 0;
+}

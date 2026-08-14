@@ -46,6 +46,7 @@
       <div id="admin-content" hidden>
         <nav class="admin-tabs" aria-label="Secciones del panel">
           <button class="is-active" type="button" data-admin-view="summary">Resumen</button>
+          <button type="button" data-admin-view="orders">Pedidos</button>
           <button type="button" data-admin-view="metrics">Métricas</button>
           <button type="button" data-admin-view="products">Productos</button>
           <button type="button" data-admin-view="customers">Clientes</button>
@@ -77,6 +78,16 @@
               <span class="eyebrow">Atención</span><h2>Revisión del catálogo</h2>
               <div id="admin-alerts"><p>No hay alertas por el momento.</p></div>
             </article>
+          </div>
+        </section>
+
+        <section class="admin-view" data-admin-panel="orders" hidden>
+          <div class="admin-page-heading">
+            <div><span class="eyebrow">Gestión</span><h1>Pedidos pendientes</h1></div>
+            <button class="button button--secondary" type="button" id="orders-refresh">🔄 Actualizar</button>
+          </div>
+          <div id="orders-list" class="admin-orders-list">
+            <p>Cargando pedidos...</p>
           </div>
         </section>
 
@@ -433,7 +444,7 @@
                     <th>Acciones</th>
                   </tr>
                 </thead>
-                <tbody id="orders-list"></tbody>
+                <tbody id="sales-orders-list"></tbody>
               </table>
             </div>
           </article>
