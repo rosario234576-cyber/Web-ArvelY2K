@@ -695,28 +695,37 @@
       const apiBase = String(window.ARVEL_PAYMENT_API_BASE || window.ARVEL_API_BASE || "").replace(/\/+$/, "");
       const endpoint = apiBase ? `${apiBase}/api/create-order` : "/api/create-order";
 
+      console.log("📦 Guardando orden:", { orderNumber: order.orderNumber, endpoint });
+
+      const payload = {
+        orderNumber: order.orderNumber,
+        fullName: order.customer.fullName,
+        email: order.customer.email,
+        phone: order.customer.phone,
+        items: order.items.map(item => ({
+          id: item.id || item.documentId,
+          name: (item.product?.name || "Producto"),
+          quantity: item.quantity,
+          price: item.product?.price || 0
+        }))
+      };
+
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderNumber: order.orderNumber,
-          fullName: order.customer.fullName,
-          email: order.customer.email,
-          phone: order.customer.phone,
-          items: order.items.map(item => ({
-            id: item.id || item.documentId,
-            name: (item.product?.name || "Producto"),
-            quantity: item.quantity,
-            price: item.product?.price || 0
-          }))
-        })
+        body: JSON.stringify(payload)
       });
 
+      const data = await response.json().catch(() => ({}));
+
       if (!response.ok) {
-        console.warn("Failed to save order to Firestore");
+        console.error("❌ Error al guardar orden:", response.status, data);
+        return;
       }
+
+      console.log("✅ Orden guardada en Firestore:", data);
     } catch (error) {
-      console.error("Save order error:", error);
+      console.error("❌ Error guardando orden:", error);
     }
   }
 
