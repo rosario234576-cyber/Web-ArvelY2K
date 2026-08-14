@@ -4046,6 +4046,24 @@ body.is-locked {
   text-align: left;
 }
 
+.notice--security {
+  padding: var(--space-4);
+  border-left: 4px solid #f59e0b;
+  background: rgb(255 193 7 / 0.08);
+  margin-bottom: var(--space-5);
+}
+
+.notice--security strong {
+  display: block;
+  margin-bottom: var(--space-2);
+}
+
+.notice--security p {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
 .order-confirmation__summary {
   margin-bottom: var(--space-5);
   padding: var(--space-5);
