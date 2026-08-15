@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const CACHE_KEY = "arvel-products-cache-v4";
+  const CACHE_KEY = "arvel-products-cache-v5";
   const fallback = Array.isArray(window.ARVEL_PRODUCTS) ? [...window.ARVEL_PRODUCTS] : [];
   let cached = [];
 
@@ -37,7 +37,7 @@
       let productRecords = [];
       try {
         const apiBase = String(window.ARVEL_API_BASE || "https://web-arvel-y2-k.vercel.app").replace(/\/+$/, "");
-        const response = await fetch(`${apiBase}/api/products`, {
+        const response = await fetch(`${apiBase}/api/products?refresh=${Date.now()}`, {
           headers: { Accept: "application/json" },
           cache: "no-store"
         });

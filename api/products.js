@@ -14,6 +14,12 @@ function isoDate(value) {
 }
 
 module.exports = async function handler(req, res) {
+  // El panel puede publicar, ocultar o destacar productos en cualquier momento.
+  // No se debe servir una copia anterior del catalogo desde el CDN de Vercel.
+  res.setHeader("Cache-Control", "private, no-store, no-cache, must-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+
   const origin = String(req.headers.origin || "");
   if (origin && !ALLOWED_ORIGINS.has(origin)) {
     return res.status(403).json({ error: "Origen no autorizado." });
@@ -45,7 +51,6 @@ module.exports = async function handler(req, res) {
       };
     });
 
-    res.setHeader("Cache-Control", "public, max-age=0, s-maxage=60, stale-while-revalidate=300");
     return res.status(200).json({ products });
   } catch (error) {
     console.error("Public products error:", error);

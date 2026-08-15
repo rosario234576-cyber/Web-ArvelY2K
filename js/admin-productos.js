@@ -1077,6 +1077,7 @@ async function saveProduct(statusOverride) {
     localStorage.removeItem("arvel-products-cache-v2");
     localStorage.removeItem("arvel-products-cache-v3");
     localStorage.removeItem("arvel-products-cache-v4");
+    localStorage.removeItem("arvel-products-cache-v5");
     const ownPrefix = `products/${documentId}/`;
     const pendingDeletes = removedStoragePaths
       .filter((path) => path.startsWith(ownPrefix))
