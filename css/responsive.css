@@ -1147,8 +1147,14 @@ body:not(.admin-body) {
   }
 
   .shop-section .product-card__payment,
-  .shop-section .product-card__transfer,
-  .shop-section .product-card__installments,
+  .shop-section .product-card__transfer {
+    color: var(--color-text);
+  }
+
+  .shop-section .product-card__installments {
+    color: var(--color-pink-dark);
+  }
+
   .shop-section .product-card__buy-link {
     color: var(--color-text);
   }

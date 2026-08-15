@@ -320,8 +320,8 @@
 }
 
 .product-card__installments {
-  color: var(--color-text);
-  font-weight: 700;
+  color: var(--color-pink-dark);
+  font-weight: 800;
 }
 
 .product-info__price-main,
@@ -392,36 +392,46 @@
 
 .product-card__cart {
   display: inline-grid;
-  width: 1.65rem;
-  height: 1.65rem;
+  width: 2.35rem;
+  height: 2.35rem;
   padding: 0;
-  border: 0;
+  border: 1px solid var(--color-pink-dark);
+  border-radius: 0.45rem;
   place-items: center;
   color: var(--color-text);
-  background: transparent;
+  background: var(--color-pink);
   cursor: pointer;
+  transition: background-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .product-card__cart img {
-  width: 1rem;
-  height: 1rem;
+  width: 1.1rem;
+  height: 1.1rem;
   object-fit: contain;
 }
 
 .product-card__buy-link {
-  padding: 0.15rem 0;
-  border: 0;
-  border-bottom: 1px solid currentColor;
+  min-height: 2.35rem;
+  padding: 0.55rem 1.15rem;
+  border: 1px solid var(--color-pink-dark);
+  border-radius: 0.45rem;
   color: var(--color-text);
-  background: transparent;
+  background: var(--color-pink);
   font-family: inherit;
   font-size: 0.92rem;
+  font-weight: 800;
   cursor: pointer;
+  transition: background-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
+.product-card__cart:hover,
+.product-card__cart:focus-visible,
 .product-card__buy-link:hover,
 .product-card__buy-link:focus-visible {
-  color: var(--color-pink-dark);
+  background: var(--color-pink-dark);
+  color: var(--color-white);
+  box-shadow: 0 0.4rem 1rem rgb(241 91 181 / 28%);
+  transform: translateY(-1px);
 }
 
 .product-card__buy-link:disabled,
