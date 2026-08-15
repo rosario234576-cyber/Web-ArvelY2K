@@ -112,7 +112,7 @@
 
     elements.price.innerHTML = `
       <div class="product-info__price-section">
-        <span class="product-info__price-label">TRANSFERENCIA O DEPÓSITO</span>
+        <span class="product-info__price-label">PRECIO POR TRANSFERENCIA BANCARIA</span>
         <span class="product-info__price-main">${oldPrice}<strong>${window.Arvel.formatPrice(transferPrice)}</strong>${discountBadge}</span>
         ${mercadoPagoSection}
       </div>

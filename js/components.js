@@ -375,7 +375,7 @@
             <a href="producto.html?id=${productId}">${productName}</a>
           </h3>
           <div class="product-card__price-section">
-            <p class="product-card__price-label">TRANSFERENCIA O DEPÓSITO</p>
+            <p class="product-card__price-label">PRECIO POR TRANSFERENCIA BANCARIA</p>
             ${discount > 0 ? `
               <div class="product-card__price-with-discount">
                 <p class="product-card__price-original">${formatPrice(originalPrice)}</p>
