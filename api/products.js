@@ -1,5 +1,12 @@
 const { getAdminDb } = require("./_firebase-admin");
 
+const ALLOWED_ORIGINS = new Set([
+  "https://arvelcustomy2k.store",
+  "https://www.arvelcustomy2k.store",
+  "https://web-arvel-y2-k.vercel.app",
+  "https://rosario234576-cyber.github.io"
+]);
+
 function isoDate(value) {
   if (!value) return "";
   if (typeof value.toDate === "function") return value.toDate().toISOString();
@@ -7,6 +14,15 @@ function isoDate(value) {
 }
 
 module.exports = async function handler(req, res) {
+  const origin = String(req.headers.origin || "");
+  if (origin && !ALLOWED_ORIGINS.has(origin)) {
+    return res.status(403).json({ error: "Origen no autorizado." });
+  }
+  if (origin) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Vary", "Origin");
+  }
+
   if (req.method !== "GET") {
     res.setHeader("Allow", "GET");
     return res.status(405).json({ error: "Method not allowed" });

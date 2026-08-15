@@ -36,7 +36,8 @@
       const storage = getStorage(app);
       let productRecords = [];
       try {
-        const response = await fetch("/api/products", {
+        const apiBase = String(window.ARVEL_API_BASE || "https://web-arvel-y2-k.vercel.app").replace(/\/+$/, "");
+        const response = await fetch(`${apiBase}/api/products`, {
           headers: { Accept: "application/json" },
           cache: "no-store"
         });
