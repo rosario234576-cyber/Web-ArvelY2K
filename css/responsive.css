@@ -1508,6 +1508,13 @@ body:not(.admin-body) {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .mini-skirts-community::before,
+  .mini-skirts-community h2,
+  .mini-skirts-community__button,
+  .mini-skirts-community__spark {
+    animation: none !important;
+  }
+
   .cyber-window,
   .cyber-window__meter i {
     animation: none !important;

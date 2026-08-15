@@ -1376,6 +1376,22 @@ body.is-locked {
     radial-gradient(circle at 88% 20%, rgb(255 178 222 / 18%), transparent 28%),
     #160b12;
   color: var(--color-white);
+  isolation: isolate;
+}
+
+.mini-skirts-community::before {
+  position: absolute;
+  z-index: 0;
+  top: -80%;
+  bottom: -80%;
+  left: -35%;
+  width: 38%;
+  background: linear-gradient(90deg, transparent, rgb(241 91 181 / 22%), rgb(255 224 243 / 17%), transparent);
+  content: "";
+  filter: blur(1.6rem);
+  pointer-events: none;
+  transform: skewX(-18deg);
+  animation: community-glow-sweep 5.5s ease-in-out infinite;
 }
 
 .mini-skirts-community__inner {
@@ -1403,6 +1419,7 @@ body.is-locked {
   font-weight: 500;
   letter-spacing: -0.035em;
   line-height: 0.98;
+  animation: community-title-glow 3.2s ease-in-out infinite;
 }
 
 .mini-skirts-community p:not(.eyebrow) {
@@ -1418,6 +1435,7 @@ body.is-locked {
   z-index: 1;
   min-width: 14rem;
   box-shadow: 0 0.7rem 1.8rem rgb(241 91 181 / 25%);
+  animation: community-button-glow 2.8s ease-in-out infinite;
 }
 
 .mini-skirts-community__spark {
@@ -1428,6 +1446,52 @@ body.is-locked {
   font-size: clamp(8rem, 18vw, 17rem);
   line-height: 1;
   transform: translateY(-50%) rotate(12deg);
+  animation: community-spark-glow 3.6s ease-in-out infinite;
+}
+
+@keyframes community-glow-sweep {
+  0%, 12% {
+    left: -40%;
+    opacity: 0;
+  }
+  38%, 62% {
+    opacity: 1;
+  }
+  88%, 100% {
+    left: 108%;
+    opacity: 0;
+  }
+}
+
+@keyframes community-title-glow {
+  0%, 100% {
+    text-shadow: 0 0 0.15rem rgb(255 255 255 / 12%);
+  }
+  50% {
+    text-shadow: 0 0 0.5rem rgb(255 255 255 / 34%), 0 0 1.4rem rgb(241 91 181 / 36%);
+  }
+}
+
+@keyframes community-button-glow {
+  0%, 100% {
+    box-shadow: 0 0.7rem 1.8rem rgb(241 91 181 / 25%);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: 0 0.7rem 2.2rem rgb(241 91 181 / 62%), 0 0 1rem rgb(255 217 240 / 35%);
+    filter: brightness(1.08);
+  }
+}
+
+@keyframes community-spark-glow {
+  0%, 100% {
+    color: rgb(241 91 181 / 14%);
+    filter: drop-shadow(0 0 0 rgb(241 91 181 / 0%));
+  }
+  50% {
+    color: rgb(241 91 181 / 30%);
+    filter: drop-shadow(0 0 1.2rem rgb(241 91 181 / 45%));
+  }
 }
 
 .drop-section__layout {
