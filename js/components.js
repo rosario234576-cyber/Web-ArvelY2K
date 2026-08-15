@@ -378,11 +378,11 @@
             <p class="product-card__price-label">PRECIO POR TRANSFERENCIA BANCARIA</p>
             ${discount > 0 ? `
               <div class="product-card__price-with-discount">
+                <p class="product-card__price-main">${formatPrice(transferPrice)}</p>
                 <p class="product-card__price-original">${formatPrice(originalPrice)}</p>
                 <p class="product-card__discount-badge">-${discount}%</p>
               </div>
-            ` : ""}
-            <p class="product-card__price-main">${formatPrice(transferPrice)}</p>
+            ` : `<p class="product-card__price-main">${formatPrice(transferPrice)}</p>`}
           </div>
           <p class="product-card__installments">Desde $50.000: solicitá por WhatsApp un link de Mercado Pago en 1, 2 o 3 cuotas con recargo.</p>
           <div class="product-card__actions">
