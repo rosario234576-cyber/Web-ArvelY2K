@@ -705,7 +705,8 @@ async function loadProducts() {
 function buildProduct(statusOverride) {
   const data = new FormData(ui.form);
   const variants = readVariants();
-  const status = statusOverride || String(data.get("status") || "draft");
+  const requestedStatus = String(statusOverride || data.get("status") || "draft").trim().toLowerCase();
+  const status = ["published", "draft", "hidden"].includes(requestedStatus) ? requestedStatus : "draft";
   const name = String(data.get("name") || "").trim();
   const sku = String(data.get("sku") || "").trim().toUpperCase();
   const stockByVariant = Object.fromEntries(
@@ -1106,6 +1107,10 @@ async function saveProduct(statusOverride) {
     if (!currentId) product.createdAt = serverTimestamp();
     await setDoc(doc(db, "products", documentId), product, { merge: true });
     productPersisted = true;
+    const persistedSnapshot = await getDocFromServer(doc(db, "products", documentId));
+    if (!persistedSnapshot.exists() || persistedSnapshot.data()?.status !== product.status) {
+      throw new Error("El estado no se guardó correctamente. Volvé a intentarlo.");
+    }
     localStorage.removeItem("arvel-products-cache-v2");
     localStorage.removeItem("arvel-products-cache-v3");
     localStorage.removeItem("arvel-products-cache-v4");
@@ -1123,7 +1128,12 @@ async function saveProduct(statusOverride) {
     const publishedMessage = product.featured
       ? "Producto publicado y agregado a Destacados"
       : "Producto publicado";
-    setState(product.status === "published" ? publishedMessage : "Producto guardado", "success");
+    const stateMessage = product.status === "published"
+      ? publishedMessage
+      : product.status === "hidden"
+        ? "Producto ocultado y retirado de la tienda"
+        : "Producto guardado como borrador y retirado de la tienda";
+    setState(stateMessage, "success");
     await loadProducts();
     const saved = products.find((item) => item.documentId === documentId);
     if (saved) fillForm(saved);
@@ -1262,6 +1272,10 @@ ui.variants?.addEventListener("input", updatePriceFieldState);
 ui.oldPriceInput?.addEventListener("input", () => syncDiscountFields("oldPrice"));
 ui.discountInput?.addEventListener("input", () => syncDiscountFields("discount"));
 ui.priceInput?.addEventListener("input", () => syncDiscountFields("price"));
+ui.form?.elements.status?.addEventListener("change", (event) => {
+  if (!activeDocumentId) return;
+  saveProduct(event.target.value);
+});
 ui.newProduct?.addEventListener("click", resetForm);
 ui.search?.addEventListener("input", renderList);
 ui.list?.addEventListener("click", (event) => {

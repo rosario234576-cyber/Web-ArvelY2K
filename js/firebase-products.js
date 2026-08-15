@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const CACHE_KEY = "arvel-products-cache-v5";
+  const CACHE_KEY = "arvel-products-cache-v6";
   const fallback = Array.isArray(window.ARVEL_PRODUCTS) ? [...window.ARVEL_PRODUCTS] : [];
   let cached = [];
 
@@ -44,13 +44,17 @@
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const payload = await response.json();
         if (!Array.isArray(payload.products)) throw new Error("Respuesta de catalogo invalida");
-        productRecords = payload.products.map((data) => ({ id: data.documentId || data.id, data }));
+        productRecords = payload.products
+          .filter((data) => data?.status === "published" && !data.archived)
+          .map((data) => ({ id: data.documentId || data.id, data }));
       } catch (apiError) {
         console.warn("La API publica del catalogo no respondio; se intenta Firestore.", apiError);
         const snapshot = await getDocs(
           query(collection(db, "products"), where("status", "==", "published"))
         );
-        productRecords = snapshot.docs.map((item) => ({ id: item.id, data: item.data() }));
+        productRecords = snapshot.docs
+          .map((item) => ({ id: item.id, data: item.data() }))
+          .filter((item) => item.data?.status === "published" && !item.data.archived);
       }
       const resolveImages = async (data) => {
         const references = Array.isArray(data.imageRefs) ? data.imageRefs : [];
