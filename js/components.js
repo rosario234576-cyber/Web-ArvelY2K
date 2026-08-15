@@ -45,10 +45,15 @@
         `<a href="tienda.html?categoria=${encodeURIComponent(category)}">${category}</a>`
       ).join("");
       return `
-        <div class="desktop-navigation__shop">
-          <a class="desktop-navigation__link" href="tienda.html"${current}>Shop</a>
-          <span class="desktop-navigation__shop-arrow" aria-hidden="true">⌄</span>
-          <div class="desktop-navigation__submenu" aria-label="Categorías de Shop">${categories}</div>
+        <div class="desktop-navigation__shop" data-shop-menu>
+          <button class="desktop-navigation__link desktop-navigation__shop-toggle" type="button" aria-expanded="false" aria-controls="desktop-shop-categories"${current}>
+            <span>Shop</span><span class="desktop-navigation__shop-arrow" aria-hidden="true">⌄</span>
+          </button>
+          <div class="desktop-navigation__submenu" id="desktop-shop-categories" aria-label="Categorías de Shop">
+            <a class="desktop-navigation__submenu-all" href="tienda.html">Ver todos los productos</a>
+            <span class="desktop-navigation__submenu-label">Elegí una categoría</span>
+            ${categories}
+          </div>
         </div>`;
     }).join("");
   }
@@ -62,9 +67,14 @@
         `<a href="tienda.html?categoria=${encodeURIComponent(category)}">${category}</a>`
       ).join("");
       return `
-        <div class="mobile-navigation__shop">
-          <a class="mobile-navigation__link" href="tienda.html"${current}>Shop · Ver todo</a>
-          <div class="mobile-navigation__categories" aria-label="Categorías de Shop">${categories}</div>
+        <div class="mobile-navigation__shop" data-shop-menu>
+          <button class="mobile-navigation__link mobile-navigation__shop-toggle" type="button" aria-expanded="false" aria-controls="mobile-shop-categories"${current}>
+            <span>Shop</span><span aria-hidden="true">＋</span>
+          </button>
+          <div class="mobile-navigation__categories" id="mobile-shop-categories" aria-label="Categorías de Shop" hidden>
+            <a class="mobile-navigation__categories-all" href="tienda.html">Ver todos los productos</a>
+            ${categories}
+          </div>
         </div>`;
     }).join("");
   }
@@ -356,7 +366,7 @@
     return Math.ceil((base / (1 - rate)) / 100) * 100;
   }
 
-  function createProductCard(product) {
+  function createProductCard(product, index = 0) {
     const [badgeLabel, badgeClass] = getProductBadge(product);
     const imageFallback = "assets/images/moodboard/arvel-editorial-hero.png";
     const image = escapeHtml(
@@ -387,7 +397,9 @@
               alt="${productName}. ${shortDescription}"
               width="1080"
               height="1440"
-              loading="lazy"
+              loading="${index < 4 ? "eager" : "lazy"}"
+              fetchpriority="${index < 2 ? "high" : "auto"}"
+              decoding="async"
               onerror="this.onerror=null;this.src='${imageFallback}';this.classList.add('is-image-fallback');"
             >
           </a>
@@ -451,6 +463,32 @@
     if (overlaysTarget) overlaysTarget.innerHTML = createOverlays();
   }
 
+  function initShopCategoryMenus() {
+    const menus = [...document.querySelectorAll("[data-shop-menu]")];
+    const setOpen = (menu, open) => {
+      const toggle = menu.querySelector("[aria-expanded]");
+      const panel = menu.querySelector(".desktop-navigation__submenu, .mobile-navigation__categories");
+      menu.classList.toggle("is-open", open);
+      toggle?.setAttribute("aria-expanded", String(open));
+      if (panel?.classList.contains("mobile-navigation__categories")) panel.hidden = !open;
+    };
+
+    menus.forEach((menu) => {
+      menu.querySelector("[aria-expanded]")?.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const shouldOpen = !menu.classList.contains("is-open");
+        menus.forEach((otherMenu) => setOpen(otherMenu, false));
+        setOpen(menu, shouldOpen);
+      });
+    });
+    document.addEventListener("click", (event) => {
+      if (!event.target.closest("[data-shop-menu]")) menus.forEach((menu) => setOpen(menu, false));
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") menus.forEach((menu) => setOpen(menu, false));
+    });
+  }
+
   window.Arvel = Object.freeze({
     config: ARVEL_CONFIG,
     createWhatsAppUrl,
@@ -466,6 +504,7 @@
   window.ARVEL_MERCADOPAGO_READY = false;
 
   renderGlobalComponents();
+  initShopCategoryMenus();
   if (!document.querySelector("[data-auth-page]")) {
     import("./firebase-auth.js?v=20260810-session-expiry-fix").catch(() => {
       // La web pública sigue funcionando aunque Firebase todavía no esté configurado.

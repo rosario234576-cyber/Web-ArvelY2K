@@ -165,7 +165,15 @@
             aria-pressed="${index === 0}"
             data-image-index="${index}"
           >
-            <img src="${image}" alt="" width="180" height="240" onerror="this.onerror=null;this.src='${fallbackImage}';">
+            <img
+              src="${image}"
+              alt=""
+              width="180"
+              height="240"
+              loading="${index < 4 ? "eager" : "lazy"}"
+              decoding="async"
+              onerror="this.onerror=null;this.src='${fallbackImage}';"
+            >
           </button>
         `
       )
