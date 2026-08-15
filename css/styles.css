@@ -5020,3 +5020,39 @@ html {
 .admin-order-items p:last-child {
   margin-bottom: 0;
 }
+
+@supports (content-visibility: auto) {
+  .home-page main > section:not(.home-hero),
+  body:not(.home-page) main > section {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 48rem;
+  }
+
+  .story-marquee,
+  .moodboard,
+  .mood-entry-grid {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 32rem;
+  }
+}
+
+@media (max-width: 47.999rem) {
+  .home-background-decor__item,
+  .mini-skirts-community::before,
+  .mini-skirts-community::after,
+  .mini-skirts-community h2,
+  .mini-skirts-community__button,
+  .mini-skirts-community__spark {
+    animation: none !important;
+  }
+
+  .mini-skirts-community::before,
+  .mini-skirts-community::after {
+    display: none;
+  }
+
+  .scroll-sparkle::after,
+  .mini-skirts-community__spark {
+    filter: none;
+  }
+}

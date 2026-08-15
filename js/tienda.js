@@ -32,6 +32,9 @@
     panelClose: document.querySelector(".filters-panel__close"),
     backdrop: document.querySelector(".filters-backdrop")
   };
+  let catalogVersion = 0;
+  let renderFrame = 0;
+  let lastRenderKey = "";
 
   function uniqueValues(key) {
     return [...new Set(products.flatMap((product) => product[key]))]
@@ -50,8 +53,15 @@
   }
 
   function populateFilters() {
+    const selectedCategory = elements.categoryHeader ? elements.categoryHeader.value : "";
     const categories = uniqueValues("category").filter((cat) => cat && cat.toLowerCase() !== "sin categorizar");
+    if (elements.categoryHeader) {
+      elements.categoryHeader.innerHTML = '<option value="">Todas las categorías</option>';
+    }
     fillSelect(elements.categoryHeader, categories);
+    if (elements.categoryHeader && categories.includes(selectedCategory)) {
+      elements.categoryHeader.value = selectedCategory;
+    }
 
     // Un tope fijo ocultaba productos caros aunque no se hubiera elegido un filtro.
     const highestPrice = products.reduce((highest, product) => {
@@ -106,7 +116,12 @@
 
     return products.filter((product) => {
       const searchable = normalize(
-        [product.name, product.category, product.collection, product.tags.join(" ")].join(" ")
+        [
+          product.name,
+          product.category,
+          product.collection,
+          Array.isArray(product.tags) ? product.tags.join(" ") : ""
+        ].join(" ")
       );
 
       return (
@@ -205,8 +220,24 @@
     render();
   }
 
-  function render() {
+  function createRenderKey(state) {
+    return JSON.stringify([
+      catalogVersion,
+      state.query,
+      state.category,
+      state.maxPrice,
+      state.available,
+      state.sale,
+      state.sort,
+      favoritesOnly
+    ]);
+  }
+
+  function render(force = false) {
     const state = getState();
+    const renderKey = createRenderKey(state);
+    if (!force && renderKey === lastRenderKey) return;
+    lastRenderKey = renderKey;
     const visibleProducts = sortProducts(filterProducts(state), state.sort);
 
     elements.grid.setAttribute("aria-busy", "true");
@@ -222,6 +253,14 @@
     renderActiveFilters(state);
     updatePriceOutput();
     syncUrl(state);
+  }
+
+  function scheduleRender() {
+    if (renderFrame) return;
+    renderFrame = window.requestAnimationFrame(() => {
+      renderFrame = 0;
+      render();
+    });
   }
 
   function setValueFromParams(element, params, key) {
@@ -267,18 +306,18 @@
   function bindEvents() {
     elements.searchForm.addEventListener("submit", (event) => {
       event.preventDefault();
-      render();
+      render(true);
     });
-    elements.search.addEventListener("input", render);
-    if (elements.categoryHeader) elements.categoryHeader.addEventListener("change", render);
-    elements.filtersForm.addEventListener("change", render);
+    elements.search.addEventListener("input", scheduleRender);
+    if (elements.categoryHeader) elements.categoryHeader.addEventListener("change", scheduleRender);
+    elements.filtersForm.addEventListener("change", scheduleRender);
     elements.filtersForm.addEventListener("submit", (event) => {
       event.preventDefault();
       render();
       if (window.matchMedia("(max-width: 63.99rem)").matches) closeFilters();
     });
-    elements.price.addEventListener("input", render);
-    elements.sort.addEventListener("change", render);
+    elements.price.addEventListener("input", scheduleRender);
+    elements.sort.addEventListener("change", scheduleRender);
     elements.clear.addEventListener("click", clearFilters);
     document.querySelector("[data-clear-filters]")?.addEventListener("click", clearFilters);
     elements.activeFilters.addEventListener("click", (event) => {
@@ -296,12 +335,13 @@
   populateFilters();
   restoreFromUrl();
   bindEvents();
-  render();
+  render(true);
 
   document.addEventListener("arvel:products-updated", (event) => {
     products = publicProducts(event.detail?.products || window.ARVEL_PRODUCTS);
+    catalogVersion += 1;
     populateFilters();
-    render();
+    render(true);
   });
-  document.addEventListener("arvel:favorites-changed", render);
+  document.addEventListener("arvel:favorites-changed", () => render(true));
 })();

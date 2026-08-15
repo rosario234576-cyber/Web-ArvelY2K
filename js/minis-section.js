@@ -1,11 +1,38 @@
-import { db } from './firebase-config.js';
-import { collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
-
 let minisFilter = 'all';
 let minisProducts = [];
+let firestoreToolsPromise = null;
+
+function hasMinisSection() {
+  return Boolean(document.querySelector("#minis-products-grid"));
+}
+
+async function getFirestoreTools() {
+  if (!firestoreToolsPromise) {
+    firestoreToolsPromise = Promise.all([
+      import("https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js"),
+      import("https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js"),
+      import("./firebase-config.js?v=20260731-5")
+    ]).then(([{ initializeApp }, firestore, configModule]) => {
+      if (!configModule.firebaseConfigured) return null;
+      const app = initializeApp(configModule.firebaseConfig, "arvel-minis-section");
+      return {
+        db: firestore.getFirestore(app),
+        collection: firestore.collection,
+        getDocs: firestore.getDocs,
+        query: firestore.query,
+        where: firestore.where
+      };
+    });
+  }
+
+  return firestoreToolsPromise;
+}
 
 async function loadMinisProducts() {
   try {
+    const tools = await getFirestoreTools();
+    if (!tools) return;
+    const { collection, db, getDocs, query, where } = tools;
     const productsRef = collection(db, "products");
     let q;
 
@@ -38,7 +65,7 @@ function renderMinisProducts() {
   grid.innerHTML = minisProducts.slice(0, 6).map(product => `
     <article class="shop-card" data-product-id="${product.id}">
       <a href="producto.html?id=${product.id}" class="shop-card__image">
-        <img src="${product.images?.[0] || 'assets/placeholder.png'}" alt="${product.name}" loading="lazy">
+        <img src="${product.images?.[0] || 'assets/images/moodboard/optimized/arvel-editorial-hero-720.jpg'}" alt="${product.name}" width="1080" height="1440" loading="lazy" decoding="async">
         ${product.oldPrice ? '<span class="shop-card__badge">-' + Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100) + '%</span>' : ''}
       </a>
       <div class="shop-card__body">
@@ -50,17 +77,15 @@ function renderMinisProducts() {
   `).join('');
 }
 
-// Event listeners para filtros
-document.querySelectorAll('.drop-filter-btn').forEach(btn => {
-  btn.addEventListener('click', (e) => {
-    document.querySelectorAll('.drop-filter-btn').forEach(b => b.classList.remove('is-active'));
-    e.target.classList.add('is-active');
-    minisFilter = e.target.dataset.filter || 'all';
-    loadMinisProducts();
+if (hasMinisSection()) {
+  document.querySelectorAll('.drop-filter-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      document.querySelectorAll('.drop-filter-btn').forEach(b => b.classList.remove('is-active'));
+      e.target.classList.add('is-active');
+      minisFilter = e.target.dataset.filter || 'all';
+      loadMinisProducts();
+    });
   });
-});
 
-// Cargar al iniciar
-if (db) {
   loadMinisProducts();
 }

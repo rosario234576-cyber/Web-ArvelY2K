@@ -102,7 +102,7 @@
     const product = findProduct(item);
     const key = productKey(product);
     const stock = getVariantStock(product, item.size, item.color);
-    const image = product.images[0] || "assets/images/moodboard/arvel-editorial-hero.png";
+    const image = product.images[0] || "assets/images/moodboard/optimized/arvel-editorial-hero-720.jpg";
     const lineTotal = product.price * item.quantity;
 
     return `

@@ -33,7 +33,7 @@ const app = firebaseConfigured
 const auth = app ? getAuth(app) : null;
 const db = app ? getFirestore(app) : null;
 const storage = app ? getStorage(app) : null;
-const placeholder = "assets/images/moodboard/arvel-editorial-hero.png";
+const placeholder = "assets/images/moodboard/optimized/arvel-editorial-hero-720.jpg";
 
 const dummyElement = {
   textContent: "",

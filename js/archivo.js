@@ -9,7 +9,7 @@
   const count = document.querySelector("#archive-count");
 
   function createArchiveCard(product, index) {
-    const image = product.images[0] || "assets/images/moodboard/arvel-editorial-hero.png";
+    const image = product.images[0] || "assets/images/moodboard/optimized/arvel-editorial-hero-720.jpg";
     const customUrl = window.Arvel.createWhatsAppUrl(
       `Hola Arvel, me inspira la pieza “${product.name}” del archivo (${product.sku}). Quiero consultar por una custom con identidad propia, sin copiarla exactamente.`
     );
