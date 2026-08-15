@@ -1311,7 +1311,7 @@ body:not(.admin-body) {
         rgb(29 8 21 / 46%) 100%
       ),
       linear-gradient(90deg, rgb(19 5 13 / 34%), transparent 48%, rgb(19 5 13 / 28%)),
-      url("../assets/images/Home/optimized/HomeFoto-720.jpg") center 32% / cover no-repeat;
+      url("../assets/images/Home/HomeFoto.png") center 32% / cover no-repeat;
     background-size:
       2.4rem 2.4rem,
       2.4rem 2.4rem,

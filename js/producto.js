@@ -122,10 +122,10 @@
   function renderGallery() {
     const images = product.images.length
       ? product.images
-      : ["assets/images/moodboard/optimized/arvel-editorial-hero-720.jpg"];
+      : ["assets/images/moodboard/arvel-editorial-hero.png"];
     let currentIndex = 0;
     let pointerStartX = 0;
-    const fallbackImage = "assets/images/moodboard/optimized/arvel-editorial-hero-720.jpg";
+    const fallbackImage = "assets/images/moodboard/arvel-editorial-hero.png";
 
     function applyImageFallback(imageElement) {
       imageElement.addEventListener("error", () => {

@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const placeholderImage = "assets/images/moodboard/optimized/arvel-editorial-hero-720.jpg";
+  const placeholderImage = "assets/images/moodboard/arvel-editorial-hero.png";
 
   const products = [
     {
@@ -456,3 +456,4 @@
 
   window.ARVEL_PRODUCTS = Object.freeze(products);
 })();
+

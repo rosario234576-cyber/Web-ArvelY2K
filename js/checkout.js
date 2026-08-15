@@ -221,7 +221,7 @@
       .map((item) => {
         const product = findProduct(item);
         if (!product) return "";
-        const image = product.images[0] || "assets/images/moodboard/optimized/arvel-editorial-hero-720.jpg";
+        const image = product.images[0] || "assets/images/moodboard/arvel-editorial-hero.png";
         return `
           <article class="checkout-item">
             <img src="${image}" alt="" width="90" height="120">

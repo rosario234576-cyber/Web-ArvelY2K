@@ -317,7 +317,7 @@
 
   function createProductCard(product, index = 0) {
     const [badgeLabel, badgeClass] = getProductBadge(product);
-    const imageFallback = "assets/images/moodboard/optimized/arvel-editorial-hero-720.jpg";
+    const imageFallback = "assets/images/moodboard/arvel-editorial-hero.png";
     const image = escapeHtml(
       product.images[0] || imageFallback
     );
@@ -347,8 +347,8 @@
               alt="${productName}. ${shortDescription}"
               width="1080"
               height="1440"
-              loading="${index < 3 ? "eager" : "lazy"}"
-              fetchpriority="${index === 0 ? "high" : "auto"}"
+              loading="${index < 4 ? "eager" : "lazy"}"
+              fetchpriority="${index < 2 ? "high" : "auto"}"
               decoding="async"
               onerror="this.onerror=null;this.src='${imageFallback}';this.classList.add('is-image-fallback');"
             >
@@ -479,7 +479,7 @@
   renderGlobalComponents();
   initShopCategoryMenus();
   updatePublicReservationTimers();
-  window.setInterval(updatePublicReservationTimers, 1000);
+  window.setInterval(updatePublicReservationTimers, 500);
   if (!document.querySelector("[data-auth-page]")) {
     const loadPublicAuth = () => {
       import("./firebase-auth.js?v=20260810-session-expiry-fix").catch(() => {

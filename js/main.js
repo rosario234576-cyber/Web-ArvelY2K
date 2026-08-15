@@ -186,7 +186,7 @@
         } scroll-sparkle--variant-${sectionIndex % 3}`;
         sparkle.setAttribute("aria-hidden", "true");
         sparkle.innerHTML =
-          '<img src="assets/images/ElementosDeHome/25.png" alt="" width="512" height="512" loading="lazy" decoding="async">';
+          '<img src="assets/images/ElementosDeHome/25.png" alt="" width="512" height="512">';
         section.prepend(sparkle);
       }
 
@@ -582,9 +582,7 @@
       return;
     }
 
-    container.innerHTML = featured
-      .map((product, index) => window.Arvel.createProductCard(product, index + 4))
-      .join("");
+    container.innerHTML = featured.map(window.Arvel.createProductCard).join("");
     container.querySelectorAll("[data-reveal]").forEach((card) => card.classList.add("is-visible"));
   }
 
