@@ -573,7 +573,8 @@
     if (!container || !Array.isArray(window.ARVEL_PRODUCTS)) return;
 
     const featured = window.ARVEL_PRODUCTS
-      .filter((product) => product.featured && !product.soldOut && !product.archived)
+      .filter((product) => product.featured && (!product.status || product.status === "published") && !product.soldOut && !product.archived)
+      .sort((a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0))
       .slice(0, 4);
 
     if (!featured.length) {

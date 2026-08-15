@@ -49,6 +49,16 @@
   function populateFilters() {
     const categories = uniqueValues("category").filter((cat) => cat && cat.toLowerCase() !== "sin categorizar");
     fillSelect(elements.categoryHeader, categories);
+
+    // Un tope fijo ocultaba productos caros aunque no se hubiera elegido un filtro.
+    const highestPrice = products.reduce((highest, product) => {
+      const variantPrices = Object.values(product.priceByVariant || {}).map(Number).filter(Number.isFinite);
+      return Math.max(highest, Number(product.price) || 0, ...variantPrices);
+    }, 0);
+    const priceCeiling = Math.max(70000, Math.ceil(highestPrice / 500) * 500);
+    const hasPriceInUrl = new URLSearchParams(window.location.search).has("precio");
+    elements.price.max = String(priceCeiling);
+    if (!hasPriceInUrl) elements.price.value = String(priceCeiling);
   }
 
   function getState() {

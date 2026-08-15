@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const CACHE_KEY = "arvel-products-cache-v2";
+  const CACHE_KEY = "arvel-products-cache-v3";
   const fallback = Array.isArray(window.ARVEL_PRODUCTS) ? [...window.ARVEL_PRODUCTS] : [];
   let cached = [];
 
@@ -92,7 +92,6 @@
           updatedAt: data.updatedAt?.toDate?.().toISOString() || data.updatedAt || ""
         };
       }));
-      if (!remote.length) return immediateCatalog;
       try {
         localStorage.setItem(CACHE_KEY, JSON.stringify(remote));
       } catch {

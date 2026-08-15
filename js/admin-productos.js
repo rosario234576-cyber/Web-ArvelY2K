@@ -80,6 +80,7 @@ const ui = {
   uploadBar: getSafeElement("#image-upload-bar"),
   previewImages: getSafeElement("#preview-image-urls"),
   preview: getSafeElement("#image-preview"),
+  publishProduct: getSafeElement("#publish-product"),
   saveDraft: getSafeElement("#save-draft"),
   duplicate: getSafeElement("#duplicate-current"),
   removeProduct: getSafeElement("#remove-current"),
@@ -1070,6 +1071,8 @@ async function saveProduct(statusOverride) {
     if (!currentId) product.createdAt = serverTimestamp();
     await setDoc(doc(db, "products", documentId), product, { merge: true });
     productPersisted = true;
+    localStorage.removeItem("arvel-products-cache-v2");
+    localStorage.removeItem("arvel-products-cache-v3");
     const ownPrefix = `products/${documentId}/`;
     const pendingDeletes = removedStoragePaths
       .filter((path) => path.startsWith(ownPrefix))
@@ -1256,6 +1259,7 @@ ui.form?.addEventListener("submit", (event) => {
   event.preventDefault();
   saveProduct();
 });
+ui.publishProduct?.addEventListener("click", () => saveProduct("published"));
 ui.saveDraft?.addEventListener("click", () => saveProduct("draft"));
 ui.duplicate?.addEventListener("click", () => {
   activeDocumentId = "";

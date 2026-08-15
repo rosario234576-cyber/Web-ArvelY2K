@@ -301,6 +301,7 @@
   function getProductBadge(product) {
     if (product.soldOut) return ["Vendida", "badge--dark"];
     if (product.discount > 0) return ["Oferta", "badge--sale"];
+    if (product.featured) return ["Destacada", "badge--pink"];
     if (product.uniquePiece) return ["Pieza única", "badge--pink"];
     if (product.stock === 1) return ["Solo queda 1", ""];
     return ["Nuevo", ""];
