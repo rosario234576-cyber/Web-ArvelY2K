@@ -505,8 +505,12 @@
   renderGlobalComponents();
   initShopCategoryMenus();
   if (!document.querySelector("[data-auth-page]")) {
-    import("./firebase-auth.js?v=20260810-session-expiry-fix").catch(() => {
-      // La web pública sigue funcionando aunque Firebase todavía no esté configurado.
-    });
+    const loadPublicAuth = () => {
+      import("./firebase-auth.js?v=20260810-session-expiry-fix").catch(() => {
+        // La web pública sigue funcionando aunque Firebase todavía no esté configurado.
+      });
+    };
+    if ("requestIdleCallback" in window) window.requestIdleCallback(loadPublicAuth, { timeout: 1800 });
+    else window.setTimeout(loadPublicAuth, 900);
   }
 })();

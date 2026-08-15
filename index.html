@@ -16,6 +16,8 @@
       content="Internet nostalgia, prendas únicas y customizadas en Argentina."
     >
     <link rel="icon" type="image/png" href="assets/logo/IsoBlanco.png?v=20260804-brand">
+    <link rel="preconnect" href="https://web-arvel-y2-k.vercel.app" crossorigin>
+    <link rel="preconnect" href="https://firebasestorage.googleapis.com" crossorigin>
     <title>Arvel Custom Y2K</title>
     <script>
       document.documentElement.classList.add("js");
@@ -51,13 +53,13 @@
 
     <main id="contenido-principal">
       <div class="home-background-decor" aria-hidden="true">
-        <img class="home-background-decor__item home-background-decor__item--one" src="assets/images/ElementosDeHome/26.png" alt="">
-        <img class="home-background-decor__item home-background-decor__item--two" src="assets/images/ElementosDeHome/18.png" alt="">
-        <img class="home-background-decor__item home-background-decor__item--three" src="assets/images/ElementosDeHome/30.png" alt="">
-        <img class="home-background-decor__item home-background-decor__item--four" src="assets/images/ElementosDeHome/22.png" alt="">
-        <img class="home-background-decor__item home-background-decor__item--five" src="assets/images/ElementosDeHome/29.png" alt="">
-        <img class="home-background-decor__item home-background-decor__item--six" src="assets/images/ElementosDeHome/31.png" alt="">
-        <img class="home-background-decor__item home-background-decor__item--chain-corner" src="assets/images/ElementosDeHome/18.png" alt="">
+        <img class="home-background-decor__item home-background-decor__item--one" src="assets/images/ElementosDeHome/26.png" alt="" loading="lazy" decoding="async">
+        <img class="home-background-decor__item home-background-decor__item--two" src="assets/images/ElementosDeHome/18.png" alt="" loading="lazy" decoding="async">
+        <img class="home-background-decor__item home-background-decor__item--three" src="assets/images/ElementosDeHome/30.png" alt="" loading="lazy" decoding="async">
+        <img class="home-background-decor__item home-background-decor__item--four" src="assets/images/ElementosDeHome/22.png" alt="" loading="lazy" decoding="async">
+        <img class="home-background-decor__item home-background-decor__item--five" src="assets/images/ElementosDeHome/29.png" alt="" loading="lazy" decoding="async">
+        <img class="home-background-decor__item home-background-decor__item--six" src="assets/images/ElementosDeHome/31.png" alt="" loading="lazy" decoding="async">
+        <img class="home-background-decor__item home-background-decor__item--chain-corner" src="assets/images/ElementosDeHome/18.png" alt="" loading="lazy" decoding="async">
       </div>
       <section class="home-hero section" aria-labelledby="hero-title">
         <div class="home-hero__cyber-ui" aria-hidden="true">
@@ -107,20 +109,22 @@
           <figure class="home-hero__media" data-reveal>
             <img
               src="assets/images/Home/HomeFoto.png"
+              srcset="assets/logo/IsoBlanco.png 32w, assets/images/Home/HomeFoto-600.png 600w, assets/images/Home/HomeFoto.png 1080w"
+              sizes="(max-width: 30rem) 1px, (max-width: 64rem) 44vw, 540px"
               alt="Look Arvel rosa y negro con gorra, lentes y accesorios Y2K"
               width="1080"
               height="1350"
               fetchpriority="high"
             >
             <span class="home-hero__orbit" aria-hidden="true">
-              <img class="home-hero__orbit-item home-hero__orbit-item--chain" src="assets/images/ElementosDeHome/18.png" alt="">
-              <img class="home-hero__orbit-item home-hero__orbit-item--bear" src="assets/images/ElementosDeHome/22.png" alt="">
-              <img class="home-hero__orbit-item home-hero__orbit-item--star" src="assets/images/ElementosDeHome/26.png" alt="">
-              <img class="home-hero__orbit-item home-hero__orbit-item--cherries" src="assets/images/ElementosDeHome/30.png" alt="">
-              <img class="home-hero__orbit-item home-hero__orbit-item--spark-one" src="assets/images/ElementosDeHome/19.png" alt="">
-              <img class="home-hero__orbit-item home-hero__orbit-item--spark-two" src="assets/images/ElementosDeHome/23.png" alt="">
-              <img class="home-hero__orbit-item home-hero__orbit-item--chrome-one" src="assets/images/ElementosDeHome/27.png" alt="">
-              <img class="home-hero__orbit-item home-hero__orbit-item--chrome-two" src="assets/images/ElementosDeHome/31.png" alt="">
+              <img class="home-hero__orbit-item home-hero__orbit-item--chain" src="assets/images/ElementosDeHome/18.png" alt="" loading="lazy" decoding="async">
+              <img class="home-hero__orbit-item home-hero__orbit-item--bear" src="assets/images/ElementosDeHome/22.png" alt="" loading="lazy" decoding="async">
+              <img class="home-hero__orbit-item home-hero__orbit-item--star" src="assets/images/ElementosDeHome/26.png" alt="" loading="lazy" decoding="async">
+              <img class="home-hero__orbit-item home-hero__orbit-item--cherries" src="assets/images/ElementosDeHome/30.png" alt="" loading="lazy" decoding="async">
+              <img class="home-hero__orbit-item home-hero__orbit-item--spark-one" src="assets/images/ElementosDeHome/19.png" alt="" loading="lazy" decoding="async">
+              <img class="home-hero__orbit-item home-hero__orbit-item--spark-two" src="assets/images/ElementosDeHome/23.png" alt="" loading="lazy" decoding="async">
+              <img class="home-hero__orbit-item home-hero__orbit-item--chrome-one" src="assets/images/ElementosDeHome/27.png" alt="" loading="lazy" decoding="async">
+              <img class="home-hero__orbit-item home-hero__orbit-item--chrome-two" src="assets/images/ElementosDeHome/31.png" alt="" loading="lazy" decoding="async">
             </span>
             <figcaption class="home-hero__window">
               <span>ARVEL_CUSTOMS.EXE</span>
@@ -367,7 +371,7 @@
     <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
 
     <script src="js/firebase-products.js?v=20260815-mobile-api-v8"></script>
-    <script src="js/components.js?v=20260815-rounded-prices"></script>
+    <script src="js/components.js?v=20260815-performance-v1"></script>
     <script src="js/main.js?v=20260814-featured-publish-fix"></script>
     <script src="js/countdown.js"></script>
     <script src="js/chatbot.js?v=20260806-categories-keywords"></script>
