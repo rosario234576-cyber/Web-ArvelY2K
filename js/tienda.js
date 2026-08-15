@@ -139,17 +139,11 @@
   }
 
   function syncUrl(state) {
-    const params = new URLSearchParams();
-    if (state.query) params.set("buscar", state.query);
-    if (state.category) params.set("categoria", state.category);
-    if (state.maxPrice < Number(elements.price.max)) params.set("precio", state.maxPrice);
-    if (state.available) params.set("disponibles", "1");
-    if (state.sale) params.set("ofertas", "1");
-    if (state.sort !== "recent") params.set("orden", state.sort);
-    if (favoritesOnly) params.set("favoritos", "1");
-
-    const url = `${window.location.pathname}${params.size ? `?${params}` : ""}`;
-    window.history.replaceState({}, "", url);
+    // Los filtros viven en los controles del catálogo. Los parámetros se leen al
+    // entrar desde un enlace, pero se quitan de la barra para mantener una URL limpia.
+    if (window.location.search) {
+      window.history.replaceState({}, "", window.location.pathname);
+    }
   }
 
   function updatePriceOutput() {
