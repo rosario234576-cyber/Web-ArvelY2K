@@ -97,7 +97,7 @@ module.exports = async function handler(req, res) {
       };
     });
 
-    return res.status(200).json({ products });
+    return res.status(200).json({ products, serverNowMs: Date.now() });
   } catch (error) {
     console.error("Public products error:", error);
     return res.status(500).json({ error: "No pudimos cargar el catalogo." });

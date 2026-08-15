@@ -606,89 +606,96 @@
   }
 
   function buildWhatsAppMessage(order) {
+    // Escapes Unicode: evitan que WhatsApp reciba rombos con signo de pregunta
+    // cuando un servidor o navegador interpreta el archivo con otro charset.
+    const icon = {
+      shop: "\u{1F6CD}\uFE0F", receipt: "\u{1F9FE}", person: "\u{1F464}",
+      bag: "\u{1F6D2}", payment: "\u{1F4B3}", delivery: "\u{1F4E6}",
+      proof: "\u{1F4CE}", important: "\u26A0\uFE0F", heart: "\u{1F496}"
+    };
     const productLines = order.items.flatMap((item, index) => [
-      `${index + 1}. ✨ *${item.product.name}*`,
-      `📏 Talle: ${item.size || "Único"}`,
-      `🎨 Color: ${item.color || "Sin especificar"}`,
-      `📦 Cantidad: ${item.quantity}`,
-      `💰 Precio: ${window.Arvel.formatPrice(item.product.price * item.quantity)}`,
+      `${index + 1}. *${item.product.name}*`,
+      `Talle: ${item.size || "Único"}`,
+      `Color: ${item.color || "Sin especificar"}`,
+      `Cantidad: ${item.quantity}`,
+      `Precio: ${window.Arvel.formatPrice(item.product.price * item.quantity)}`,
       index < order.items.length - 1 ? "" : null
     ]);
 
     const deliveryLines = order.delivery.value === "correo-sucursal"
       ? [
-          `📍 Sucursal: ${order.address.agencyName}`,
-          `🏠 Dirección: ${order.address.agencyAddress}`
+          `Sucursal: ${order.address.agencyName}`,
+          `Dirección: ${order.address.agencyAddress}`
         ]
       : order.delivery.value === "encuentro"
         ? [
-            `🤝 Punto coordinado: ${elements.meetingPoint?.value || "A coordinar"}`,
-            "📅 Día y horario: a coordinar con la vendedora"
+            `Punto coordinado: ${elements.meetingPoint?.value || "A coordinar"}`,
+            "Día y horario: a coordinar con la vendedora"
           ]
         : [
-            `🏠 Dirección: ${order.address.street} ${order.address.streetNumber}${order.address.apartment ? `, ${order.address.apartment}` : ""}`,
-            order.address.references ? `↔️ Entre calles / referencia: ${order.address.references}` : null
+            `Dirección: ${order.address.street} ${order.address.streetNumber}${order.address.apartment ? `, ${order.address.apartment}` : ""}`,
+            order.address.references ? `Entre calles / referencia: ${order.address.references}` : null
           ];
 
     const isManualPaymentLink = order.payment.value === "mercadopago";
     const paymentLines = isManualPaymentLink
       ? [
-          `💳 Método: ${order.payment.label}`,
-          `🧾 Total base: ${window.Arvel.formatPrice(order.baseTotal)}`,
-          `📈 Recargo del link/cuotas: ${window.Arvel.formatPrice(order.payment.feeAmount)}`,
-          `💖 *TOTAL DEL LINK: ${window.Arvel.formatPrice(order.payment.finalAmount)}*`,
+          `Método: ${order.payment.label}`,
+          `Total base: ${window.Arvel.formatPrice(order.baseTotal)}`,
+          `Recargo del link/cuotas: ${window.Arvel.formatPrice(order.payment.feeAmount)}`,
+          `*TOTAL DEL LINK: ${window.Arvel.formatPrice(order.payment.finalAmount)}*`,
           order.payment.installments > 1
-            ? `🔢 Cuotas solicitadas: ${order.payment.installments} de aprox. ${window.Arvel.formatPrice(order.payment.installmentAmount)}`
-            : "🔢 Modalidad solicitada: 1 pago"
+            ? `Cuotas solicitadas: ${order.payment.installments} de aprox. ${window.Arvel.formatPrice(order.payment.installmentAmount)}`
+            : "Modalidad solicitada: 1 pago"
         ]
       : [
-          `💳 Método: ${order.payment.label}`,
-          `🧾 Subtotal: ${window.Arvel.formatPrice(order.subtotal)}`,
-          `🚚 Envío: ${order.delivery.cost === 0 ? "GRATIS" : window.Arvel.formatPrice(order.delivery.cost)}`,
-          `💖 *TOTAL: ${window.Arvel.formatPrice(order.total)}*`,
-          window.ARVEL_TRANSFER?.alias ? `💡 Alias: *${window.ARVEL_TRANSFER.alias}*` : null,
-          window.ARVEL_TRANSFER?.wallet ? `💳 Billetera: ${window.ARVEL_TRANSFER.wallet}` : null
+          `Método: ${order.payment.label}`,
+          `Subtotal: ${window.Arvel.formatPrice(order.subtotal)}`,
+          `Envío: ${order.delivery.cost === 0 ? "GRATIS" : window.Arvel.formatPrice(order.delivery.cost)}`,
+          `*TOTAL: ${window.Arvel.formatPrice(order.total)}*`,
+          window.ARVEL_TRANSFER?.alias ? `Alias: *${window.ARVEL_TRANSFER.alias}*` : null,
+          window.ARVEL_TRANSFER?.wallet ? `Billetera: ${window.ARVEL_TRANSFER.wallet}` : null
         ];
 
     return [
-      "🛍️ ✨ *NUEVO PEDIDO ARVEL*",
-      "¡Hola! 💌 Quiero enviar mi pedido para revisión y confirmación.",
+      `${icon.shop} *NUEVO PEDIDO ARVEL*`,
+      "¡Hola! Quiero enviar mi pedido para revisión y confirmación.",
       "",
-      "🧾 *DATOS DEL PEDIDO*",
-      `📌 Pedido: *${order.orderNumber}*`,
-      `🗓️ Fecha: ${new Intl.DateTimeFormat("es-AR", { dateStyle: "short", timeStyle: "short" }).format(order.createdAt)}`,
+      `${icon.receipt} *DATOS DEL PEDIDO*`,
+      `Pedido: *${order.orderNumber}*`,
+      `Fecha: ${new Intl.DateTimeFormat("es-AR", { dateStyle: "short", timeStyle: "short" }).format(order.createdAt)}`,
       "",
-      "👥 *DATOS DE LA CLIENTA*",
-      `👤 Nombre: ${order.customer.fullName}`,
-      `📱 Teléfono: ${order.customer.phone}`,
-      `💌 Correo: ${order.customer.email}`,
-      order.customer.dni ? `🪪 DNI: ${order.customer.dni}` : null,
+      `${icon.person} *DATOS DE LA CLIENTA*`,
+      `Nombre: ${order.customer.fullName}`,
+      `Teléfono: ${order.customer.phone}`,
+      `Correo: ${order.customer.email}`,
+      order.customer.dni ? `DNI: ${order.customer.dni}` : null,
       "",
-      "🛒 *MI PEDIDO*",
+      `${icon.bag} *MI PEDIDO*`,
       ...productLines,
       "",
-      "💳 *PAGO*",
+      `${icon.payment} *PAGO*`,
       ...paymentLines,
       "",
-      "📦 *ENTREGA*",
-      `🚚 Modalidad: ${order.delivery.label}`,
+      `${icon.delivery} *ENTREGA*`,
+      `Modalidad: ${order.delivery.label}`,
       ...deliveryLines,
-      `🏙️ Localidad: ${order.address.city}, ${order.address.province}`,
-      `📮 Código postal: ${order.address.postalCode}`,
-      order.address.notes ? `📝 Observaciones: ${order.address.notes}` : null,
+      `Localidad: ${order.address.city}, ${order.address.province}`,
+      `Código postal: ${order.address.postalCode}`,
+      order.address.notes ? `Observaciones: ${order.address.notes}` : null,
       "",
-      isManualPaymentLink ? "🔗 ✨ *SOLICITUD DE LINK*" : "🧾 ✨ *COMPROBANTE*",
+      `${icon.proof} *${isManualPaymentLink ? "SOLICITUD DE LINK" : "COMPROBANTE"}*`,
       isManualPaymentLink
-        ? "✅ Solicito el link de Mercado Pago por el total y las cuotas indicadas. Todavía no realicé el pago."
-        : "✅ Confirmo que realicé la transferencia. Voy a adjuntar el comprobante de pago en este chat.",
+        ? "Solicito el link de Mercado Pago por el total y las cuotas indicadas. Todavía no realicé el pago."
+        : "Confirmo que realicé la transferencia. Voy a adjuntar el comprobante de pago en este chat.",
       "",
-      "💌 *IMPORTANTE*",
+      `${icon.important} *IMPORTANTE*`,
       isManualPaymentLink
         ? "Al enviar este mensaje, mi pedido queda enviado para revisión. Arvel confirmará el stock y me enviará manualmente el link correspondiente."
-        : "Al enviar este mensaje, mi pedido queda enviado para revisión ✨",
+        : "Al enviar este mensaje, mi pedido queda enviado para revisión.",
       "La confirmación final queda sujeta a la verificación de stock y acreditación del pago.",
       "",
-      "¡Gracias! 🛒 🛍️ 💖"
+      `¡Gracias! ${icon.heart}`
     ]
       .filter((line) => line !== null && line !== undefined)
       .join("\n");

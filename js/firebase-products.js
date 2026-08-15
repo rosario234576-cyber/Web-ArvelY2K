@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const CACHE_KEY = "arvel-products-cache-v9";
+  const CACHE_KEY = "arvel-products-cache-v10";
   const fallback = Array.isArray(window.ARVEL_PRODUCTS) ? [...window.ARVEL_PRODUCTS] : [];
   let cached = [];
 
@@ -24,6 +24,8 @@
   window.ARVEL_PRODUCTS_READY = (async () => {
     try {
       let productRecords = [];
+      let catalogServerNowMs = 0;
+      let catalogReceivedAtMs = 0;
       let firebaseApp = null;
       let firebaseAppPromise = null;
       let storageToolsPromise = null;
@@ -57,6 +59,8 @@
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const payload = await response.json();
         if (!Array.isArray(payload.products)) throw new Error("Respuesta de catalogo invalida");
+        catalogServerNowMs = Number(payload.serverNowMs || 0);
+        catalogReceivedAtMs = Date.now();
         productRecords = payload.products
           .filter((data) => data?.status === "published" && !data.archived)
           .map((data) => ({ id: data.documentId || data.id, data }));
@@ -113,6 +117,9 @@
           ? data.stockByVariant
           : { [`${sizes[0]}|${colors[0]}`]: stock };
         const finalStock = stock;
+        const serverReservationRemaining = data.reservationActive && catalogServerNowMs
+          ? Math.max(0, Math.min(5 * 60 * 1000, Number(data.reservedUntilMs || 0) - catalogServerNowMs))
+          : 0;
         return {
           ...data,
           name: data.name || "Pieza Arvel",
@@ -132,6 +139,9 @@
           featured: data.featured === true || data.featured === "true" || data.featured === 1,
           uniquePiece: isUniquePiece,
           soldOut: Boolean(data.soldOut) || finalStock <= 0,
+          reservedUntilMs: serverReservationRemaining
+            ? catalogReceivedAtMs + serverReservationRemaining
+            : Number(data.reservedUntilMs || 0),
           documentId: item.id,
           // Firestore document IDs are the stable public identifier for products.
           // Keeping them as strings prevents every manually-created product from
@@ -146,6 +156,7 @@
         localStorage.removeItem("arvel-products-cache-v6");
         localStorage.removeItem("arvel-products-cache-v7");
         localStorage.removeItem("arvel-products-cache-v8");
+        localStorage.removeItem("arvel-products-cache-v9");
       } catch {
         // El catálogo sigue funcionando aunque el navegador no permita guardar caché.
       }
