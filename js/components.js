@@ -17,6 +17,8 @@
     ["Nosotros", "nosotros.html"]
   ];
 
+  const shopCategories = ["Accesorios", "Buzos", "Camisas", "Camperas", "Faldas", "Pantalones", "Remeras", "Short"];
+
   function getCurrentPage() {
     const page = window.location.pathname.split("/").pop();
     return page || "index.html";
@@ -32,6 +34,39 @@
         return `<a class="${className}" href="${href}"${current}>${label}</a>`;
       })
       .join("");
+  }
+
+  function createDesktopNavigation() {
+    const currentPage = getCurrentPage();
+    return navigationItems.map(([label, href]) => {
+      const current = currentPage === href ? ' aria-current="page"' : "";
+      if (label !== "Shop") return `<a class="desktop-navigation__link" href="${href}"${current}>${label}</a>`;
+      const categories = shopCategories.map((category) =>
+        `<a href="tienda.html?categoria=${encodeURIComponent(category)}">${category}</a>`
+      ).join("");
+      return `
+        <div class="desktop-navigation__shop">
+          <a class="desktop-navigation__link" href="tienda.html"${current}>Shop</a>
+          <span class="desktop-navigation__shop-arrow" aria-hidden="true">⌄</span>
+          <div class="desktop-navigation__submenu" aria-label="Categorías de Shop">${categories}</div>
+        </div>`;
+    }).join("");
+  }
+
+  function createMobileNavigation() {
+    const currentPage = getCurrentPage();
+    return navigationItems.map(([label, href]) => {
+      const current = currentPage === href ? ' aria-current="page"' : "";
+      if (label !== "Shop") return `<a class="mobile-navigation__link" href="${href}"${current}>${label}</a>`;
+      const categories = shopCategories.map((category) =>
+        `<a href="tienda.html?categoria=${encodeURIComponent(category)}">${category}</a>`
+      ).join("");
+      return `
+        <div class="mobile-navigation__shop">
+          <a class="mobile-navigation__link" href="tienda.html"${current}>Shop · Ver todo</a>
+          <div class="mobile-navigation__categories" aria-label="Categorías de Shop">${categories}</div>
+        </div>`;
+    }).join("");
   }
 
   function createHeader() {
@@ -101,7 +136,7 @@
           </a>
 
           <nav class="desktop-navigation" aria-label="Navegación principal">
-            ${createNavigationLinks("desktop-navigation__link")}
+            ${createDesktopNavigation()}
           </nav>
 
           <div class="header-actions">
@@ -144,7 +179,7 @@
             <button class="mobile-navigation__close" type="button" aria-label="Cerrar menú">×</button>
           </div>
           <div class="mobile-navigation__links">
-            ${createNavigationLinks("mobile-navigation__link")}
+            ${createMobileNavigation()}
             <a class="mobile-navigation__link mobile-navigation__link--account" href="login.html" data-auth-account>
               <span data-auth-label>Ingresar</span>
             </a>
