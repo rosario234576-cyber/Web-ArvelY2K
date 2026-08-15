@@ -1,22 +1,24 @@
 (function () {
   "use strict";
 
-  const CACHE_KEY = "arvel-products-cache-v7";
+  const CACHE_KEY = "arvel-products-cache-v8";
   const fallback = Array.isArray(window.ARVEL_PRODUCTS) ? [...window.ARVEL_PRODUCTS] : [];
   let cached = [];
 
   try {
-    const stored = JSON.parse(
-      localStorage.getItem(CACHE_KEY)
-      || localStorage.getItem("arvel-products-cache-v6")
-      || "[]"
-    );
+    const stored = JSON.parse(localStorage.getItem(CACHE_KEY) || "[]");
     cached = Array.isArray(stored) ? stored : [];
   } catch {
     cached = [];
   }
 
-  const immediateCatalog = cached.length ? cached : fallback;
+  // En producción nunca mostramos el catálogo local de demostración: si aún no
+  // hay caché esperamos la API y evitamos enseñar productos/fotos incorrectos.
+  const immediateCatalog = cached.length
+    ? cached
+    : window.location.protocol === "file:"
+      ? fallback
+      : [];
   window.ARVEL_PRODUCTS = Object.freeze(immediateCatalog);
 
   window.ARVEL_PRODUCTS_READY = (async () => {
@@ -42,8 +44,8 @@
       }
 
       try {
-        const canUseSameOrigin = /^https?:$/.test(window.location.protocol)
-          && !window.location.hostname.endsWith("github.io");
+        const canUseSameOrigin = window.location.hostname.endsWith("vercel.app")
+          || ["localhost", "127.0.0.1"].includes(window.location.hostname);
         const apiBase = String(
           window.ARVEL_API_BASE
           || (canUseSameOrigin ? window.location.origin : "https://web-arvel-y2-k.vercel.app")
@@ -142,6 +144,7 @@
       try {
         localStorage.setItem(CACHE_KEY, JSON.stringify(remote));
         localStorage.removeItem("arvel-products-cache-v6");
+        localStorage.removeItem("arvel-products-cache-v7");
       } catch {
         // El catálogo sigue funcionando aunque el navegador no permita guardar caché.
       }
