@@ -206,6 +206,10 @@
                 <label>Precio anterior
                   <input class="input" name="oldPrice" type="number" min="0" step="1">
                 </label>
+                <label>Descuento (%)
+                  <input class="input" name="discount" type="number" min="0" max="99" step="1" placeholder="Ej: 15">
+                  <small>IngresÃ¡ el precio anterior y el porcentaje; el precio final se calcula automÃ¡ticamente.</small>
+                </label>
                 <label>Condición
                   <select class="select" name="condition">
                     <option>Custom</option>
@@ -455,6 +459,6 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
-    <script type="module" src="js/admin-productos.js?v=20260814-featured-publish-fix"></script>
+    <script type="module" src="js/admin-productos.js?v=20260815-discounts"></script>
   </body>
 </html>

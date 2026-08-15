@@ -72,8 +72,13 @@
 
   function createBadges() {
     const badges = [];
+    const regular = Number(product.oldPrice) || 0;
+    const final = Number(product.price) || 0;
+    const discount = regular > final && final > 0
+      ? Math.round((1 - final / regular) * 100)
+      : Number(product.discount || 0);
     if (product.soldOut) badges.push('<span class="badge badge--dark">Vendida</span>');
-    if (product.discount > 0) badges.push(`<span class="badge badge--sale">-${product.discount}%</span>`);
+    if (discount > 0) badges.push(`<span class="badge badge--sale">-${discount}%</span>`);
     if (product.uniquePiece) badges.push('<span class="badge badge--pink">Pieza única</span>');
     if (!product.soldOut && product.stock === 1) badges.push('<span class="badge">Solo queda 1</span>');
     elements.badges.innerHTML = badges.join("");
@@ -84,13 +89,14 @@
     const priceToUse = isVariantPrice ? variantPrice : product.price;
     const originalPrice = Number(priceToUse || 0);
     const transferPrice = Number(priceToUse || 0);
-    const discount = isVariantPrice ? 0 : Number(product.discount || 0);
+    const regularPrice = Number(product.oldPrice) || 0;
+    const discount = isVariantPrice ? 0 : (regularPrice > originalPrice && originalPrice > 0
+      ? Math.round((1 - originalPrice / regularPrice) * 100)
+      : Number(product.discount || 0));
     const oldPrice = isVariantPrice
       ? ""
       : product.oldPrice
       ? `<del>${window.Arvel.formatPrice(product.oldPrice)}</del>`
-      : discount > 0
-      ? `<del>${window.Arvel.formatPrice(originalPrice)}</del>`
       : "";
     const discountBadge = isVariantPrice ? "" : (discount > 0 ? `<span class="product-info__discount">-${discount}%</span>` : "");
 

@@ -72,6 +72,8 @@ const ui = {
   addVariant: getSafeElement("#add-variant"),
   variants: getSafeElement("#variant-rows"),
   priceInput: getSafeElement('input[name="price"]'),
+  oldPriceInput: getSafeElement('input[name="oldPrice"]'),
+  discountInput: getSafeElement('input[name="discount"]'),
   imageUrls: getSafeElement("#product-image-urls"),
   imageFiles: getSafeElement("#product-image-files"),
   uploadProgress: getSafeElement("#image-upload-progress"),
@@ -368,6 +370,24 @@ function updatePriceFieldState() {
   }
 }
 
+function effectiveDiscount(oldPrice, finalPrice, savedDiscount = 0) {
+  const regular = Number(oldPrice) || 0;
+  const final = Number(finalPrice) || 0;
+  if (regular > final && final > 0) return Math.round((1 - final / regular) * 100);
+  return Math.max(0, Math.min(99, Math.round(Number(savedDiscount) || 0)));
+}
+
+function syncDiscountFields(source) {
+  const regular = Math.max(0, Number(ui.oldPriceInput.value) || 0);
+  const discount = Math.max(0, Math.min(99, Number(ui.discountInput.value) || 0));
+  const final = Math.max(0, Number(ui.priceInput.value) || 0);
+  if ((source === "oldPrice" || source === "discount") && regular > 0 && discount > 0) {
+    ui.priceInput.value = String(Math.round(regular * (1 - discount / 100)));
+  } else if (source === "price" && regular > final && final > 0) {
+    ui.discountInput.value = String(effectiveDiscount(regular, final));
+  }
+}
+
 function isTemporaryImageUrl(url) {
   return /^(blob:|data:)/i.test(String(url || "").trim());
 }
@@ -614,6 +634,7 @@ function fillForm(product) {
     collection: product.collection,
     price: product.price,
     oldPrice: product.oldPrice || "",
+    discount: effectiveDiscount(product.oldPrice, product.price, product.discount),
     condition: product.condition,
     status: product.status || "draft",
     shortDescription: product.shortDescription,
@@ -696,6 +717,9 @@ function buildProduct(statusOverride) {
     finalPrice = Math.min(...Object.values(priceByVariant));
   }
 
+  const oldPrice = Number(data.get("oldPrice")) || null;
+  const discount = effectiveDiscount(oldPrice, finalPrice, data.get("discount"));
+
   return {
     name,
     slug: slugify(name),
@@ -703,7 +727,7 @@ function buildProduct(statusOverride) {
     category: String(data.get("category") || "").trim(),
     collection: String(data.get("collection") || "").trim(),
     price: finalPrice,
-    oldPrice: Number(data.get("oldPrice")) || null,
+    oldPrice: discount > 0 ? oldPrice : null,
     condition: String(data.get("condition") || "Custom"),
     status,
     shortDescription: String(data.get("shortDescription") || "").trim(),
@@ -725,7 +749,7 @@ function buildProduct(statusOverride) {
     stock,
     soldOut: stock <= 0,
     archived: status === "hidden",
-    discount: 0,
+    discount,
     featured: data.get("featured") === "on",
     uniquePiece: data.get("uniquePiece") === "on",
     tags: String(data.get("tags") || "").split(",").map((tag) => tag.trim()).filter(Boolean),
@@ -740,6 +764,9 @@ function validateProduct(product) {
   if (!product.sku) return "Ingresá el SKU.";
   if (!product.category) return "Elegí una categoría.";
   const hasVariantPrices = Object.keys(product.priceByVariant || {}).length > 0;
+  if (product.discount > 0 && (!product.oldPrice || product.oldPrice <= product.price)) {
+    return "El precio anterior debe ser mayor que el precio final para aplicar un descuento.";
+  }
   if (!hasVariantPrices && product.price <= 0) return "Ingresá un precio válido.";
   if (!product.shortDescription) return "Ingresá una descripción breve.";
   if (!product.sizes.length) return "Agregá al menos una combinación de talle y color.";
@@ -1227,6 +1254,9 @@ ui.addVariant?.addEventListener("click", () => {
 });
 ui.variants?.addEventListener("change", updatePriceFieldState);
 ui.variants?.addEventListener("input", updatePriceFieldState);
+ui.oldPriceInput?.addEventListener("input", () => syncDiscountFields("oldPrice"));
+ui.discountInput?.addEventListener("input", () => syncDiscountFields("discount"));
+ui.priceInput?.addEventListener("input", () => syncDiscountFields("price"));
 ui.newProduct?.addEventListener("click", resetForm);
 ui.search?.addEventListener("input", renderList);
 ui.list?.addEventListener("click", (event) => {

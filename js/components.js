@@ -300,11 +300,18 @@
 
   function getProductBadge(product) {
     if (product.soldOut) return ["Vendida", "badge--dark"];
-    if (product.discount > 0) return ["Oferta", "badge--sale"];
+    if (getProductDiscount(product) > 0) return ["Oferta", "badge--sale"];
     if (product.featured) return ["Destacada", "badge--pink"];
     if (product.uniquePiece) return ["Pieza única", "badge--pink"];
     if (product.stock === 1) return ["Solo queda 1", ""];
     return ["Nuevo", ""];
+  }
+
+  function getProductDiscount(product) {
+    const regular = Number(product.oldPrice) || 0;
+    const final = Number(product.price) || 0;
+    if (regular > final && final > 0) return Math.round((1 - final / regular) * 100);
+    return Math.max(0, Math.min(99, Math.round(Number(product.discount) || 0)));
   }
 
   function calculateMercadoPagoPrice(basePrice, feeRate = window.ARVEL_MP_3_INSTALLMENTS_FEE_RATE) {
@@ -332,8 +339,8 @@
     }
 
     const transferPrice = Number(product.transferPrice || mainPrice || 0);
-    const originalPrice = mainPrice;
-    const discount = Number(product.discount || 0);
+    const originalPrice = Number(product.oldPrice) > mainPrice ? Number(product.oldPrice) : mainPrice;
+    const discount = getProductDiscount({ ...product, price: mainPrice });
     const unavailable = product.soldOut || product.stock <= 0;
 
     return `
