@@ -204,6 +204,24 @@ body:not(.admin-body) {
     padding-block: clamp(2.5rem, 9vw, 4rem);
   }
 
+  .mini-skirts-community__inner {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .mini-skirts-community h2,
+  .mini-skirts-community p:not(.eyebrow) {
+    margin-inline: auto;
+  }
+
+  .mini-skirts-community__button {
+    width: 100%;
+  }
+
+  .mini-skirts-community__spark {
+    right: -2rem;
+  }
+
   .home-hero__layout {
     gap: var(--space-5);
     justify-items: center;
