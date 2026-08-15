@@ -14,7 +14,8 @@ import {
   orderBy,
   query,
   serverTimestamp,
-  setDoc
+  setDoc,
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import {
   deleteObject,
@@ -1105,11 +1106,23 @@ async function saveProduct(statusOverride) {
     }));
     product.updatedAt = serverTimestamp();
     if (!currentId) product.createdAt = serverTimestamp();
-    await setDoc(doc(db, "products", documentId), product, { merge: true });
+    const productReference = doc(db, "products", documentId);
+    if (currentId) {
+      // updateDoc reemplaza cada campo de nivel superior. Esto es importante para
+      // que los mapas de variantes no conserven claves que el usuario eliminó.
+      await updateDoc(productReference, product);
+    } else {
+      await setDoc(productReference, product);
+    }
     productPersisted = true;
-    const persistedSnapshot = await getDocFromServer(doc(db, "products", documentId));
+    const persistedSnapshot = await getDocFromServer(productReference);
     if (!persistedSnapshot.exists() || persistedSnapshot.data()?.status !== product.status) {
       throw new Error("El estado no se guardó correctamente. Volvé a intentarlo.");
+    }
+    const persistedStockKeys = Object.keys(persistedSnapshot.data()?.stockByVariant || {}).sort();
+    const submittedStockKeys = Object.keys(product.stockByVariant || {}).sort();
+    if (JSON.stringify(persistedStockKeys) !== JSON.stringify(submittedStockKeys)) {
+      throw new Error("Las variantes no se actualizaron correctamente. Volvé a intentarlo.");
     }
     localStorage.removeItem("arvel-products-cache-v2");
     localStorage.removeItem("arvel-products-cache-v3");
