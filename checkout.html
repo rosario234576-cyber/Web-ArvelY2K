@@ -25,7 +25,7 @@
     <link rel="stylesheet" href="css/reset.css">
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/components.css?v=20260815-header-sync">
-    <link rel="stylesheet" href="css/styles.css?v=20260811-manual-payment-link">
+    <link rel="stylesheet" href="css/styles.css?v=20260815-reservas-v1">
     <link rel="stylesheet" href="css/responsive.css?v=20260815-header-sync">
   </head>
   <body>
@@ -358,10 +358,14 @@
               Este pedido todavía no fue enviado, cobrado ni reservado. Usá el
               botón para compartirlo con Arvel por WhatsApp.
             </div>
+            <div class="reservation-timer" id="reservation-timer" role="alert" aria-live="assertive">
+              <strong>Tenés 5 minutos para abonar</strong>
+              <span>La reserva se libera sin excepción en <b id="reservation-countdown">05:00</b></span>
+            </div>
             <div class="order-confirmation__summary" id="confirmation-summary"></div>
             <div class="notice notice--security" id="security-notice">
-              <strong>⚠️ Por seguridad de tu compra y producto:</strong>
-              <p>Por favor, primero envía la confirmación del producto que deseas al WhatsApp usando el botón de abajo. Una vez que nosotras te respondamos y te confirmemos la disponibilidad de la prenda, podés abonarla y esa prenda va a ser tuya.</p>
+              <strong>⚠️ Para mantener la reserva:</strong>
+              <p>Transferí el total dentro de los 5 minutos. Después tocá el botón rosa para confirmar la orden, abrir WhatsApp y adjuntar el comprobante en el chat.</p>
             </div>
             <div class="notice transfer-details" id="transfer-details">
               <span class="eyebrow">Datos para transferir</span>
@@ -374,7 +378,7 @@
               <button class="button button--secondary" id="copy-transfer-alias" type="button">Copiar alias</button>
             </div>
             <button class="button button--pink" id="confirmation-whatsapp" type="button">
-              <span id="confirmation-whatsapp-label">Enviar pedido por WhatsApp</span>
+              <span id="confirmation-whatsapp-label">Enviar pedido para confirmar la orden y adjuntar comprobante</span>
             </button>
             <a class="button button--secondary" href="tienda.html">Volver al shop</a>
           </section>
@@ -393,7 +397,7 @@
     <script src="js/transfer-config.js?v=20260803-payment2"></script>
     <script src="js/payment-config.js?v=20260811-manual-payment-link"></script>
     <script src="js/shipping.js?v=20260803-ca1"></script>
-    <script src="js/checkout.js?v=20260812-whatsapp-transfer"></script>
+    <script src="js/checkout.js?v=20260815-reservas-v1"></script>
     <script src="js/chatbot.js"></script>
     <script src="js/favoritos.js"></script>
     <script src="js/analytics.js"></script>

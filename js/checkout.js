@@ -11,6 +11,8 @@
   );
   let cart = window.ArvelStore.readStoredArray(window.ArvelStore.storageKeys.cart);
   let preparedOrder = null;
+  let reservationTimerId = null;
+  let reservationClockOffset = 0;
 
   const elements = {
     empty: document.querySelector("#checkout-empty"),
@@ -57,6 +59,8 @@
     confirmationWhatsApp: document.querySelector("#confirmation-whatsapp"),
     confirmationWhatsAppLabel: document.querySelector("#confirmation-whatsapp-label"),
     confirmationNotice: document.querySelector("#confirmation-notice"),
+    reservationTimer: document.querySelector("#reservation-timer"),
+    reservationCountdown: document.querySelector("#reservation-countdown"),
     transferAlias: document.querySelector("#transfer-alias"),
     copyTransferAlias: document.querySelector("#copy-transfer-alias"),
     transferWallet: document.querySelector("#transfer-wallet"),
@@ -733,8 +737,6 @@
     const registered = options.registered !== false;
     preparedOrder = order;
 
-    saveOrderToFirestore(order);
-
     elements.content.hidden = true;
     elements.confirmation.hidden = false;
     elements.confirmationName.textContent = order.customer.fullName;
@@ -750,9 +752,9 @@
       </dl>
     `;
     elements.confirmationNotice.textContent = registered
-      ? "Registramos tu pedido como pendiente de pago. Transferí el total exacto y enviá el pedido por WhatsApp; dentro del chat adjuntá el comprobante desde el clip. La reserva se confirma al verificar el pago y el stock."
+      ? "Tu producto está reservado. Transferí el total exacto y tocá el botón rosa antes de que termine el tiempo; después adjuntá el comprobante en el chat."
       : "El registro automático no está disponible en este momento. Conservamos tu resumen en esta pantalla, pero el pedido todavía no fue recibido: transferí el total exacto, abrí WhatsApp y adjuntá allí el comprobante para que Arvel lo revise manualmente.";
-    elements.confirmationWhatsAppLabel.textContent = "Enviar pedido por WhatsApp";
+    elements.confirmationWhatsAppLabel.textContent = "Enviar pedido para confirmar la orden y adjuntar comprobante";
     const alias = String(window.ARVEL_TRANSFER?.alias || "").trim();
     elements.transferAlias.textContent = alias || "Alias todavía no configurado";
     elements.transferWallet.textContent = window.ARVEL_TRANSFER?.wallet || "";
@@ -761,10 +763,62 @@
     elements.copyTransferAlias.disabled = !alias;
     elements.confirmation.focus();
     window.scrollTo({ top: 0, behavior: "smooth" });
+    if (registered) startReservationTimer(order);
   }
 
-  function sendOrderToWhatsApp() {
+  function expireReservation() {
+    window.clearInterval(reservationTimerId);
+    reservationTimerId = null;
+    if (elements.reservationCountdown) elements.reservationCountdown.textContent = "00:00";
+    elements.reservationTimer?.classList.add("is-expired");
+    if (elements.reservationTimer) elements.reservationTimer.firstElementChild.textContent = "La reserva venció";
+    elements.confirmationWhatsApp.disabled = true;
+    window.alert("Pasaron los 5 minutos y el producto se liberó automáticamente. Volvé a intentarlo desde el carrito.");
+    window.location.replace("carrito.html?reserva=vencida");
+  }
+
+  function startReservationTimer(order) {
+    window.clearInterval(reservationTimerId);
+    const tick = () => {
+      const remaining = Math.max(0, Number(order.reservationExpiresAtMs || 0) - (Date.now() + reservationClockOffset));
+      const seconds = Math.ceil(remaining / 1000);
+      if (elements.reservationCountdown) elements.reservationCountdown.textContent = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
+      if (remaining <= 0) expireReservation();
+    };
+    tick();
+    reservationTimerId = window.setInterval(tick, 250);
+  }
+
+  async function sendOrderToWhatsApp() {
     if (!preparedOrder) return;
+    const button = elements.confirmationWhatsApp;
+    const originalLabel = elements.confirmationWhatsAppLabel.textContent;
+    button.disabled = true;
+    elements.confirmationWhatsAppLabel.textContent = "Confirmando reserva…";
+    try {
+      const apiBase = String(window.ARVEL_PAYMENT_API_BASE || window.ARVEL_API_BASE || "").replace(/\/+$/, "");
+      const response = await fetch(`${apiBase}/api/submit-transfer-order`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${await window.ARVEL_CHECKOUT_USER.getIdToken()}` },
+        body: JSON.stringify({ orderNumber: preparedOrder.orderNumber })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.ok) {
+        if (response.status === 410) return expireReservation();
+        throw new Error(result.error || "No pudimos confirmar la reserva.");
+      }
+      window.clearInterval(reservationTimerId);
+      reservationTimerId = null;
+      elements.reservationTimer.innerHTML = "<strong>Pedido enviado a revisión</strong><span>Tu producto queda reservado durante 1 hora mientras Arvel verifica el comprobante.</span>";
+      elements.reservationTimer.classList.remove("is-expired");
+      elements.reservationTimer.classList.add("is-submitted");
+      elements.confirmationWhatsAppLabel.textContent = "Abrir WhatsApp y adjuntar comprobante";
+    } catch (error) {
+      elements.confirmationNotice.textContent = error.message || "No pudimos confirmar la reserva. Intentá nuevamente.";
+      button.disabled = false;
+      elements.confirmationWhatsAppLabel.textContent = originalLabel;
+      return;
+    }
     const message = buildWhatsAppMessage(preparedOrder);
     const adminNumber = String(window.ARVEL_TRANSFER?.whatsappNumber || "5491160153234")
       .replace(/\D/g, "");
@@ -826,16 +880,12 @@
       });
       const result = await response.json().catch(() => ({}));
 
-      if (response.status >= 500) {
-        console.error("No se pudo registrar el pedido automáticamente:", result);
-        showConfirmation(order, { registered: false });
-        return;
-      }
-
       if (!response.ok || !result.ok) {
         throw new Error(result.error || "No pudimos registrar el pedido.");
       }
       order.total = Number(result.total) || order.total;
+      order.reservationExpiresAtMs = Number(result.expiresAtMs);
+      reservationClockOffset = Number(result.serverNowMs) - Date.now();
       showConfirmation(order, { registered: true });
     } catch (error) {
       console.error("No se pudo registrar el pedido por API", error);
@@ -844,14 +894,9 @@
         error instanceof TypeError ||
         /failed to fetch|networkerror|load failed|network request failed/i.test(message);
 
-      if (isNetworkFailure) {
-        // La transferencia y el envío por WhatsApp continúan como proceso
-        // manual. No afirmamos que el pedido haya quedado guardado en Firebase.
-        showConfirmation(order, { registered: false });
-        return;
-      }
-
-      elements.globalError.textContent = message || "No pudimos registrar el pedido. Intentá nuevamente.";
+      elements.globalError.textContent = isNetworkFailure
+        ? "No pudimos conectar con el sistema de reservas. No se generó ningún pedido; intentá nuevamente."
+        : message || "No pudimos reservar el pedido. Intentá nuevamente.";
       submit.disabled = false;
       submit.textContent = originalLabel;
     }

@@ -13,6 +13,26 @@ function isoDate(value) {
   return value;
 }
 
+function publicStock(data) {
+  const nowMs = Date.now();
+  const reservations = Object.values(data.reservations && typeof data.reservations === "object" ? data.reservations : {})
+    .filter((reservation) => Number(reservation?.expiresAtMs || 0) > nowMs);
+  const reservedByVariant = {};
+  for (const reservation of reservations) {
+    for (const item of Array.isArray(reservation?.items) ? reservation.items : []) {
+      reservedByVariant[item.variantKey] = (reservedByVariant[item.variantKey] || 0) + Number(item.quantity || 0);
+    }
+  }
+  const stockByVariant = data.stockByVariant && typeof data.stockByVariant === "object"
+    ? Object.fromEntries(Object.entries(data.stockByVariant).map(([key, stock]) => [key, Math.max(0, Number(stock || 0) - Number(reservedByVariant[key] || 0))]))
+    : data.stockByVariant;
+  const reservedTotal = Object.values(reservedByVariant).reduce((sum, quantity) => sum + quantity, 0);
+  const stock = stockByVariant && Object.keys(stockByVariant).length
+    ? Object.values(stockByVariant).reduce((sum, quantity) => sum + Number(quantity || 0), 0)
+    : Math.max(0, Number(data.stock || 0) - reservedTotal);
+  return { stock, stockByVariant, soldOut: Boolean(data.soldOut) || stock <= 0 };
+}
+
 module.exports = async function handler(req, res) {
   // El panel puede publicar, ocultar o destacar productos en cualquier momento.
   // No se debe servir una copia anterior del catalogo desde el CDN de Vercel.
@@ -42,8 +62,11 @@ module.exports = async function handler(req, res) {
 
     const products = snapshot.docs.map((item) => {
       const data = item.data();
+      const availability = publicStock(data);
       return {
         ...data,
+        reservations: undefined,
+        ...availability,
         documentId: item.id,
         id: item.id,
         createdAt: isoDate(data.createdAt),

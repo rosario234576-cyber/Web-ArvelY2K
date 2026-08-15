@@ -4212,6 +4212,24 @@ body.is-locked {
   text-align: left;
 }
 
+.reservation-timer {
+  display: grid;
+  gap: 0.35rem;
+  margin-block: var(--space-5);
+  padding: var(--space-4);
+  border: 2px solid #b42318;
+  border-radius: 0.35rem;
+  background: #fff0ee;
+  color: #8f1710;
+  text-align: center;
+}
+
+.reservation-timer strong { font-size: var(--text-md); text-transform: uppercase; }
+.reservation-timer b { display: inline-block; min-width: 4.5ch; color: #b42318; font-size: 1.3em; font-variant-numeric: tabular-nums; }
+.reservation-timer.is-expired { background: #b42318; color: var(--color-white); }
+.reservation-timer.is-expired b { color: inherit; }
+.reservation-timer.is-submitted { border-color: #267a3b; background: #edf9f0; color: #185b2a; }
+
 .notice--security {
   padding: var(--space-4);
   border-left: 4px solid #f59e0b;
