@@ -26,9 +26,10 @@ const authPage = document.querySelector("[data-auth-page]")?.dataset.authPage ||
 let auth = null;
 let db = null;
 const SESSION_ACTIVITY_KEY = "arvel-session-last-activity";
-// Firebase conserva la sesión localmente. Solo aplicamos un vencimiento de
-// seguridad amplio; navegar por Mi cuenta nunca debe cerrar una sesión activa.
-const SESSION_TIMEOUT_MS = 30 * 24 * 60 * 60 * 1000;
+// La sesión se cierra después de 2 horas reales sin actividad.
+// La marca queda en localStorage para poder comprobarla incluso si el
+// navegador estuvo cerrado durante varios días.
+const SESSION_TIMEOUT_MS = 2 * 60 * 60 * 1000;
 const SESSION_WARNING_MS = 2 * 60 * 1000;
 let sessionTimer = 0;
 let sessionWarningShown = false;
@@ -49,8 +50,11 @@ function stopSessionTimeout() {
 
 async function expireInactiveSession() {
   if (!auth?.currentUser) return false;
-  const storedActivity = Number(localStorage.getItem(SESSION_ACTIVITY_KEY));
-  if (!storedActivity || Date.now() - storedActivity < SESSION_TIMEOUT_MS) return false;
+  const stored = localStorage.getItem(SESSION_ACTIVITY_KEY);
+  if (!stored) return false; // Sin registro de actividad, no expira
+  
+  const storedActivity = Number(stored);
+  if (isNaN(storedActivity) || Date.now() - storedActivity < SESSION_TIMEOUT_MS) return false;
 
   stopSessionTimeout();
   await signOut(auth);
@@ -94,7 +98,8 @@ async function startSessionTimeout() {
 
   sessionTimer = window.setInterval(async () => {
     if (!auth?.currentUser) return;
-    const lastActivity = Number(localStorage.getItem(SESSION_ACTIVITY_KEY)) || Date.now();
+    const stored = localStorage.getItem(SESSION_ACTIVITY_KEY);
+    const lastActivity = stored ? Number(stored) : Date.now();
     const remaining = SESSION_TIMEOUT_MS - (Date.now() - lastActivity);
 
     if (remaining <= 0) {
