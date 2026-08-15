@@ -190,7 +190,9 @@
 
 /* Panel completo de Mi cuenta */
 .account-page {
+  position: relative;
   min-height: 70vh;
+  overflow: hidden;
   padding-block: clamp(2rem, 6vw, 5rem);
   background:
     radial-gradient(circle at 94% 8%, rgb(241 91 181 / 12%), transparent 24rem),
@@ -220,6 +222,29 @@
   background: var(--color-white);
   box-shadow: 0.65rem 0.65rem 0 var(--color-pink-light);
 }
+
+.account-main {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.account-main::before,
+.account-main::after {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  bottom: 0;
+  width: clamp(8rem, 15vw, 13rem);
+  background: url("../assets/images/decor/account-border-grunge.png") top right / 100% auto no-repeat;
+  content: "";
+  opacity: 0.055;
+  pointer-events: none;
+}
+
+.account-main::before { right: 0; }
+.account-main::after { left: 0; transform: scaleX(-1); }
+.account-main > * { position: relative; z-index: 1; }
 
 .account-sidebar {
   padding: clamp(1.3rem, 3vw, 2rem);
@@ -585,6 +610,13 @@
   .account-main {
     padding: 1rem;
   }
+
+  .account-main::before {
+    width: 9rem;
+    opacity: 0.04;
+  }
+
+  .account-main::after { display: none; }
 
   .account-section-title,
   .account-order {

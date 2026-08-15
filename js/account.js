@@ -1,5 +1,5 @@
 import { getApp, initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, sendPasswordResetEmail, updateProfile } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+import { browserLocalPersistence, getAuth, onAuthStateChanged, sendPasswordResetEmail, setPersistence, updateProfile } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 import { collection, doc, getDoc, getDocs, getFirestore, orderBy, query, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import { firebaseConfig, firebaseConfigured } from "./firebase-config.js?v=20260731-5";
 
@@ -186,6 +186,8 @@ async function initialize() {
   }
   auth = getAuth(app);
   db = getFirestore(app);
+  await setPersistence(auth, browserLocalPersistence);
+  await auth.authStateReady();
 
   onAuthStateChanged(auth, async (user) => {
     loading.hidden = true;

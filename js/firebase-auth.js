@@ -26,10 +26,9 @@ const authPage = document.querySelector("[data-auth-page]")?.dataset.authPage ||
 let auth = null;
 let db = null;
 const SESSION_ACTIVITY_KEY = "arvel-session-last-activity";
-// La sesión se cierra después de 2 horas reales sin actividad.
-// La marca queda en localStorage para poder comprobarla incluso si el
-// navegador estuvo cerrado durante varios días.
-const SESSION_TIMEOUT_MS = 2 * 60 * 60 * 1000;
+// Firebase conserva la sesión localmente. Solo aplicamos un vencimiento de
+// seguridad amplio; navegar por Mi cuenta nunca debe cerrar una sesión activa.
+const SESSION_TIMEOUT_MS = 30 * 24 * 60 * 60 * 1000;
 const SESSION_WARNING_MS = 2 * 60 * 1000;
 let sessionTimer = 0;
 let sessionWarningShown = false;
@@ -397,9 +396,12 @@ async function initializeAuthentication() {
     renderAccount(user);
     updateAdminAccess(user);
 
-    if (user) startSessionTimeout().catch((error) => {
+    if (user) {
+      rememberSessionActivity();
+      startSessionTimeout().catch((error) => {
       console.error("No pudimos controlar el vencimiento de la sesión", error);
-    });
+      });
+    }
     else stopSessionTimeout();
 
     if (authPage === "login" && user) {
