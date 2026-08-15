@@ -4,7 +4,10 @@
   const catalog = window.ARVEL_PRODUCTS_READY
     ? await window.ARVEL_PRODUCTS_READY
     : window.ARVEL_PRODUCTS;
-  const products = Array.isArray(catalog)
+  const publicProducts = (items) => Array.isArray(items)
+    ? items.filter((product) => !product.archived && (!product.status || product.status === "published"))
+    : [];
+  let products = Array.isArray(catalog)
     ? catalog.filter((product) => !product.archived && (!product.status || product.status === "published"))
     : [];
   const favoritesOnly = new URLSearchParams(window.location.search).get("favoritos") === "1";
@@ -295,7 +298,8 @@
   bindEvents();
   render();
 
-  document.addEventListener("arvel:products-updated", () => {
+  document.addEventListener("arvel:products-updated", (event) => {
+    products = publicProducts(event.detail?.products || window.ARVEL_PRODUCTS);
     populateFilters();
     render();
   });

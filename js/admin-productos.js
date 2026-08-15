@@ -635,7 +635,7 @@ function fillForm(product) {
     const control = ui.form.elements.namedItem(name);
     if (control) control.value = value ?? "";
   });
-  ui.form.elements.featured.checked = Boolean(product.featured);
+  ui.form.elements.featured.checked = product.featured === true || product.featured === "true" || product.featured === 1;
   ui.form.elements.uniquePiece.checked = Boolean(product.uniquePiece);
   ui.variants.innerHTML = "";
   const variants = productVariants(product);
@@ -663,7 +663,7 @@ function renderList() {
   ui.list.innerHTML = visible.length ? visible.map((product) => `
     <button class="admin-product-item" type="button" data-product-id="${escapeHtml(product.documentId)}">
       <img src="${escapeHtml(productImageUrls(product)[0] || placeholder)}" alt="">
-      <span><strong>${escapeHtml(product.name)}</strong><small>${escapeHtml(product.sku)}</small></span>
+      <span><strong>${escapeHtml(product.name)}</strong><small>${escapeHtml(product.sku)}${product.featured === true || product.featured === "true" || product.featured === 1 ? " · Destacado" : ""}</small></span>
       <span class="admin-status admin-status--${escapeHtml(product.status || "draft")}">${escapeHtml(product.status || "draft")}</span>
     </button>
   `).join("") : "<p>No hay productos para mostrar.</p>";
@@ -752,6 +752,9 @@ function validateProduct(product) {
   renderImages();
   if (product.status === "published" && !existingImages.length && !selectedImages.length) {
     return "Para publicar necesitás al menos una fotografía.";
+  }
+  if (product.status === "published" && product.stock <= 0) {
+    return "Para publicar necesitás indicar stock mayor a cero en al menos una variante.";
   }
   return "";
 }
@@ -1073,6 +1076,7 @@ async function saveProduct(statusOverride) {
     productPersisted = true;
     localStorage.removeItem("arvel-products-cache-v2");
     localStorage.removeItem("arvel-products-cache-v3");
+    localStorage.removeItem("arvel-products-cache-v4");
     const ownPrefix = `products/${documentId}/`;
     const pendingDeletes = removedStoragePaths
       .filter((path) => path.startsWith(ownPrefix))
@@ -1083,7 +1087,10 @@ async function saveProduct(statusOverride) {
       if (failures.length) console.warn("Algunas fotos antiguas no pudieron eliminarse de Storage.", failures);
     }
     removedStoragePaths = [];
-    setState(product.status === "published" ? "Producto publicado" : "Producto guardado", "success");
+    const publishedMessage = product.featured
+      ? "Producto publicado y agregado a Destacados"
+      : "Producto publicado";
+    setState(product.status === "published" ? publishedMessage : "Producto guardado", "success");
     await loadProducts();
     const saved = products.find((item) => item.documentId === documentId);
     if (saved) fillForm(saved);

@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const CACHE_KEY = "arvel-products-cache-v3";
+  const CACHE_KEY = "arvel-products-cache-v4";
   const fallback = Array.isArray(window.ARVEL_PRODUCTS) ? [...window.ARVEL_PRODUCTS] : [];
   let cached = [];
 
@@ -34,27 +34,41 @@
       const app = initializeApp(configModule.firebaseConfig, "arvel-public-catalog");
       const db = getFirestore(app);
       const storage = getStorage(app);
-      const snapshot = await getDocs(
-        query(collection(db, "products"), where("status", "==", "published"))
-      );
+      let productRecords = [];
+      try {
+        const response = await fetch("/api/products", {
+          headers: { Accept: "application/json" },
+          cache: "no-store"
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const payload = await response.json();
+        if (!Array.isArray(payload.products)) throw new Error("Respuesta de catalogo invalida");
+        productRecords = payload.products.map((data) => ({ id: data.documentId || data.id, data }));
+      } catch (apiError) {
+        console.warn("La API publica del catalogo no respondio; se intenta Firestore.", apiError);
+        const snapshot = await getDocs(
+          query(collection(db, "products"), where("status", "==", "published"))
+        );
+        productRecords = snapshot.docs.map((item) => ({ id: item.id, data: item.data() }));
+      }
       const resolveImages = async (data) => {
         const references = Array.isArray(data.imageRefs) ? data.imageRefs : [];
         const durable = await Promise.all(references.map(async (image) => {
           if (typeof image === "string") return image;
-          if (image?.url) return image.url;
-          if (!image?.path) return "";
-          try {
-            return await getDownloadURL(ref(storage, image.path));
-          } catch (error) {
-            console.warn("No se pudo resolver una imagen de Storage.", image.path, error);
-            return "";
+          if (image?.path) {
+            try {
+              return await getDownloadURL(ref(storage, image.path));
+            } catch (error) {
+              console.warn("No se pudo resolver una imagen de Storage.", image.path, error);
+            }
           }
+          return image?.url || "";
         }));
         const legacy = Array.isArray(data.images) ? data.images.filter(Boolean) : [];
         return durable.filter(Boolean).length ? durable.filter(Boolean) : legacy;
       };
-      const remote = await Promise.all(snapshot.docs.map(async (item) => {
-        const data = item.data();
+      const remote = await Promise.all(productRecords.map(async (item) => {
+        const data = item.data;
         const sizes = Array.isArray(data.sizes) && data.sizes.length ? data.sizes : ["Único"];
         const colors = Array.isArray(data.colors) && data.colors.length
           ? data.colors
@@ -81,6 +95,7 @@
           colors,
           stock: finalStock,
           stockByVariant,
+          featured: data.featured === true || data.featured === "true" || data.featured === 1,
           uniquePiece: isUniquePiece,
           soldOut: Boolean(data.soldOut) || finalStock <= 0,
           documentId: item.id,
