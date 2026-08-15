@@ -3,6 +3,7 @@ const ALLOWED_ORIGINS = new Set([
   "https://web-arvel-y2-k.vercel.app", "https://rosario234576-cyber.github.io"
 ]);
 const PAYMENT_WINDOW_MS = 5 * 60 * 1000;
+const LEGACY_REVIEW_EXPIRY_MS = 1786768723687;
 
 function setCors(req, res) {
   const origin = req.headers.origin;
@@ -40,7 +41,13 @@ function calculateShipping(delivery, subtotal) {
 }
 function activeReservations(value, nowMs, excludedOrder) {
   const source = value && typeof value === "object" ? value : {};
-  return Object.fromEntries(Object.entries(source).filter(([orderNumber, reservation]) => orderNumber !== excludedOrder && Number(reservation?.expiresAtMs || 0) > nowMs));
+  return Object.fromEntries(Object.entries(source).filter(([orderNumber, reservation]) => {
+    const storedExpiry = Number(reservation?.expiresAtMs || 0);
+    const expiresAtMs = reservation?.stage === "review" && storedExpiry - nowMs > PAYMENT_WINDOW_MS
+      ? Math.min(storedExpiry, LEGACY_REVIEW_EXPIRY_MS)
+      : storedExpiry;
+    return orderNumber !== excludedOrder && expiresAtMs > nowMs;
+  }));
 }
 function reservedForVariant(reservations, variantKey) {
   return Object.values(reservations).reduce((total, reservation) => total + (Array.isArray(reservation?.items) ? reservation.items : []).filter((item) => item.variantKey === variantKey).reduce((sum, item) => sum + Number(item.quantity || 0), 0), 0);

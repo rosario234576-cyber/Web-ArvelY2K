@@ -807,12 +807,13 @@
         if (response.status === 410) return expireReservation();
         throw new Error(result.error || "No pudimos confirmar la reserva.");
       }
-      window.clearInterval(reservationTimerId);
-      reservationTimerId = null;
-      elements.reservationTimer.innerHTML = "<strong>Pedido enviado a revisión</strong><span>Tu producto queda reservado durante 1 hora mientras Arvel verifica el comprobante.</span>";
+      preparedOrder.reservationExpiresAtMs = Number(result.expiresAtMs);
+      reservationClockOffset = Number(result.serverNowMs) - Date.now();
+      elements.reservationTimer.innerHTML = "<strong>Pedido enviado a revisión</strong><span>La reserva se libera en <b id=\"reservation-countdown\">05:00</b></span>";
+      elements.reservationCountdown = elements.reservationTimer.querySelector("#reservation-countdown");
       elements.reservationTimer.classList.remove("is-expired");
-      elements.reservationTimer.classList.add("is-submitted");
       elements.confirmationWhatsAppLabel.textContent = "Abrir WhatsApp y adjuntar comprobante";
+      startReservationTimer(preparedOrder);
     } catch (error) {
       elements.confirmationNotice.textContent = error.message || "No pudimos confirmar la reserva. Intentá nuevamente.";
       button.disabled = false;

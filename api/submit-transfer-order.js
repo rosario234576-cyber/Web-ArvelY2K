@@ -2,7 +2,7 @@ const ALLOWED_ORIGINS = new Set([
   "https://arvelcustomy2k.store", "https://www.arvelcustomy2k.store",
   "https://web-arvel-y2-k.vercel.app", "https://rosario234576-cyber.github.io"
 ]);
-const REVIEW_WINDOW_MS = 60 * 60 * 1000;
+const REVIEW_WINDOW_MS = 5 * 60 * 1000;
 
 function setCors(req, res) {
   const origin = req.headers.origin;

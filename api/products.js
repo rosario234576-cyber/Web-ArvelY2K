@@ -6,6 +6,9 @@ const ALLOWED_ORIGINS = new Set([
   "https://web-arvel-y2-k.vercel.app",
   "https://rosario234576-cyber.github.io"
 ]);
+// Las reservas de revisión creadas por la versión anterior duraban una hora.
+// Este límite único las reduce a cinco minutos sin afectar reservas nuevas.
+const LEGACY_REVIEW_EXPIRY_MS = 1786768723687;
 
 function isoDate(value) {
   if (!value) return "";
@@ -16,7 +19,14 @@ function isoDate(value) {
 function publicStock(data) {
   const nowMs = Date.now();
   const reservations = Object.values(data.reservations && typeof data.reservations === "object" ? data.reservations : {})
-    .filter((reservation) => Number(reservation?.expiresAtMs || 0) > nowMs);
+    .map((reservation) => {
+      const storedExpiry = Number(reservation?.expiresAtMs || 0);
+      const expiresAtMs = reservation?.stage === "review" && storedExpiry - nowMs > 5 * 60 * 1000
+        ? Math.min(storedExpiry, LEGACY_REVIEW_EXPIRY_MS)
+        : storedExpiry;
+      return { ...reservation, expiresAtMs };
+    })
+    .filter((reservation) => reservation.expiresAtMs > nowMs);
   const reservedByVariant = {};
   for (const reservation of reservations) {
     for (const item of Array.isArray(reservation?.items) ? reservation.items : []) {
