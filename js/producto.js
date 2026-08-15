@@ -205,17 +205,61 @@
     selectImage(images[0], 0);
   }
 
-  function createVariantOptions(values, name, container) {
-    container.innerHTML = values
+  function createVariantOptions(options, name, container) {
+    const enabledOptions = options.filter((option) => !option.disabled);
+    container.innerHTML = options
       .map(
-        (value, index) => `
+        (option) => `
           <label class="variant-option">
-            <input type="radio" name="${name}" value="${value}" ${values.length === 1 ? "checked" : ""}>
-            <span>${value}</span>
+            <input type="radio" name="${name}" value="${option.value}"
+              ${enabledOptions.length === 1 && !option.disabled ? "checked" : ""}
+              ${option.disabled ? "disabled" : ""}>
+            <span>${option.value}</span>
           </label>
         `
       )
       .join("");
+  }
+
+  function variantEntries() {
+    return Object.entries(product.stockByVariant || {}).map(([key, stock]) => {
+      const separator = key.indexOf("|");
+      const size = separator >= 0 ? key.slice(0, separator) : key;
+      const color = separator >= 0 ? key.slice(separator + 1) : "";
+      return {
+        size,
+        color,
+        stock: Math.max(0, Number(stock) || 0),
+        price: Math.max(0, Number(product.priceByVariant?.[key]) || Number(product.price) || 0)
+      };
+    });
+  }
+
+  function renderSizeOptions() {
+    const variants = variantEntries();
+    const sizes = variants.length ? [...new Set(variants.map((variant) => variant.size))] : product.sizes;
+    createVariantOptions(sizes.map((size) => ({
+      value: size,
+      disabled: variants.length > 0 && !variants.some((variant) => variant.size === size && variant.stock > 0)
+    })), "size", elements.sizes);
+  }
+
+  function renderColorOptions(size) {
+    const variants = variantEntries();
+    if (!size && variants.length > 0) {
+      elements.colors.innerHTML = '<span class="variant-help">Elegí primero un tamaño.</span>';
+      return;
+    }
+
+    const colors = variants.length
+      ? [...new Set(variants.filter((variant) => variant.size === size).map((variant) => variant.color))]
+      : product.colors;
+    createVariantOptions(colors.map((color) => ({
+      value: color,
+      disabled: variants.length > 0 && !variants.some(
+        (variant) => variant.size === size && variant.color === color && variant.stock > 0
+      )
+    })), "color", elements.colors);
   }
 
   function getSelection() {
@@ -240,14 +284,25 @@
     return product.price;
   }
 
+  function getSelectionPrice(size, color) {
+    if (size && color) return getVariantPrice(size, color);
+    if (!size) return null;
+
+    const prices = [...new Set(
+      variantEntries()
+        .filter((variant) => variant.size === size && variant.stock > 0)
+        .map((variant) => variant.price)
+        .filter((price) => price > 0)
+    )];
+    return prices.length === 1 ? prices[0] : null;
+  }
+
   function updateStockStatus() {
     const selection = getSelection();
     const stock = selection.size && selection.color
       ? getVariantStock(selection.size, selection.color)
       : product.stock;
-    const variantPrice = selection.size && selection.color
-      ? getVariantPrice(selection.size, selection.color)
-      : null;
+    const variantPrice = getSelectionPrice(selection.size, selection.color);
     const unavailable = product.soldOut || stock <= 0;
 
     elements.quantity.max = String(Math.max(1, stock));
@@ -261,7 +316,7 @@
     elements.addButton.disabled = unavailable;
     elements.buyButton.disabled = unavailable;
 
-    if (variantPrice) renderPrice(variantPrice);
+    renderPrice(variantPrice || undefined);
   }
 
   function validateSelection() {
@@ -308,7 +363,11 @@
       return false;
     }
 
-    if (existing) existing.quantity = nextQuantity;
+    const variantPrice = getVariantPrice(selection.size, selection.color);
+    if (existing) {
+      existing.quantity = nextQuantity;
+      existing.price = variantPrice;
+    }
     else {
       const variantId = `${productKey(product)}::${selection.size}::${selection.color}`;
       cart.push({
@@ -319,7 +378,7 @@
         size: selection.size,
         color: selection.color,
         quantity: selection.quantity,
-        price: product.price
+        price: variantPrice
       });
     }
 
@@ -447,7 +506,10 @@
       addToCart(false);
     });
     elements.buyButton.addEventListener("click", () => addToCart(true));
-    elements.form.addEventListener("change", updateStockStatus);
+    elements.form.addEventListener("change", (event) => {
+      if (event.target.name === "size") renderColorOptions(event.target.value);
+      updateStockStatus();
+    });
     document.querySelector(".quantity-control").addEventListener("click", (event) => {
       const button = event.target.closest("[data-quantity-action]");
       if (!button) return;
@@ -538,8 +600,8 @@
     createBadges();
     renderPrice();
     renderGallery();
-    createVariantOptions(product.sizes, "size", elements.sizes);
-    createVariantOptions(product.colors, "color", elements.colors);
+    renderSizeOptions();
+    renderColorOptions(elements.form.elements.size?.value || "");
     renderMeasurements();
     updateFavoriteButton();
     updateStockStatus();

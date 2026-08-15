@@ -619,7 +619,12 @@ function resetForm() {
 function productVariants(product) {
   return Object.entries(product.stockByVariant || {}).map(([key, stock]) => {
     const [size, color] = key.split("|");
-    return { size, color, stock };
+    return {
+      size,
+      color,
+      stock,
+      price: Math.max(0, Number(product.priceByVariant?.[key]) || 0)
+    };
   });
 }
 
