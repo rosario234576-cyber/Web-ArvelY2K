@@ -1031,17 +1031,19 @@ body:not(.admin-body) {
   }
 
   .shop-section .product-card__price-main {
-    color: var(--color-pink);
-    font-family: var(--font-display);
+    color: var(--color-text);
+    font-family: var(--font-body);
     font-size: 1.5rem;
     line-height: 1;
-    font-weight: 700;
+    font-weight: 900;
   }
 
   .shop-section .product-card__price-original {
-    color: var(--color-text-muted);
-    text-decoration: line-through;
-    font-size: 0.95rem;
+    color: var(--color-pink-dark);
+    font-family: var(--font-body);
+    font-weight: 900;
+    text-decoration: line-through 2px;
+    font-size: 1rem;
   }
 
   .shop-section .product-card__discount-badge {
@@ -1162,16 +1164,19 @@ body:not(.admin-body) {
   }
 
   .shop-section .product-card__price-main {
-    color: #f15bb5;
-    font-family: var(--font-display);
+    color: var(--color-text);
+    font-family: var(--font-body);
     font-size: clamp(1.25rem, 4vw, 1.75rem);
     line-height: 1;
+    font-weight: 900;
   }
 
   .shop-section .product-card__price-original {
-    color: #bdb2b9;
-    text-decoration: line-through;
-    font-size: 0.9rem;
+    color: var(--color-pink-dark);
+    font-family: var(--font-body);
+    font-weight: 900;
+    text-decoration: line-through 2px;
+    font-size: 1rem;
   }
 
   .shop-section .product-card__discount-badge {

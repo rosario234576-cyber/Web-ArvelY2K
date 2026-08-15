@@ -259,8 +259,10 @@
   margin: 0;
   color: var(--color-pink);
   font-size: 1.1rem;
-  font-weight: 700;
-  text-decoration: line-through;
+  font-family: var(--font-body);
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  text-decoration: line-through 2px;
 }
 
 .product-card__price-main {
@@ -316,7 +318,7 @@
 }
 
 .product-card__installments {
-  color: var(--color-pink-dark);
+  color: var(--color-text);
   font-weight: 700;
 }
 
