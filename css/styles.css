@@ -1394,6 +1394,33 @@ body.is-locked {
   animation: community-glow-sweep 5.5s ease-in-out infinite;
 }
 
+@media (min-width: 1025px) {
+  .mini-skirts-community::before {
+    top: -105%;
+    bottom: -105%;
+    width: 46%;
+    background: linear-gradient(90deg, transparent 0%, rgb(241 91 181 / 16%) 24%, rgb(255 224 243 / 46%) 50%, rgb(241 91 181 / 24%) 72%, transparent 100%);
+    filter: blur(1.15rem);
+    animation-duration: 4.8s;
+  }
+
+  .mini-skirts-community::after {
+    position: absolute;
+    z-index: 0;
+    top: 50%;
+    left: 50%;
+    width: 42rem;
+    height: 14rem;
+    border-radius: 50%;
+    background: radial-gradient(ellipse, rgb(241 91 181 / 28%) 0%, rgb(241 91 181 / 9%) 42%, transparent 72%);
+    content: "";
+    filter: blur(1.8rem);
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    animation: community-desktop-pulse 3.2s ease-in-out infinite;
+  }
+}
+
 .mini-skirts-community__inner {
   position: relative;
   display: grid;
@@ -1491,6 +1518,17 @@ body.is-locked {
   50% {
     color: rgb(241 91 181 / 30%);
     filter: drop-shadow(0 0 1.2rem rgb(241 91 181 / 45%));
+  }
+}
+
+@keyframes community-desktop-pulse {
+  0%, 100% {
+    opacity: 0.35;
+    transform: translate(-50%, -50%) scale(0.88);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.12);
   }
 }
 
