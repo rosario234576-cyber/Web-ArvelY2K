@@ -1,9 +1,9 @@
 (async function () {
   "use strict";
 
-  const catalog = window.ARVEL_PRODUCTS_READY
-    ? await window.ARVEL_PRODUCTS_READY
-    : window.ARVEL_PRODUCTS;
+  // Pintamos primero la copia local para que el catálogo aparezca sin esperar
+  // la red. El evento products-updated la reemplaza por la versión más reciente.
+  const catalog = window.ARVEL_PRODUCTS;
   const publicProducts = (items) => Array.isArray(items)
     ? items.filter((product) => !product.archived && (!product.status || product.status === "published"))
     : [];

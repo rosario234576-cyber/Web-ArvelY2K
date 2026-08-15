@@ -1,12 +1,16 @@
 (function () {
   "use strict";
 
-  const CACHE_KEY = "arvel-products-cache-v6";
+  const CACHE_KEY = "arvel-products-cache-v7";
   const fallback = Array.isArray(window.ARVEL_PRODUCTS) ? [...window.ARVEL_PRODUCTS] : [];
   let cached = [];
 
   try {
-    const stored = JSON.parse(localStorage.getItem(CACHE_KEY) || "[]");
+    const stored = JSON.parse(
+      localStorage.getItem(CACHE_KEY)
+      || localStorage.getItem("arvel-products-cache-v6")
+      || "[]"
+    );
     cached = Array.isArray(stored) ? stored : [];
   } catch {
     cached = [];
@@ -17,26 +21,33 @@
 
   window.ARVEL_PRODUCTS_READY = (async () => {
     try {
-      const [
-        { initializeApp },
-        { collection, getDocs, getFirestore, query, where },
-        { getDownloadURL, getStorage, ref },
-        configModule
-      ] =
-        await Promise.all([
-          import("https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js"),
-          import("https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js"),
-          import("https://www.gstatic.com/firebasejs/12.16.0/firebase-storage.js"),
-          import("./firebase-config.js?v=20260731-5")
-        ]);
-
-      if (!configModule.firebaseConfigured) return immediateCatalog;
-      const app = initializeApp(configModule.firebaseConfig, "arvel-public-catalog");
-      const db = getFirestore(app);
-      const storage = getStorage(app);
       let productRecords = [];
+      let firebaseApp = null;
+      let firebaseAppPromise = null;
+      let storageToolsPromise = null;
+
+      async function getFirebaseApp() {
+        if (firebaseApp) return firebaseApp;
+        if (!firebaseAppPromise) {
+          firebaseAppPromise = Promise.all([
+            import("https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js"),
+            import("./firebase-config.js?v=20260731-5")
+          ]).then(([{ initializeApp }, configModule]) => {
+            if (!configModule.firebaseConfigured) throw new Error("Firebase no configurado");
+            firebaseApp = initializeApp(configModule.firebaseConfig, "arvel-public-catalog");
+            return firebaseApp;
+          });
+        }
+        return firebaseAppPromise;
+      }
+
       try {
-        const apiBase = String(window.ARVEL_API_BASE || "https://web-arvel-y2-k.vercel.app").replace(/\/+$/, "");
+        const canUseSameOrigin = /^https?:$/.test(window.location.protocol)
+          && !window.location.hostname.endsWith("github.io");
+        const apiBase = String(
+          window.ARVEL_API_BASE
+          || (canUseSameOrigin ? window.location.origin : "https://web-arvel-y2-k.vercel.app")
+        ).replace(/\/+$/, "");
         const response = await fetch(`${apiBase}/api/products?refresh=${Date.now()}`, {
           headers: { Accept: "application/json" },
           cache: "no-store"
@@ -49,6 +60,11 @@
           .map((data) => ({ id: data.documentId || data.id, data }));
       } catch (apiError) {
         console.warn("La API publica del catalogo no respondio; se intenta Firestore.", apiError);
+        const app = await getFirebaseApp();
+        const { collection, getDocs, getFirestore, query, where } = await import(
+          "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js"
+        );
+        const db = getFirestore(app);
         const snapshot = await getDocs(
           query(collection(db, "products"), where("status", "==", "published"))
         );
@@ -60,8 +76,19 @@
         const references = Array.isArray(data.imageRefs) ? data.imageRefs : [];
         const durable = await Promise.all(references.map(async (image) => {
           if (typeof image === "string") return image;
+          // Las URLs permanentes ya guardadas se usan directamente. Evita cargar
+          // Firebase Storage y hacer una consulta adicional por cada fotografía.
+          if (image?.url) return image.url;
           if (image?.path) {
             try {
+              if (!storageToolsPromise) {
+                storageToolsPromise = Promise.all([
+                  getFirebaseApp(),
+                  import("https://www.gstatic.com/firebasejs/12.16.0/firebase-storage.js")
+                ]);
+              }
+              const [app, { getDownloadURL, getStorage, ref }] = await storageToolsPromise;
+              const storage = getStorage(app);
               return await getDownloadURL(ref(storage, image.path));
             } catch (error) {
               console.warn("No se pudo resolver una imagen de Storage.", image.path, error);
@@ -114,6 +141,7 @@
       }));
       try {
         localStorage.setItem(CACHE_KEY, JSON.stringify(remote));
+        localStorage.removeItem("arvel-products-cache-v6");
       } catch {
         // El catálogo sigue funcionando aunque el navegador no permita guardar caché.
       }
