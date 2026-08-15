@@ -257,6 +257,35 @@
   margin: 0.25rem 0 0.35rem;
 }
 
+.product-card__reservation {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 0.35rem;
+  background: rgb(23 10 18 / 72%);
+  color: var(--color-white);
+  text-align: center;
+  text-transform: uppercase;
+  backdrop-filter: blur(2px);
+}
+
+.product-card__reservation strong {
+  color: var(--color-pink);
+  font-size: clamp(1.1rem, 2vw, 1.6rem);
+  letter-spacing: 0.08em;
+}
+
+.product-card__reservation span { font-size: 0.85rem; font-weight: 700; }
+.product-card__reservation b { font-size: 1.2em; font-variant-numeric: tabular-nums; }
+
+.badge--reserved {
+  border-color: #8f1710;
+  background: #c82b20;
+  color: var(--color-white);
+}
+
 .product-card__price-original {
   margin: 0;
   color: var(--color-text-muted);

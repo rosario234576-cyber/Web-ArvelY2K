@@ -76,6 +76,7 @@ module.exports = async function handler(req, res) {
         const variantKey = `${requested.size}|${requested.color}`;
         const reservations = reservationsByProduct.get(requested.documentId) || activeReservations(product.reservations, serverNowMs, orderNumber);
         reservationsByProduct.set(requested.documentId, reservations);
+        if (Object.keys(reservations).length) throw Object.assign(new Error(`${product.name || "Esta pieza"} está reservada por otra clienta.`), { statusCode: 409 });
         const hasVariantStock = Boolean(product.stockByVariant && Object.keys(product.stockByVariant).length);
         const stock = hasVariantStock ? Number(product.stockByVariant[variantKey] || 0) : Number(product.stock || 0);
         const alreadyRequested = items.filter((item) => item.documentId === requested.documentId && item.variantKey === variantKey).reduce((sum, item) => sum + item.quantity, 0);

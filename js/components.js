@@ -343,6 +343,7 @@
   }
 
   function getProductBadge(product) {
+    if (product.reservationActive) return ["Reservada", "badge--reserved"];
     if (product.soldOut) return ["Vendida", "badge--dark"];
     if (getProductDiscount(product) > 0) return ["Oferta", "badge--sale"];
     if (product.featured) return ["Destacada", "badge--pink"];
@@ -386,6 +387,7 @@
     const originalPrice = Number(product.oldPrice) > mainPrice ? Number(product.oldPrice) : mainPrice;
     const discount = getProductDiscount({ ...product, price: mainPrice });
     const unavailable = product.soldOut || product.stock <= 0;
+    const reservedUntilMs = Number(product.reservedUntilMs || 0);
 
     return `
       <article class="product-card" data-product-id="${productId}" data-reveal>
@@ -405,6 +407,12 @@
           <div class="product-card__badges">
             <span class="badge ${badgeClass}">${badgeLabel}</span>
           </div>
+          ${product.reservationActive ? `
+            <div class="product-card__reservation" data-reservation-until="${reservedUntilMs}">
+              <strong>Reservada</strong>
+              <span>Se libera en <b data-reservation-countdown>--:--</b></span>
+            </div>
+          ` : ""}
           <button
             class="button button--icon product-card__favorite"
             type="button"
@@ -437,7 +445,7 @@
               type="button"
               data-card-buy="${productId}"
               ${unavailable ? "disabled" : ""}
-            >${unavailable ? "Sin stock" : "Comprar"}</button>
+            >${product.reservationActive ? "Reservada" : unavailable ? "Sin stock" : "Comprar"}</button>
             <button
               class="product-card__cart"
               type="button"
@@ -460,6 +468,23 @@
     if (headerTarget) headerTarget.innerHTML = createHeader();
     if (footerTarget) footerTarget.innerHTML = createFooter();
     if (overlaysTarget) overlaysTarget.innerHTML = createOverlays();
+  }
+
+  function updatePublicReservationTimers() {
+    document.querySelectorAll("[data-reservation-until]").forEach((timer) => {
+      const remaining = Math.max(0, Number(timer.dataset.reservationUntil || 0) - Date.now());
+      const seconds = Math.ceil(remaining / 1000);
+      const output = timer.querySelector("[data-reservation-countdown]");
+      if (output) output.textContent = remaining > 0
+        ? `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`
+        : "Liberando…";
+      if (remaining <= 0 && timer.dataset.refreshScheduled !== "true") {
+        timer.dataset.refreshScheduled = "true";
+        window.setTimeout(() => {
+          if (document.body.contains(timer)) window.location.reload();
+        }, 2500);
+      }
+    });
   }
 
   function initShopCategoryMenus() {
@@ -504,6 +529,8 @@
 
   renderGlobalComponents();
   initShopCategoryMenus();
+  updatePublicReservationTimers();
+  window.setInterval(updatePublicReservationTimers, 500);
   if (!document.querySelector("[data-auth-page]")) {
     const loadPublicAuth = () => {
       import("./firebase-auth.js?v=20260810-session-expiry-fix").catch(() => {

@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const CACHE_KEY = "arvel-products-cache-v8";
+  const CACHE_KEY = "arvel-products-cache-v9";
   const fallback = Array.isArray(window.ARVEL_PRODUCTS) ? [...window.ARVEL_PRODUCTS] : [];
   let cached = [];
 
@@ -145,6 +145,7 @@
         localStorage.setItem(CACHE_KEY, JSON.stringify(remote));
         localStorage.removeItem("arvel-products-cache-v6");
         localStorage.removeItem("arvel-products-cache-v7");
+        localStorage.removeItem("arvel-products-cache-v8");
       } catch {
         // El catálogo sigue funcionando aunque el navegador no permita guardar caché.
       }

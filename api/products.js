@@ -23,14 +23,27 @@ function publicStock(data) {
       reservedByVariant[item.variantKey] = (reservedByVariant[item.variantKey] || 0) + Number(item.quantity || 0);
     }
   }
-  const stockByVariant = data.stockByVariant && typeof data.stockByVariant === "object"
+  const reservationActive = reservations.length > 0;
+  const reservedUntilMs = reservationActive
+    ? Math.min(...reservations.map((reservation) => Number(reservation.expiresAtMs)))
+    : 0;
+  const availableByVariant = data.stockByVariant && typeof data.stockByVariant === "object"
     ? Object.fromEntries(Object.entries(data.stockByVariant).map(([key, stock]) => [key, Math.max(0, Number(stock || 0) - Number(reservedByVariant[key] || 0))]))
     : data.stockByVariant;
   const reservedTotal = Object.values(reservedByVariant).reduce((sum, quantity) => sum + quantity, 0);
-  const stock = stockByVariant && Object.keys(stockByVariant).length
-    ? Object.values(stockByVariant).reduce((sum, quantity) => sum + Number(quantity || 0), 0)
+  const availableStock = availableByVariant && Object.keys(availableByVariant).length
+    ? Object.values(availableByVariant).reduce((sum, quantity) => sum + Number(quantity || 0), 0)
     : Math.max(0, Number(data.stock || 0) - reservedTotal);
-  return { stock, stockByVariant, soldOut: Boolean(data.soldOut) || stock <= 0 };
+  const stockByVariant = reservationActive && availableByVariant
+    ? Object.fromEntries(Object.keys(availableByVariant).map((key) => [key, 0]))
+    : availableByVariant;
+  return {
+    stock: reservationActive ? 0 : availableStock,
+    stockByVariant,
+    soldOut: Boolean(data.soldOut),
+    reservationActive,
+    reservedUntilMs
+  };
 }
 
 module.exports = async function handler(req, res) {
