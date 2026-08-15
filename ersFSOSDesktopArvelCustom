@@ -1,0 +1,162 @@
+[33mcommit af97486c2f1d54fb6452d19298b1e10fa876d845[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m
+Author: Rosario <rosario234576@gmail.com>
+Date:   Thu Aug 13 20:26:53 2026 -0300
+
+    Asegurar que Firebase esté inicializado antes de usarlo en producto.js
+    
+    Cambios:
+    - firebase-auth.js exporta firebaseReady promesa que se resuelve cuando está listo
+    - Disponible globalmente como window.ARVEL_FIREBASE_READY
+    - requestReservation() y submitReservation() esperan a que Firebase esté listo
+    - Evita timing issues donde producto.js intenta usar getAuth() antes de que la app esté inicializada
+
+[1mdiff --git a/js/firebase-auth.js b/js/firebase-auth.js[m
+[1mindex 7fce252..a08e12a 100644[m
+[1m--- a/js/firebase-auth.js[m
+[1m+++ b/js/firebase-auth.js[m
+[36m@@ -408,7 +408,7 @@[m [masync function initializeAuthentication() {[m
+   });[m
+ }[m
+ [m
+[31m-initializeAuthentication().catch((error) => {[m
+[32m+[m[32mexport const firebaseReady = initializeAuthentication().catch((error) => {[m
+   reportAuthError("inicialización", error);[m
+   showConfigurationNotice();[m
+   setStatus([m
+[36m@@ -417,3 +417,8 @@[m [minitializeAuthentication().catch((error) => {[m
+     "error"[m
+   );[m
+ });[m
+[32m+[m
+[32m+[m[32m// Make it available globally for non-module scripts[m
+[32m+[m[32mif (typeof window !== "undefined") {[m
+[32m+[m[32m  window.ARVEL_FIREBASE_READY = firebaseReady;[m
+[32m+[m[32m}[m
+[1mdiff --git a/js/producto.js b/js/producto.js[m
+[1mindex b557d60..01b84b0 100644[m
+[1m--- a/js/producto.js[m
+[1m+++ b/js/producto.js[m
+[36m@@ -312,6 +312,7 @@[m [mimport {[m
+ [m
+   async function requestReservation() {[m
+     try {[m
+[32m+[m[32m      await (window.ARVEL_FIREBASE_READY || Promise.resolve());[m
+       const auth = getAuth();[m
+       if (!auth.currentUser) {[m
+         window.ArvelStore.showToast("Necesitás estar logueada para reservar.", {[m
+[36m@@ -352,6 +353,7 @@[m [mimport {[m
+     elements.reservationConfirm.textContent = "Procesando...";[m
+ [m
+     try {[m
+[32m+[m[32m      await (window.ARVEL_FIREBASE_READY || Promise.resolve());[m
+       const auth = getAuth();[m
+       if (!auth.currentUser) {[m
+         elements.reservationError.textContent = "Tu sesión expiró. Por favor recargá la página.";[m
+[33mcommit af97486c2f1d54fb6452d19298b1e10fa876d845[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m
+Author: Rosario <rosario234576@gmail.com>
+Date:   Thu Aug 13 20:26:53 2026 -0300
+
+    Asegurar que Firebase esté inicializado antes de usarlo en producto.js
+    
+    Cambios:
+    - firebase-auth.js exporta firebaseReady promesa que se resuelve cuando está listo
+    - Disponible globalmente como window.ARVEL_FIREBASE_READY
+    - requestReservation() y submitReservation() esperan a que Firebase esté listo
+    - Evita timing issues donde producto.js intenta usar getAuth() antes de que la app esté inicializada
+
+[1mdiff --git a/js/firebase-auth.js b/js/firebase-auth.js[m
+[1mindex 7fce252..a08e12a 100644[m
+[1m--- a/js/firebase-auth.js[m
+[1m+++ b/js/firebase-auth.js[m
+[36m@@ -408,7 +408,7 @@[m [masync function initializeAuthentication() {[m
+   });[m
+ }[m
+ [m
+[31m-initializeAuthentication().catch((error) => {[m
+[32m+[m[32mexport const firebaseReady = initializeAuthentication().catch((error) => {[m
+   reportAuthError("inicialización", error);[m
+   showConfigurationNotice();[m
+   setStatus([m
+[36m@@ -417,3 +417,8 @@[m [minitializeAuthentication().catch((error) => {[m
+     "error"[m
+   );[m
+ });[m
+[32m+[m
+[32m+[m[32m// Make it available globally for non-module scripts[m
+[32m+[m[32mif (typeof window !== "undefined") {[m
+[32m+[m[32m  window.ARVEL_FIREBASE_READY = firebaseReady;[m
+[32m+[m[32m}[m
+[1mdiff --git a/js/producto.js b/js/producto.js[m
+[1mindex b557d60..01b84b0 100644[m
+[1m--- a/js/producto.js[m
+[1m+++ b/js/producto.js[m
+[36m@@ -312,6 +312,7 @@[m [mimport {[m
+ [m
+   async function requestReservation() {[m
+     try {[m
+[32m+[m[32m      await (window.ARVEL_FIREBASE_READY || Promise.resolve());[m
+       const auth = getAuth();[m
+       if (!auth.currentUser) {[m
+         window.ArvelStore.showToast("Necesitás estar logueada para reservar.", {[m
+[36m@@ -352,6 +353,7 @@[m [mimport {[m
+     elements.reservationConfirm.textContent = "Procesando...";[m
+ [m
+     try {[m
+[32m+[m[32m      await (window.ARVEL_FIREBASE_READY || Promise.resolve());[m
+       const auth = getAuth();[m
+       if (!auth.currentUser) {[m
+         elements.reservationError.textContent = "Tu sesión expiró. Por favor recargá la página.";[m
+[33mcommit af97486c2f1d54fb6452d19298b1e10fa876d845[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m
+Author: Rosario <rosario234576@gmail.com>
+Date:   Thu Aug 13 20:26:53 2026 -0300
+
+    Asegurar que Firebase esté inicializado antes de usarlo en producto.js
+    
+    Cambios:
+    - firebase-auth.js exporta firebaseReady promesa que se resuelve cuando está listo
+    - Disponible globalmente como window.ARVEL_FIREBASE_READY
+    - requestReservation() y submitReservation() esperan a que Firebase esté listo
+    - Evita timing issues donde producto.js intenta usar getAuth() antes de que la app esté inicializada
+
+[1mdiff --git a/js/firebase-auth.js b/js/firebase-auth.js[m
+[1mindex 7fce252..a08e12a 100644[m
+[1m--- a/js/firebase-auth.js[m
+[1m+++ b/js/firebase-auth.js[m
+[36m@@ -408,7 +408,7 @@[m [masync function initializeAuthentication() {[m
+   });[m
+ }[m
+ [m
+[31m-initializeAuthentication().catch((error) => {[m
+[32m+[m[32mexport const firebaseReady = initializeAuthentication().catch((error) => {[m
+   reportAuthError("inicialización", error);[m
+   showConfigurationNotice();[m
+   setStatus([m
+[36m@@ -417,3 +417,8 @@[m [minitializeAuthentication().catch((error) => {[m
+     "error"[m
+   );[m
+ });[m
+[32m+[m
+[32m+[m[32m// Make it available globally for non-module scripts[m
+[32m+[m[32mif (typeof window !== "undefined") {[m
+[32m+[m[32m  window.ARVEL_FIREBASE_READY = firebaseReady;[m
+[32m+[m[32m}[m
+[1mdiff --git a/js/producto.js b/js/producto.js[m
+[1mindex b557d60..01b84b0 100644[m
+[1m--- a/js/producto.js[m
+[1m+++ b/js/producto.js[m
+[36m@@ -312,6 +312,7 @@[m [mimport {[m
+ [m
+   async function requestReservation() {[m
+     try {[m
+[32m+[m[32m      await (window.ARVEL_FIREBASE_READY || Promise.resolve());[m
+       const auth = getAuth();[m
+       if (!auth.currentUser) {[m
+         window.ArvelStore.showToast("Necesitás estar logueada para reservar.", {[m
+[36m@@ -352,6 +353,7 @@[m [mimport {[m
+     elements.reservationConfirm.textContent = "Procesando...";[m
+ [m
+     try {[m
+[32m+[m[32m      await (window.ARVEL_FIREBASE_READY || Promise.resolve());[m
+       const auth = getAuth();[m
+       if (!auth.currentUser) {[m
+         elements.reservationError.textContent = "Tu sesión expiró. Por favor recargá la página.";[m

@@ -249,60 +249,9 @@
         <p class="field-help">Probá con “top”, “denim” o “custom”.</p>
       </dialog>
 
-      <section class="chatbot-panel" id="chatbot-panel" aria-labelledby="chatbot-title" hidden>
-        <header class="chatbot-panel__header">
-          <div>
-            <span class="chatbot-panel__status" aria-hidden="true"></span>
-            <div>
-              <h2 id="chatbot-title">Arvel Assistant</h2>
-              <p>Asistente virtual · disponible ahora</p>
-            </div>
-          </div>
-          <button id="chatbot-close" type="button" aria-label="Cerrar asistente">×</button>
-        </header>
-        <div class="chatbot-messages" id="chatbot-messages" aria-live="polite">
-          <div class="chatbot-message chatbot-message--bot">
-            Hola ♡ Soy el asistente virtual de Arvel. Puedo buscar prendas y
-            ayudarte con stock, talles, envíos, pagos, cambios y customs.
-          </div>
-        </div>
-        <div class="chatbot-quick-replies" aria-label="Preguntas rápidas">
-          <button type="button" data-chat-question="Quiero buscar una prenda">Buscar prendas</button>
-          <button type="button" data-chat-question="Ayudame con el talle">Elegir talle</button>
-          <button type="button" data-chat-question="¿Cuánto cuesta el envío?">Consultar envíos</button>
-          <button type="button" data-chat-question="Quiero pedir una custom">Pedir una custom</button>
-        </div>
-        <form class="chatbot-form" id="chatbot-form">
-          <label class="visually-hidden" for="chatbot-input">Escribí tu pregunta</label>
-          <input
-            id="chatbot-input"
-            name="question"
-            type="text"
-            maxlength="240"
-            autocomplete="off"
-            placeholder="Escribí tu pregunta..."
-            required
-          >
-          <button type="submit" aria-label="Enviar pregunta">→</button>
-        </form>
-        <a class="chatbot-whatsapp" id="chatbot-whatsapp" href="${whatsappUrl}" target="_blank" rel="noopener noreferrer">
-          Hablar con una persona por WhatsApp ↗
-        </a>
-      </section>
-
       <div class="floating-actions" aria-label="Accesos rápidos">
         <button class="floating-button back-to-top" type="button" aria-label="Volver arriba" hidden>
           ↑
-        </button>
-        <button
-          class="floating-button floating-button--chat"
-          id="chatbot-toggle"
-          type="button"
-          aria-label="Abrir asistente virtual"
-          aria-controls="chatbot-panel"
-          aria-expanded="false"
-        >
-          <img src="assets/icons/robot-de-chat.png" alt="" width="512" height="512">
         </button>
         <a
           class="floating-button floating-button--whatsapp"
