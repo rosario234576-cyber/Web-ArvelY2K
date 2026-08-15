@@ -322,11 +322,10 @@
   }
 
   function formatPrice(value) {
-    return new Intl.NumberFormat("es-AR", {
-      style: "currency",
-      currency: "ARS",
-      maximumFractionDigits: 2
-    }).format(value);
+    const roundedValue = Math.round(Number(value) || 0);
+    return `$${new Intl.NumberFormat("es-AR", {
+      maximumFractionDigits: 0
+    }).format(roundedValue)}`;
   }
 
   function escapeHtml(value) {
