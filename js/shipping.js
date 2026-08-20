@@ -56,7 +56,7 @@
     const code = String(stateId || "").trim().toUpperCase();
     if (!/^[A-Z]$/.test(code)) return [];
     const apiBase = window.ARVEL_API_BASE || window.ARVEL_PAYMENT_API_BASE || "";
-    if (!apiBase) return [];
+    if (!apiBase) throw new Error("El servicio de envíos no está configurado.");
     const response = await fetch(
       `${apiBase}/api/correo-argentino-agencies?stateId=${encodeURIComponent(code)}`,
       { headers: { Accept: "application/json" } }

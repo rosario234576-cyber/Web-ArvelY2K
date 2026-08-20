@@ -45,6 +45,7 @@
     correoHomeCostLabel: document.querySelector("#correo-home-cost-label"),
     province: document.querySelector("#province"),
     correoAgencySelector: document.querySelector("#correo-agency-selector"),
+    correoAgencySelect: document.querySelector("#correo-agency-select"),
     correoAgency: document.querySelector("#correo-agency"),
     correoAgencyAddress: document.querySelector("#correo-agency-address"),
     correoAgencyStatus: document.querySelector("#correo-agency-status"),
@@ -67,6 +68,20 @@
     transferHolder: document.querySelector("#transfer-holder"),
     transferCvu: document.querySelector("#transfer-cvu")
   };
+
+  const correoProvinceCodes = Object.freeze({
+    "salta": "A", "buenos aires": "B", "ciudad autonoma de buenos aires": "C",
+    "san luis": "D", "entre rios": "E", "la rioja": "F", "santiago del estero": "G",
+    "chaco": "H", "san juan": "J", "catamarca": "K", "la pampa": "L", "mendoza": "M",
+    "misiones": "N", "formosa": "P", "neuquen": "Q", "rio negro": "R", "santa fe": "S",
+    "tucuman": "T", "chubut": "U", "tierra del fuego": "V", "corrientes": "W",
+    "cordoba": "X", "jujuy": "Y", "santa cruz": "Z"
+  });
+  let agencyRequestId = 0;
+
+  function normalizeText(value) {
+    return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  }
 
   function findProduct(itemOrId) {
     const key = String(
@@ -128,7 +143,7 @@
           ? `${input.dataset.label} · ${agencyName}`
           : input.dataset.label,
       cost: freeByThreshold ? 0 : baseCost,
-      agencyId: ""
+      agencyId: elements.correoAgencySelect?.value || ""
     };
   }
 
@@ -319,12 +334,57 @@
     updateTotals();
   }
 
+  async function loadCorreoAgencies() {
+    if (!elements.correoAgencySelect || !elements.correoAgencyStatus) return;
+    const provinceCode = correoProvinceCodes[normalizeText(elements.province.value)];
+    const requestId = ++agencyRequestId;
+    elements.correoAgency.value = "";
+    elements.correoAgencyAddress.value = "";
+    elements.correoAgencySelect.replaceChildren(new Option("Consultando sucursales…", ""));
+    elements.correoAgencySelect.disabled = true;
+    if (!provinceCode) {
+      elements.correoAgencySelect.replaceChildren(new Option("Seleccioná primero tu provincia", ""));
+      elements.correoAgencySelect.disabled = false;
+      elements.correoAgencyStatus.textContent = "Seleccioná una provincia para consultar las sucursales disponibles.";
+      return;
+    }
+    elements.correoAgencyStatus.textContent = "Consultando Correo Argentino…";
+    try {
+      const agencies = await window.ArvelShipping.getAgencies(provinceCode);
+      if (requestId !== agencyRequestId) return;
+      const options = [new Option("Elegí una sucursal", "")];
+      agencies.forEach((agency) => {
+        const label = [agency.name, agency.address, agency.city].filter(Boolean).join(" · ");
+        const option = new Option(label, agency.id);
+        option.dataset.name = agency.name;
+        option.dataset.address = agency.address;
+        options.push(option);
+      });
+      elements.correoAgencySelect.replaceChildren(...options);
+      elements.correoAgencySelect.disabled = false;
+      elements.correoAgencyStatus.textContent = agencies.length
+        ? `${agencies.length} sucursal${agencies.length === 1 ? "" : "es"} disponible${agencies.length === 1 ? "" : "s"}.`
+        : "Correo Argentino no informó sucursales de retiro para esta provincia.";
+    } catch (error) {
+      if (requestId !== agencyRequestId) return;
+      elements.correoAgencySelect.replaceChildren(new Option("No pudimos cargar las sucursales", ""));
+      elements.correoAgencySelect.disabled = false;
+      elements.correoAgencyStatus.textContent = error.message || "No pudimos consultar Correo Argentino.";
+    }
+  }
+
+  function updateSelectedCorreoAgency() {
+    const option = elements.correoAgencySelect?.selectedOptions?.[0];
+    elements.correoAgency.value = option?.dataset.name || "";
+    elements.correoAgencyAddress.value = option?.dataset.address || "";
+  }
+
   function updateCorreoAgencyAvailability() {
-    if (!elements.correoAgencySelector || !elements.correoAgency) return;
+    if (!elements.correoAgencySelector || !elements.correoAgencySelect) return;
     const isBranch = elements.form.elements.delivery?.value === "correo-sucursal";
     elements.correoAgencySelector.hidden = !isBranch;
-    elements.correoAgency.required = isBranch;
-    if (elements.correoAgencyAddress) elements.correoAgencyAddress.required = isBranch;
+    elements.correoAgencySelect.required = isBranch;
+    if (isBranch && elements.correoAgencySelect.options.length <= 1) loadCorreoAgencies();
   }
 
   function getErrorElement(input) {
@@ -480,6 +540,7 @@
       references: data.get("deliveryReferences").trim(),
       agencyName: String(data.get("correoAgency") || "").trim(),
       agencyAddress: String(data.get("correoAgencyAddress") || "").trim(),
+      agencyId: String(data.get("correoAgencyId") || "").trim(),
       meetingPoint: String(data.get("meetingPoint") || "").trim(),
       notes: data.get("notes").trim()
     };
@@ -506,7 +567,7 @@
         number: address.streetNumber,
         floorApartment: address.apartment,
         reference: address.references,
-        branch: { name: address.agencyName, address: address.agencyAddress },
+        branch: { id: address.agencyId, name: address.agencyName, address: address.agencyAddress },
         meetingPoint: address.meetingPoint
       },
       delivery,
@@ -950,8 +1011,10 @@
         updateCheckoutProgress(event.target.closest(".checkout-block")?.id || null);
       }
       if (event.target.name === "province") {
+        loadCorreoAgencies();
         updateCorreoAgencyAvailability();
       }
+      if (event.target.name === "correoAgencyId") updateSelectedCorreoAgency();
       if (event.target.matches("[aria-invalid]")) {
         event.target.removeAttribute("aria-invalid");
         const error = getErrorElement(event.target);

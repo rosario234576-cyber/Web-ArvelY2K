@@ -260,24 +260,23 @@
                 </div>
                 <div class="meeting-point-selector" id="correo-agency-selector" hidden>
                   <div class="notice">
-                    Por el momento, debido a los permisos pendientes de Correo Argentino, coordinaremos el envío manualmente. Ingresá los datos de la sucursal que preferís y Arvel confirmará disponibilidad y costo final.
+                    Elegí una sucursal oficial de Correo Argentino habilitada para retirar tu pedido.
                   </div>
                   <div class="checkout-fields">
-                    <div class="form-field">
-                      <label for="correo-agency">Nombre de la sucursal *</label>
-                      <input class="input" id="correo-agency" name="correoAgency" type="text" placeholder="Ej. Correo Argentino Caballito">
-                      <p class="field-error" id="correo-agency-error"></p>
-                    </div>
-                    <div class="form-field">
-                      <label for="correo-agency-address">Dirección de la sucursal *</label>
-                      <input class="input" id="correo-agency-address" name="correoAgencyAddress" type="text" placeholder="Calle y altura">
-                      <p class="field-error" id="correo-agency-address-error"></p>
+                    <div class="form-field checkout-field--full">
+                      <label for="correo-agency-select">Sucursal *</label>
+                      <select class="select" id="correo-agency-select" name="correoAgencyId">
+                        <option value="">Seleccioná primero tu provincia</option>
+                      </select>
+                      <input id="correo-agency" name="correoAgency" type="hidden">
+                      <input id="correo-agency-address" name="correoAgencyAddress" type="hidden">
+                      <p class="field-error" id="correo-agency-select-error"></p>
                     </div>
                   </div>
-                  <small class="field-help" id="correo-agency-status">Podés buscar la sucursal más cercana en Correo Argentino y copiar aquí sus datos.</small>
+                  <small class="field-help" id="correo-agency-status" aria-live="polite">Seleccioná una provincia para consultar las sucursales disponibles.</small>
                 </div>
                 <p class="field-error" id="delivery-error"></p>
-                <p class="field-help checkout-shipping-note"><strong>Proceso manual temporal:</strong> los importes son orientativos. Si elegís sucursal, necesitamos su nombre y dirección; si elegís domicilio, necesitamos la dirección completa. Arvel confirmará disponibilidad, costo final y coordinación antes del despacho.</p>
+                <p class="field-help checkout-shipping-note">Los importes se calculan por zona postal. Para retiro, la sucursal se consulta directamente en Correo Argentino. Arvel confirmará el despacho cuando se acredite el pago.</p>
               </fieldset>
 
               <fieldset class="checkout-block choice-group" id="payment-group" aria-describedby="payment-error">
@@ -396,8 +395,8 @@
     <script src="js/main.js?v=20260804-cart-variant-fix"></script>
     <script src="js/transfer-config.js?v=20260803-payment2"></script>
     <script src="js/payment-config.js?v=20260811-manual-payment-link"></script>
-    <script src="js/shipping.js?v=20260803-ca1"></script>
-    <script src="js/checkout.js?v=20260815-whatsapp-emojis-v3"></script>
+    <script src="js/shipping.js?v=20260820-ca-agencies"></script>
+    <script src="js/checkout.js?v=20260820-ca-agencies"></script>
     <script src="js/chatbot.js"></script>
     <script src="js/favoritos.js"></script>
     <script src="js/analytics.js"></script>

@@ -214,6 +214,9 @@ module.exports = async function handler(req, res) {
     if (shippingCost === null) {
       return res.status(400).json({ error: "La modalidad de entrega no es válida." });
     }
+    if (delivery.method === "correo-sucursal" && (!cleanText(address.agencyId, 30) || !cleanText(address.agencyName, 120) || !cleanText(address.agencyAddress, 200))) {
+      return res.status(400).json({ error: "Elegí una sucursal válida de Correo Argentino." });
+    }
 
     const host = req.headers["x-forwarded-host"] || req.headers.host;
     const apiBase = `https://${host}`;
@@ -283,6 +286,7 @@ module.exports = async function handler(req, res) {
         floorApartment: cleanText(address.apartment, 80),
         reference: cleanText(address.references, 500),
         branch: {
+          id: cleanText(address.agencyId, 30),
           name: cleanText(address.agencyName, 120),
           address: cleanText(address.agencyAddress, 200)
         },
@@ -324,6 +328,7 @@ module.exports = async function handler(req, res) {
         city: cleanText(address.city, 100),
         postalCode: cleanText(address.postalCode, 20),
         branch: {
+          id: cleanText(address.agencyId, 30),
           name: cleanText(address.agencyName, 120),
           address: cleanText(address.agencyAddress, 200)
         }
