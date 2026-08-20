@@ -618,7 +618,10 @@ function resetForm() {
 }
 
 function productVariants(product) {
-  return Object.entries(product.stockByVariant || {}).map(([key, stock]) => {
+  const stockByVariant = product.soldOut && Object.keys(product.stockByVariantBeforeSold || {}).length
+    ? product.stockByVariantBeforeSold
+    : product.stockByVariant;
+  return Object.entries(stockByVariant || {}).map(([key, stock]) => {
     const [size, color] = key.split("|");
     return {
       size,
@@ -642,7 +645,7 @@ function fillForm(product) {
     oldPrice: product.oldPrice || "",
     discount: effectiveDiscount(product.oldPrice, product.price, product.discount),
     condition: product.condition,
-    status: product.status || "draft",
+    status: product.soldOut ? "sold" : (product.status || "draft"),
     shortDescription: product.shortDescription,
     description: product.description,
     material: product.material,
@@ -691,7 +694,7 @@ function renderList() {
     <button class="admin-product-item" type="button" data-product-id="${escapeHtml(product.documentId)}">
       <img src="${escapeHtml(productImageUrls(product)[0] || placeholder)}" alt="">
       <span><strong>${escapeHtml(product.name)}</strong><small>${escapeHtml(product.sku)}${product.featured === true || product.featured === "true" || product.featured === 1 ? " · Destacado" : ""}</small></span>
-      <span class="admin-status admin-status--${escapeHtml(product.status || "draft")}">${escapeHtml(product.status || "draft")}</span>
+      <span class="admin-status admin-status--${product.soldOut ? "sold" : escapeHtml(product.status || "draft")}">${product.soldOut ? "Vendido" : escapeHtml(product.status || "draft")}</span>
     </button>
   `).join("") : "<p>No hay productos para mostrar.</p>";
 }
@@ -707,16 +710,23 @@ function buildProduct(statusOverride) {
   const data = new FormData(ui.form);
   const variants = readVariants();
   const requestedStatus = String(statusOverride || data.get("status") || "draft").trim().toLowerCase();
-  const status = ["published", "draft", "hidden"].includes(requestedStatus) ? requestedStatus : "draft";
+  const soldOut = requestedStatus === "sold";
+  const status = soldOut
+    ? "published"
+    : (["published", "draft", "hidden"].includes(requestedStatus) ? requestedStatus : "draft");
   const name = String(data.get("name") || "").trim();
   const sku = String(data.get("sku") || "").trim().toUpperCase();
-  const stockByVariant = Object.fromEntries(
+  const availableStockByVariant = Object.fromEntries(
     variants.map((variant) => [`${variant.size}|${variant.color}`, variant.stock])
   );
+  const stockByVariant = soldOut
+    ? Object.fromEntries(Object.keys(availableStockByVariant).map((key) => [key, 0]))
+    : availableStockByVariant;
   const priceByVariant = Object.fromEntries(
     variants.filter((variant) => variant.price > 0).map((variant) => [`${variant.size}|${variant.color}`, variant.price])
   );
-  const stock = variants.reduce((sum, variant) => sum + variant.stock, 0);
+  const availableStock = variants.reduce((sum, variant) => sum + variant.stock, 0);
+  const stock = soldOut ? 0 : availableStock;
 
   // Si no hay precio general pero hay precios en variantes, usar el precio mínimo
   let finalPrice = Math.max(0, Number(data.get("price")) || 0);
@@ -754,7 +764,11 @@ function buildProduct(statusOverride) {
     stockByVariant,
     priceByVariant: Object.keys(priceByVariant).length ? priceByVariant : {},
     stock,
-    soldOut: stock <= 0,
+    soldOut: soldOut || stock <= 0,
+    ...(soldOut ? {
+      stockBeforeSold: availableStock,
+      stockByVariantBeforeSold: availableStockByVariant
+    } : {}),
     archived: status === "hidden",
     discount,
     featured: data.get("featured") === "on",
@@ -787,7 +801,7 @@ function validateProduct(product) {
   if (product.status === "published" && !existingImages.length && !selectedImages.length) {
     return "Para publicar necesitás al menos una fotografía.";
   }
-  if (product.status === "published" && product.stock <= 0) {
+  if (product.status === "published" && !product.soldOut && product.stock <= 0) {
     return "Para publicar necesitás indicar stock mayor a cero en al menos una variante.";
   }
   return "";
@@ -991,9 +1005,12 @@ async function changeStockState(documentId, action) {
   const stockByVariant = sold
     ? Object.fromEntries(Object.keys(product.stockByVariant || {}).map((key) => [key, 0]))
     : previousVariants;
+  const restoredStock = Object.keys(stockByVariant).length
+    ? Object.values(stockByVariant).reduce((sum, value) => sum + Number(value || 0), 0)
+    : Number(product.stockBeforeSold) || 0;
   const changes = {
     soldOut: sold,
-    stock: sold ? 0 : Object.values(stockByVariant).reduce((sum, value) => sum + value, 0),
+    stock: sold ? 0 : restoredStock,
     stockByVariant,
     updatedAt: serverTimestamp()
   };
@@ -1001,8 +1018,19 @@ async function changeStockState(documentId, action) {
     changes.stockBeforeSold = Number(product.stock) || 0;
     changes.stockByVariantBeforeSold = product.stockByVariant || {};
   }
-  await setDoc(doc(db, "products", documentId), changes, { merge: true });
+  const productReference = doc(db, "products", documentId);
+  await updateDoc(productReference, changes);
+  const persistedSnapshot = await getDocFromServer(productReference);
+  const persisted = persistedSnapshot.data();
+  if (!persistedSnapshot.exists() || Boolean(persisted?.soldOut) !== sold || Number(persisted?.stock) !== changes.stock) {
+    throw new Error("Firestore no confirmó el cambio de inventario. Volvé a intentarlo.");
+  }
+  localStorage.removeItem("arvel-products-cache-v2");
+  localStorage.removeItem("arvel-products-cache-v3");
+  localStorage.removeItem("arvel-products-cache-v4");
+  localStorage.removeItem("arvel-products-cache-v5");
   await loadProducts();
+  setState(sold ? "Producto marcado como vendido" : "Producto reactivado", "success");
 }
 
 async function checkInstagramConnection() {
@@ -1119,6 +1147,9 @@ async function saveProduct(statusOverride) {
     if (!persistedSnapshot.exists() || persistedSnapshot.data()?.status !== product.status) {
       throw new Error("El estado no se guardó correctamente. Volvé a intentarlo.");
     }
+    if (Boolean(persistedSnapshot.data()?.soldOut) !== product.soldOut || Number(persistedSnapshot.data()?.stock) !== product.stock) {
+      throw new Error("El estado de inventario no se guardó correctamente. Volvé a intentarlo.");
+    }
     const persistedStockKeys = Object.keys(persistedSnapshot.data()?.stockByVariant || {}).sort();
     const submittedStockKeys = Object.keys(product.stockByVariant || {}).sort();
     if (JSON.stringify(persistedStockKeys) !== JSON.stringify(submittedStockKeys)) {
@@ -1141,7 +1172,9 @@ async function saveProduct(statusOverride) {
     const publishedMessage = product.featured
       ? "Producto publicado y agregado a Destacados"
       : "Producto publicado";
-    const stateMessage = product.status === "published"
+    const stateMessage = product.soldOut
+      ? "Producto marcado como vendido"
+      : product.status === "published"
       ? publishedMessage
       : product.status === "hidden"
         ? "Producto ocultado y retirado de la tienda"
@@ -1217,10 +1250,15 @@ document.addEventListener("click", (event) => {
 ui.inventory?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-stock-action]");
   if (!button) return;
+  const product = products.find((item) => item.documentId === button.dataset.productId);
+  const actionLabel = button.dataset.stockAction === "sold" ? "marcar como vendido" : "reactivar";
+  if (!window.confirm(`¿Querés ${actionLabel} ${product?.name || "este producto"}?`)) return;
   button.disabled = true;
+  setState("Actualizando inventario…");
   changeStockState(button.dataset.productId, button.dataset.stockAction).catch((error) => {
     button.disabled = false;
     setState(error.message || "No pudimos actualizar el stock.", "error");
+    window.alert(error.message || "No pudimos actualizar el stock.");
   });
 });
 ui.settingsForm?.addEventListener("submit", async (event) => {

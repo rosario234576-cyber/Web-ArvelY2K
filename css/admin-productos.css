@@ -304,6 +304,7 @@
 
 .admin-status--published { background: #dff3e4; color: #17672d !important; }
 .admin-status--draft { background: #fff0c9; color: #725200 !important; }
+.admin-status--sold { background: #2b1b25; color: #fff !important; }
 .admin-status--hidden { background: #eadfe6; color: #5c4052 !important; }
 
 .button--danger {
