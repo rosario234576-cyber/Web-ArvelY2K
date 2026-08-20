@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git commit -m 'fix: precios en negro y mejora de visualización de descuentos *)",
+      "Bash(git push *)",
+      "Bash(git commit -m 'fix: aumentar timeout de sesión a 24 horas y warning a 30 minutos *)",
+      "PowerShell(Head -20)",
+      "Bash(git commit -m 'Agregar cartel de reserva activa en página de confirmación de pedido *)",
+      "Bash(git commit -m 'Corregir detección de piezas reservadas en confirmación *)",
+      "Bash(git commit -m 'Agregar sección de productos reservados en dashboard admin *)",
+      "Bash(git commit -m 'Corregir autenticación en modal de reserva en producto.html *)",
+      "Bash(git reset *)",
+      "Bash(node -e ' *)"
+    ]
+  }
+}
